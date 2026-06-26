@@ -4,6 +4,7 @@ import { existsSync, watch } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { buildFile, outputPathFor } from "./build.js";
+import { startDevServer } from "./serve.js";
 
 const VERSION = "0.1.0";
 
@@ -11,11 +12,12 @@ const USAGE = `chalk ${VERSION} — compile a Chalk lecture into an interactive 
 
 Usage:
   chalk build   <file.chalk> [--out <file.html>]   compile to a slide bundle
-  chalk watch   <file.chalk> [--out <file.html>]   rebuild on every change
+  chalk watch   <file.chalk> [--port <n>]          serve with live reload
   chalk present <file.chalk> [--out <file.html>]   build, then open the deck
 
 Options:
   --out <path>   output HTML path (default: alongside the source)
+  --port <n>     dev-server port for watch (default: 4321)
   -h, --help     show this help
   -v, --version  show the version
 `;
@@ -24,6 +26,7 @@ interface Args {
   command: string | undefined;
   file: string | undefined;
   out: string | undefined;
+  port: number | undefined;
   help: boolean;
   version: boolean;
 }
@@ -33,6 +36,7 @@ function parseArgs(argv: string[]): Args {
     command: undefined,
     file: undefined,
     out: undefined,
+    port: undefined,
     help: false,
     version: false,
   };
@@ -42,6 +46,8 @@ function parseArgs(argv: string[]): Args {
     else if (a === "-v" || a === "--version") args.version = true;
     else if (a === "--out") args.out = argv[++i];
     else if (a.startsWith("--out=")) args.out = a.slice("--out=".length);
+    else if (a === "--port") args.port = Number(argv[++i]);
+    else if (a.startsWith("--port=")) args.port = Number(a.slice("--port=".length));
     else if (!args.command) args.command = a;
     else if (!args.file) args.file = a;
   }
@@ -59,9 +65,8 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-/** Open a file in the OS default application (used by `present`). */
-function openInBrowser(file: string): void {
-  const url = pathToFileURL(file).href;
+/** Open a URL in the OS default browser. */
+function openUrl(url: string): void {
   const platform = process.platform;
   const [cmd, cmdArgs] =
     platform === "darwin"
@@ -71,7 +76,7 @@ function openInBrowser(file: string): void {
         : ["xdg-open", [url]];
   const child = spawn(cmd, cmdArgs, { stdio: "ignore", detached: true });
   child.on("error", () => {
-    process.stdout.write(`Open this file in a browser:\n  ${url}\n`);
+    process.stdout.write(`Open this in a browser:\n  ${url}\n`);
   });
   child.unref();
 }
@@ -86,20 +91,36 @@ function build(file: string, out: string | undefined): ReturnType<typeof buildFi
   return result;
 }
 
-function watchFile(file: string, out: string | undefined): void {
+async function watchFile(
+  file: string,
+  out: string | undefined,
+  port: number | undefined,
+): Promise<void> {
   const target = resolve(file);
   const outPath = out ? resolve(out) : outputPathFor(target);
+
+  // Initial build before the server starts (so the first request succeeds).
+  try {
+    build(file, outPath);
+  } catch (err) {
+    process.stderr.write(`✗ build failed: ${(err as Error).message}\n`);
+  }
+
+  const server = await startDevServer(outPath, { port });
+  openUrl(server.url);
+  process.stdout.write(
+    `serving ${basename(target)} at ${server.url} with live reload (Ctrl+C to stop)\n`,
+  );
 
   const rebuild = (): void => {
     try {
       build(file, outPath);
+      server.reload();
     } catch (err) {
+      // Keep watching after a bad edit; report and leave the last good deck up.
       process.stderr.write(`✗ build failed: ${(err as Error).message}\n`);
     }
   };
-
-  rebuild();
-  process.stdout.write(`watching ${basename(target)} … (Ctrl+C to stop)\n`);
 
   // Watch the containing directory so editor save-by-rename still triggers.
   let timer: NodeJS.Timeout | undefined;
@@ -110,6 +131,12 @@ function watchFile(file: string, out: string | undefined): void {
     if (timer) clearTimeout(timer);
     timer = setTimeout(rebuild, 60); // debounce rapid successive events
   });
+
+  const shutdown = (): void => {
+    void server.close().then(() => process.exit(0));
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 function main(): void {
@@ -136,11 +163,11 @@ function main(): void {
       build(file, out);
       break;
     case "watch":
-      watchFile(file, out);
+      void watchFile(file, out, args.port);
       break;
     case "present": {
       const result = build(file, out);
-      openInBrowser(result.output);
+      openUrl(pathToFileURL(result.output).href);
       process.stdout.write(`opening ${basename(result.output)} …\n`);
       break;
     }
