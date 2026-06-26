@@ -322,6 +322,35 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   border-radius: 8px;
   background: var(--surface);
 }
+/* Captured matplotlib figures (PNG on a white field for legibility in dark). */
+.chalk-cell__image {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #ffffff;
+}
+/* Calm loading state while Pyodide initializes (first load only). */
+.chalk-cell__loading {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chalk-cell__loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: chalk-spin 0.8s linear infinite;
+}
+@keyframes chalk-spin { to { transform: rotate(360deg); } }
+/* The error box already wraps; cap its height so a long traceback scrolls. */
+.chalk-cell__error { max-height: 220px; overflow: auto; }
 .chalk-cell__error {
   margin-top: 10px;
   border: 1px solid #ef4444;
@@ -339,5 +368,6 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 @media (prefers-reduced-motion: reduce) {
   body, .chalk-bar__progress { transition: none; }
   .chalk-step { transition: none; transform: none; }
+  .chalk-cell__loading::before { animation: none; }
 }
 `;

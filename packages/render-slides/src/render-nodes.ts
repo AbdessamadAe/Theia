@@ -213,19 +213,15 @@ function renderGeo(block: GeoBlock): string {
 }
 
 function renderCode(block: CodeCell): string {
-  // Python cells are not executed yet (Pyodide is a later phase): clear label.
-  if (block.lang === "py") {
-    return `<div class="chalk-block chalk-placeholder chalk-code">
-  <div class="chalk-code__head"><span class="chalk-tag">python</span><span class="chalk-code__note">Python — coming soon (Pyodide)</span></div>
-  <pre class="chalk-code__source"><code>${escapeHtml(block.source)}</code></pre>
-</div>`;
-  }
-
-  // JavaScript cells run live in the compute layer. The runtime reads the
-  // source from `.chalk-code__source` and writes results into `__output`
-  // (or `__error` on a throw).
-  return `<div class="chalk-block chalk-code chalk-cell" data-chalk-cell="js">
-  <div class="chalk-code__head"><span class="chalk-tag">javascript</span><span class="chalk-code__note">runs live</span></div>
+  // Both js and py cells run live in the compute layer. The runtime reads the
+  // source from `.chalk-code__source` and writes results into `__output` (or
+  // `__error` on a throw). Python runs client-side via Pyodide, loaded lazily
+  // only because this deck contains a py cell.
+  const label = block.lang === "py" ? "python" : "javascript";
+  const note =
+    block.lang === "py" ? "runs in your browser (Pyodide)" : "runs live";
+  return `<div class="chalk-block chalk-code chalk-cell" data-chalk-cell="${block.lang}">
+  <div class="chalk-code__head"><span class="chalk-tag">${label}</span><span class="chalk-code__note">${note}</span></div>
   <pre class="chalk-code__source"><code>${escapeHtml(block.source)}</code></pre>
   <div class="chalk-cell__output"></div>
   <div class="chalk-cell__error" hidden></div>

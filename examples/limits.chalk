@@ -41,6 +41,20 @@ const slope = 2 * a; // f'(x) = 2a x, evaluated at x = 1
 chalk.tex(`f'(1) = 2a = ${slope.toFixed(2)}`);
 ```
 
+Python can do the same thing *symbolically*. This cell runs SymPy in your
+browser (via Pyodide): it differentiates $f(x) = a x^2$ for the current $a$ and
+renders the exact derivative. Drag the slider and the symbolic result follows:
+
+```py
+import sympy as sp
+
+x = sp.Symbol("x")
+a = chalk.slider("a")            # the live slider value
+f = a * x**2
+fprime = sp.diff(f, x)           # exact symbolic derivative
+chalk.tex("f'(x) = " + sp.latex(fprime))
+```
+
 ## A first epsilon–delta proof
 
 We now prove a concrete limit straight from the definition. The goal is to turn
