@@ -30,6 +30,17 @@ Drag the slider and watch how the curve — and its limit behavior at the origin
 As you increase $a$, the parabola grows steeper, yet $\lim_{x \to 0} f(x) = 0$
 no matter what $a$ is: the limit at the origin is robust to the parameter.
 
+The derivative $f'(x) = 2ax$ measures that steepness. This cell reads the
+slider live and reports the slope at $x = 1$ — drag $a$ and watch it move:
+
+```js
+// `chalk` is the cell API: chalk.slider(name) reads a live @slider value,
+// chalk.tex(...) renders a LaTeX result into the slide.
+const a = chalk.slider("a");
+const slope = 2 * a; // f'(x) = 2a x, evaluated at x = 1
+chalk.tex(`f'(1) = 2a = ${slope.toFixed(2)}`);
+```
+
 ## A first epsilon–delta proof
 
 We now prove a concrete limit straight from the definition. The goal is to turn
@@ -62,12 +73,16 @@ For a continuous function the one-sided limits agree with the value. We can
 sample the function on both sides of the point and compare.
 
 ```js
-// Sample f(x) = 3x + 1 approaching x = 2 from both sides.
+// Sample f(x) = 3x + 1 approaching x = 2 from both sides, then report.
 const f = (x) => 3 * x + 1;
-const left  = f(2 - 1e-6);
+const left = f(2 - 1e-6);
 const right = f(2 + 1e-6);
 const value = f(2);
-({ left, right, value, continuous: Math.abs(left - right) < 1e-3 });
+const continuous = Math.abs(left - right) < 1e-3 && Math.abs(left - value) < 1e-3;
+chalk.text(
+  `left → ${left.toFixed(6)},  right → ${right.toFixed(6)},  f(2) = ${value};  ` +
+    `continuous here: ${continuous}`,
+);
 ```
 
 :::remark

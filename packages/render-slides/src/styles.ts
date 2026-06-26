@@ -297,8 +297,31 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 }
 .chalk-bar__btn:hover { border-color: var(--accent); color: var(--accent); }
 
-/* ---- Code-cell output / errors (live with the compute layer) ---- */
+/* ---- Live JS code cells (compute layer) ---- */
+.chalk-code.chalk-cell {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  background: var(--code-bg);
+}
 .chalk-cell__output { margin-top: 10px; }
+.chalk-cell__output:empty { display: none; }
+.chalk-cell__value {
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+.chalk-cell__tex { margin: 4px 0; }
+.chalk-cell__canvas {
+  display: block;
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
 .chalk-cell__error {
   margin-top: 10px;
   border: 1px solid #ef4444;

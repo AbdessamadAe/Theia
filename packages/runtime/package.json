@@ -16,5 +16,8 @@
   "files": ["dist", "src"],
   "scripts": {
     "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@chalk/compute": "0.1.0"
   }
 }

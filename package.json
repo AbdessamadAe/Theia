@@ -10,6 +10,7 @@
   "workspaces": [
     "packages/ast",
     "packages/parser",
+    "packages/compute",
     "packages/runtime",
     "packages/render-slides",
     "packages/cli"

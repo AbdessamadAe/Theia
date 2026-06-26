@@ -140,7 +140,7 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     const code = slide.children.find((b): b is CodeCell => b.type === "code")!;
     expect(code.lang).toBe("js");
     expect(code.source).toContain("const f = (x) => 3 * x + 1;");
-    expect(code.source).toContain("continuous:");
+    expect(code.source).toContain("Math.abs(left - right)");
     // The fence markers themselves are not part of the source.
     expect(code.source).not.toContain("```");
   });

@@ -17,8 +17,10 @@ const html = renderDeck(parse(source));
  * which jsdom fires on the next macrotask, so we wait for the first slide to go
  * active (set by the navigation boot) before returning.
  */
-async function loadDeck(): Promise<Window & typeof globalThis> {
-  const dom = new JSDOM(html, {
+async function bootHtml(
+  deckHtml: string,
+): Promise<Window & typeof globalThis> {
+  const dom = new JSDOM(deckHtml, {
     runScripts: "dangerously",
     pretendToBeVisual: true,
     url: "https://example.test/deck.html",
@@ -30,6 +32,12 @@ async function loadDeck(): Promise<Window & typeof globalThis> {
   }
   throw new Error("runtime did not boot");
 }
+
+function loadDeck(): Promise<Window & typeof globalThis> {
+  return bootHtml(html);
+}
+
+const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 60));
 
 describe("Phase 3 reactivity (executed in jsdom)", () => {
   it("wires the slider as a live, enabled control with its default value", async () => {
@@ -87,5 +95,51 @@ describe("Phase 3 reactivity (executed in jsdom)", () => {
     input.value = "2";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
     expect(w.document.querySelector(".chalk-plot canvas")).toBeTruthy();
+  });
+});
+
+describe("Phase 4 compute cells in the real deck (executed in jsdom)", () => {
+  it("runs the parabola slope cell on load and updates it when `a` is dragged", async () => {
+    const w = await loadDeck();
+    const out = w.document.querySelector<HTMLElement>(
+      '.chalk-cell[data-chalk-cell="js"] .chalk-cell__output',
+    )!;
+    // f'(1) = 2a, a = 1 → 2.00 (KaTeX-rendered; tex text is in the annotation).
+    expect(out.textContent).toContain("2.00");
+
+    const input = w.document.querySelector<HTMLInputElement>(
+      '.chalk-slider[data-slider="a"] input[type=range]',
+    )!;
+    input.value = "3";
+    input.dispatchEvent(new w.Event("input", { bubbles: true }));
+    await settle(); // cell re-run is coalesced to an animation frame
+    expect(out.textContent).toContain("6.00");
+  });
+
+  it("isolates a broken cell: its error shows inline; the deck keeps working", async () => {
+    const src = [
+      "## Compute",
+      "",
+      "@slider a [0, 2] = 1",
+      "",
+      "```js",
+      'chalk.text("good " + chalk.slider("a"));',
+      "```",
+      "",
+      "```js",
+      'throw new Error("kaboom");',
+      "```",
+      "",
+    ].join("\n");
+    const w = await bootHtml(renderDeck(parse(src)));
+    const cells = w.document.querySelectorAll('.chalk-cell[data-chalk-cell="js"]');
+    const out0 = cells[0]!.querySelector(".chalk-cell__output")!;
+    const err1 = cells[1]!.querySelector<HTMLElement>(".chalk-cell__error")!;
+
+    expect(out0.textContent).toContain("good 1"); // healthy cell ran
+    expect(err1.hidden).toBe(false); // broken cell shows its error
+    expect(err1.textContent).toContain("kaboom");
+    // The deck itself is unharmed: a slide is active and navigable.
+    expect(w.document.querySelector(".slide.is-active")).toBeTruthy();
   });
 });

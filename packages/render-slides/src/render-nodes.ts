@@ -213,10 +213,22 @@ function renderGeo(block: GeoBlock): string {
 }
 
 function renderCode(block: CodeCell): string {
-  const langLabel = block.lang === "py" ? "python" : "javascript";
-  return `<div class="chalk-block chalk-placeholder chalk-code">
-  <div class="chalk-code__head"><span class="chalk-tag">${langLabel} cell</span><span class="chalk-code__note">output — live with the compute layer</span></div>
+  // Python cells are not executed yet (Pyodide is a later phase): clear label.
+  if (block.lang === "py") {
+    return `<div class="chalk-block chalk-placeholder chalk-code">
+  <div class="chalk-code__head"><span class="chalk-tag">python</span><span class="chalk-code__note">Python — coming soon (Pyodide)</span></div>
   <pre class="chalk-code__source"><code>${escapeHtml(block.source)}</code></pre>
+</div>`;
+  }
+
+  // JavaScript cells run live in the compute layer. The runtime reads the
+  // source from `.chalk-code__source` and writes results into `__output`
+  // (or `__error` on a throw).
+  return `<div class="chalk-block chalk-code chalk-cell" data-chalk-cell="js">
+  <div class="chalk-code__head"><span class="chalk-tag">javascript</span><span class="chalk-code__note">runs live</span></div>
+  <pre class="chalk-code__source"><code>${escapeHtml(block.source)}</code></pre>
+  <div class="chalk-cell__output"></div>
+  <div class="chalk-cell__error" hidden></div>
 </div>`;
 }
 

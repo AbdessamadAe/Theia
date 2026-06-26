@@ -84,9 +84,14 @@ describe("renderDeck(limits.chalk)", () => {
     expect(html).toContain("A = Point(1, 0)");
   });
 
-  it("keeps code cells as labeled placeholders (compute layer is later)", () => {
-    expect(html).toContain("chalk-code");
+  it("renders js code cells as live compute cells with output/error targets", () => {
+    expect(html).toContain('data-chalk-cell="js"');
+    expect(html).toContain("chalk-cell__output");
+    expect(html).toContain("chalk-cell__error");
+    // Source is preserved (escaped) so the runtime can compile it.
     expect(html).toContain("const f = (x) =&gt; 3 * x + 1;");
+    // Cell source is HTML-escaped in the <pre>; the runtime decodes it.
+    expect(html).toContain("chalk.slider(&quot;a&quot;)");
   });
 
   it("includes the reactive runtime, both themes, and reduced-motion handling", () => {

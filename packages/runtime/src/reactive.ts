@@ -10,6 +10,7 @@
  *
  * This module never imports the parser; it reads only what the renderer wrote.
  */
+import { initCells } from "@chalk/compute/browser";
 import { compileExpr } from "./expr.js";
 import { initGeo, type GeoSpec } from "./geo.js";
 import { ReactiveGraph } from "./graph.js";
@@ -116,6 +117,11 @@ export function initReactive(): void {
     geoSpecs.push({ container: target, commands: src.split("\n") });
   });
   initGeo(geoSpecs);
+
+  // --- JS code cells (compute layer) ---------------------------------------
+  // Cells join this same graph: a cell that reads a slider re-runs when it
+  // moves, evaluating in dependency order. Set up before the initial paint.
+  initCells(graph);
 
   // Initial paint, then keep plots in sync with theme + viewport changes.
   graph.runAll();
