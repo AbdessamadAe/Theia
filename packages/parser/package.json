@@ -1,0 +1,21 @@
+{
+  "name": "@chalk/parser",
+  "version": "0.1.0",
+  "description": "Pure .chalk string → AST parser for Chalk. No I/O, no DOM.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@chalk/ast": "0.1.0"
+  }
+}

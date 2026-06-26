@@ -1,0 +1,29 @@
+{
+  "name": "chalk-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chalk — compile a math-teaching markup language into interactive slide decks.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/ast",
+    "packages/parser",
+    "packages/runtime",
+    "packages/render-slides",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "clean": "rm -rf packages/*/dist"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^28.0.3",
+    "@types/node": "^20.14.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}

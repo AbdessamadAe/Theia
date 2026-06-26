@@ -1,0 +1,19 @@
+{
+  "name": "@chalk/cli",
+  "version": "0.1.0",
+  "description": "The `chalk` command — build, watch, and present Chalk decks.",
+  "type": "module",
+  "bin": {
+    "chalk": "./dist/cli.js"
+  },
+  "main": "./dist/build.js",
+  "types": "./dist/build.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@chalk/parser": "0.1.0",
+    "@chalk/render-slides": "0.1.0"
+  }
+}
