@@ -1,0 +1,20 @@
+{
+  "name": "@chalk/compute",
+  "version": "0.1.0",
+  "description": "Chalk's compute layer: runs JavaScript code cells inside the reactive runtime, in dependency order, with error isolation. (Python via Pyodide is a later phase.)",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./browser": "./src/browser.ts",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}
