@@ -1,23 +1,32 @@
 /**
- * The JavaScript code-cell engine (browser side).
+ * The code-cell engine (browser side) for both `js` and `py` cells.
  *
  * Execution model:
- *  - Each cell is compiled once with `new Function("chalk", source)` — never
- *    `eval` — giving it its own function scope. Cells are isolated: they share
- *    no globals and communicate only through the injected `chalk` object.
- *  - `chalk` exposes the current slider values, a cross-cell value channel
- *    (`expose`/`imports`), and output sinks (`tex`, `text`, `canvas`).
- *  - Cells + sliders form ONE dependency graph (the runtime's ReactiveGraph,
- *    passed in). A cell that reads a slider becomes a dependent of it; a cell
- *    that imports another cell's exposed value is ordered after it. Evaluation
- *    runs in topological order; cells on a cycle render an inline error.
- *  - Every run is wrapped in try/catch: a throwing cell shows a readable error
- *    box on its slide and never disturbs the other cells or the deck.
+ *  - JS cells are compiled once with `new Function("chalk", source)` (never
+ *    `eval`), run synchronously, and discover their dependencies by running.
+ *  - PY cells run in a single shared Pyodide interpreter (lazily loaded only if
+ *    the deck has a py cell). Their dependencies are discovered *statically*
+ *    from the source, so ordering and package selection happen before Pyodide
+ *    is paid for.
+ *  - Both languages feed ONE `planCells` call → one topological order with the
+ *    existing cycle detection. A js cell and a py cell that read the same
+ *    slider, or depend on each other's `expose`d values, order correctly.
+ *  - Reactivity reuses the runtime's ReactiveGraph (passed in). JS cells re-run
+ *    every animation frame; py cells re-run on a trailing debounce (so dragging
+ *    a slider stays smooth and never blocks navigation).
+ *  - Every run is isolated: a throwing cell (JS error or Python traceback)
+ *    renders an inline error box and leaves the rest of the deck working.
  *
- * This module imports no parser internals and no runtime internals — it takes a
- * structurally-typed graph handle, so the package boundary stays clean.
+ * Imports no parser internals and no runtime internals — it takes a
+ * structurally-typed graph handle.
  */
+import { discoverPython, pythonPackages } from "./discover-python.js";
 import { planCells } from "./order.js";
+import {
+  loadPyodideEngine,
+  type PyodideFactory,
+  type PyodideLike,
+} from "./pyodide-host.js";
 
 /** The slice of the runtime's reactive graph the compute layer needs. */
 export interface ReactiveLike {
@@ -25,21 +34,20 @@ export interface ReactiveLike {
   addDependent(deps: string[], run: () => void): unknown;
 }
 
-/** The API surface available inside a `js` cell as the `chalk` object. */
+export interface ComputeOptions {
+  /** Override the Pyodide loader (used by tests to inject a fake). */
+  pyodide?: PyodideFactory;
+}
+
+/** The API surface available inside a cell as the `chalk` object (JS), and
+ * mirrored for Python via a bridge of the same shape. */
 export interface ChalkApi {
-  /** Current value of a slider by name (NaN if it does not exist). */
   slider(name: string): number;
-  /** All slider values; reading a key registers a dependency on that slider. */
   readonly sliders: Record<string, number>;
-  /** Values exposed by other cells; reading a key creates a cell dependency. */
   readonly imports: Record<string, unknown>;
-  /** Publish a value for other cells to import by name. */
   expose(name: string, value: unknown): void;
-  /** Emit a LaTeX string, rendered by KaTeX into the cell's output. */
   tex(latex: string): void;
-  /** Emit a plain text / numeric value into the cell's output. */
   text(value: unknown): void;
-  /** Get a canvas (mounted in the cell's output) to draw a figure into. */
   canvas(
     width?: number,
     height?: number,
@@ -55,8 +63,11 @@ function katex(): KatexLike | undefined {
 
 interface Cell {
   id: string;
-  fn: ((chalk: ChalkApi) => unknown) | null;
+  lang: "js" | "py";
+  source: string;
+  fn: ((chalk: ChalkApi) => unknown) | null; // js only
   compileError: string | null;
+  packages: string[]; // py only
   outputEl: HTMLElement;
   errorEl: HTMLElement;
   readsSliders: Set<string>;
@@ -70,6 +81,10 @@ const raf: (cb: () => void) => unknown =
     ? (cb) => requestAnimationFrame(cb)
     : (cb) => setTimeout(cb, 16);
 
+/** How long after the last slider change a py cell re-runs (ms). Python eval
+ * is too heavy for every drag tick, so we update on the drag pause/release. */
+const PY_DEBOUNCE_MS = 200;
+
 function errMsg(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
@@ -82,7 +97,6 @@ function safeJson(v: unknown): string {
   }
 }
 
-/** Find a child by selector, creating it if the renderer did not emit one. */
 function ensureChild(parent: HTMLElement, className: string): HTMLElement {
   let el = parent.querySelector<HTMLElement>(`.${className}`);
   if (!el) {
@@ -93,46 +107,132 @@ function ensureChild(parent: HTMLElement, className: string): HTMLElement {
   return el;
 }
 
+/** The Python preamble: defines a `chalk` object mirroring the JS cell API,
+ * bridged to JS via the injected `_chalk_bridge`. Run once after load. */
+const PY_PREAMBLE = `
+import os as _os
+_os.environ.setdefault("MPLBACKEND", "AGG")
+
+class _Chalk:
+    def slider(self, name):
+        return _chalk_bridge.slider(name)
+    def imported(self, name):
+        return _chalk_bridge.imported(name)
+    def expose(self, name, value):
+        _chalk_bridge.expose(name, value)
+    def tex(self, s):
+        _chalk_bridge.tex(str(s))
+    def text(self, s):
+        _chalk_bridge.text(str(s))
+    def figure(self, fig=None):
+        import io, base64
+        import matplotlib.pyplot as plt
+        f = fig if fig is not None else plt.gcf()
+        buf = io.BytesIO()
+        f.savefig(buf, format="png", dpi=120, bbox_inches="tight")
+        plt.close(f)
+        data = base64.b64encode(buf.getvalue()).decode("ascii")
+        _chalk_bridge.image("data:image/png;base64," + data)
+
+chalk = _Chalk()
+`;
+
 /**
- * Initialize every `js` code cell on the page and join them to the reactive
- * graph. Safe to call once after the DOM and sliders are set up.
+ * Initialize every code cell on the page and join them to the reactive graph.
+ * Safe to call once after the DOM and sliders are set up.
  */
-export function initCells(graph: ReactiveLike): void {
+export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): void {
   const boxes = Array.from(
-    document.querySelectorAll<HTMLElement>('.chalk-cell[data-chalk-cell="js"]'),
+    document.querySelectorAll<HTMLElement>(
+      '.chalk-cell[data-chalk-cell="js"], .chalk-cell[data-chalk-cell="py"]',
+    ),
   );
   if (boxes.length === 0) return;
 
   const registry: Record<string, unknown> = {};
+  let currentPyCell: Cell | null = null;
 
   const cells: Cell[] = boxes.map((el, i) => {
-    const srcEl = el.querySelector(".chalk-code__source");
-    const source = srcEl?.textContent ?? "";
+    const lang = el.getAttribute("data-chalk-cell") === "py" ? "py" : "js";
+    const source = el.querySelector(".chalk-code__source")?.textContent ?? "";
+    const outputEl = ensureChild(el, "chalk-cell__output");
+    const errorEl = ensureChild(el, "chalk-cell__error");
+
     let fn: ((chalk: ChalkApi) => unknown) | null = null;
     let compileError: string | null = null;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      fn = new Function("chalk", source) as (chalk: ChalkApi) => unknown;
-    } catch (e) {
-      compileError = errMsg(e);
+    const readsSliders = new Set<string>();
+    const imports = new Set<string>();
+    const exposes = new Set<string>();
+    let packages: string[] = [];
+
+    if (lang === "js") {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-implied-eval
+        fn = new Function("chalk", source) as (chalk: ChalkApi) => unknown;
+      } catch (e) {
+        compileError = errMsg(e);
+      }
+    } else {
+      // Static discovery: learn deps + packages without running Python.
+      const d = discoverPython(source);
+      for (const s of d.sliders) readsSliders.add(s);
+      for (const s of d.imports) imports.add(s);
+      for (const s of d.exposes) exposes.add(s);
+      packages = d.packages;
     }
+
     return {
       id: `cell${i}`,
+      lang,
+      source,
       fn,
       compileError,
-      outputEl: ensureChild(el, "chalk-cell__output"),
-      errorEl: ensureChild(el, "chalk-cell__error"),
-      readsSliders: new Set<string>(),
-      imports: new Set<string>(),
-      exposes: new Set<string>(),
+      packages,
+      outputEl,
+      errorEl,
+      readsSliders,
+      imports,
+      exposes,
       emitted: false,
     };
   });
+
+  const pyCells = cells.filter((c) => c.lang === "py");
+
+  // --- Output sinks --------------------------------------------------------
 
   function showError(cell: Cell, message: string): void {
     cell.outputEl.innerHTML = "";
     cell.errorEl.hidden = false;
     cell.errorEl.textContent = `Error: ${message}`;
+  }
+
+  function showCycle(cell: Cell): void {
+    showError(
+      cell,
+      "circular dependency between code cells (a cell imports a value that, directly or indirectly, depends on its own output)",
+    );
+  }
+
+  function showPyError(cell: Cell, e: unknown): void {
+    // Pyodide throws with the full traceback in the message; keep the tail,
+    // which holds the exception type and message.
+    const lines = errMsg(e)
+      .split("\n")
+      .map((l) => l.replace(/\s+$/, ""))
+      .filter((l) => l.length > 0);
+    cell.outputEl.innerHTML = "";
+    cell.errorEl.hidden = false;
+    cell.errorEl.textContent = lines.slice(-8).join("\n") || "Python error";
+  }
+
+  function setLoading(cell: Cell, message: string): void {
+    cell.errorEl.hidden = true;
+    cell.outputEl.innerHTML = "";
+    const div = document.createElement("div");
+    div.className = "chalk-cell__loading";
+    div.textContent = message;
+    cell.outputEl.appendChild(div);
   }
 
   function emitTex(cell: Cell, tex: string): void {
@@ -154,8 +254,16 @@ export function initCells(graph: ReactiveLike): void {
   function emitText(cell: Cell, value: unknown): void {
     const div = document.createElement("div");
     div.className = "chalk-cell__value";
-    div.textContent = typeof value === "object" ? safeJson(value) : String(value);
+    div.textContent =
+      typeof value === "object" ? safeJson(value) : String(value);
     cell.outputEl.appendChild(div);
+  }
+
+  function emitImage(cell: Cell, dataUrl: string): void {
+    const img = document.createElement("img");
+    img.className = "chalk-cell__image";
+    img.src = dataUrl;
+    cell.outputEl.appendChild(img);
   }
 
   function getCanvas(
@@ -173,6 +281,8 @@ export function initCells(graph: ReactiveLike): void {
     if (height) canvas.height = height;
     return { canvas, ctx: canvas.getContext("2d") };
   }
+
+  // --- JS cell API + evaluation -------------------------------------------
 
   function makeApi(cell: Cell): ChalkApi {
     return {
@@ -224,7 +334,7 @@ export function initCells(graph: ReactiveLike): void {
     };
   }
 
-  function evalCell(cell: Cell): void {
+  function evalJs(cell: Cell): void {
     cell.emitted = false;
     cell.errorEl.hidden = true;
     cell.errorEl.textContent = "";
@@ -241,10 +351,47 @@ export function initCells(graph: ReactiveLike): void {
     }
   }
 
-  // Discovery pass (document order): learn each cell's reads/imports/exposes.
-  for (const cell of cells) evalCell(cell);
+  // --- Python bridge (mirrors the JS API onto the current py cell) ---------
 
-  // Plan a dependency order from the discovered import/expose names.
+  const bridge = {
+    slider(name: string): number {
+      currentPyCell?.readsSliders.add(name);
+      const v = graph.get(name);
+      return v === undefined ? NaN : v;
+    },
+    imported(name: string): unknown {
+      currentPyCell?.imports.add(name);
+      return registry[name];
+    },
+    expose(name: string, value: unknown): void {
+      if (currentPyCell) currentPyCell.exposes.add(name);
+      registry[name] = value;
+    },
+    tex(s: string): void {
+      if (currentPyCell) {
+        currentPyCell.emitted = true;
+        emitTex(currentPyCell, String(s));
+      }
+    },
+    text(s: unknown): void {
+      if (currentPyCell) {
+        currentPyCell.emitted = true;
+        emitText(currentPyCell, s);
+      }
+    },
+    image(dataUrl: string): void {
+      if (currentPyCell) {
+        currentPyCell.emitted = true;
+        emitImage(currentPyCell, String(dataUrl));
+      }
+    },
+  };
+
+  // --- Planning ------------------------------------------------------------
+
+  // Discover JS deps by running each JS cell once (document order).
+  for (const cell of cells) if (cell.lang === "js") evalJs(cell);
+
   const plan = planCells(
     cells.map((c) => ({
       id: c.id,
@@ -253,35 +400,138 @@ export function initCells(graph: ReactiveLike): void {
     })),
   );
   const byId = new Map(cells.map((c) => [c.id, c]));
+  const ordered = new Set(plan.order);
+  for (const id of plan.cyclic) showCycle(byId.get(id)!);
 
-  function runAll(): void {
-    for (const key of Object.keys(registry)) delete registry[key];
-    for (const id of plan.order) evalCell(byId.get(id)!);
-    for (const id of plan.cyclic) {
-      showError(
-        byId.get(id)!,
-        "circular dependency between code cells (a cell imports a value that, directly or indirectly, depends on its own output)",
-      );
+  const pyExposed = new Set<string>();
+  for (const c of pyCells) for (const n of c.exposes) pyExposed.add(n);
+  const jsDependsOnPy = cells.some(
+    (c) => c.lang === "js" && [...c.imports].some((n) => pyExposed.has(n)),
+  );
+
+  function runJs(): void {
+    for (const id of plan.order) {
+      const cell = byId.get(id)!;
+      if (cell.lang === "js") evalJs(cell);
     }
   }
 
-  // First real evaluation, in dependency order.
-  runAll();
+  // --- Python evaluation (lazy, one-time interpreter) ----------------------
 
-  // Join the reactive graph: any slider a cell reads re-runs the cells (in
-  // order) when it moves. Coalesced to one run per animation frame so dragging
-  // stays smooth.
+  const factory = options.pyodide ?? loadPyodideEngine;
+  let pySetup: Promise<PyodideLike | null> | null = null;
+
+  function pyStatus(message: string): void {
+    for (const c of pyCells) if (ordered.has(c.id)) setLoading(c, message);
+  }
+
+  function ensurePy(): Promise<PyodideLike | null> {
+    if (pySetup) return pySetup;
+    pySetup = (async () => {
+      try {
+        const py = await factory(pyStatus);
+        const pkgs = pythonPackages(pyCells.map((c) => c.source));
+        if (pkgs.length > 0) {
+          pyStatus(`Loading ${pkgs.join(", ")}…`);
+          await py.loadPackage(pkgs);
+        }
+        py.globals.set("_chalk_bridge", bridge);
+        await py.runPythonAsync(PY_PREAMBLE);
+        return py;
+      } catch (e) {
+        for (const c of pyCells) {
+          if (ordered.has(c.id)) showError(c, `Python runtime failed: ${errMsg(e)}`);
+        }
+        return null;
+      }
+    })();
+    return pySetup;
+  }
+
+  async function evalPy(py: PyodideLike, cell: Cell): Promise<void> {
+    cell.emitted = false;
+    cell.errorEl.hidden = true;
+    cell.errorEl.textContent = "";
+    cell.outputEl.innerHTML = "";
+    currentPyCell = cell;
+    try {
+      const ret = await py.runPythonAsync(cell.source);
+      if (
+        !cell.emitted &&
+        (typeof ret === "number" ||
+          typeof ret === "string" ||
+          typeof ret === "boolean")
+      ) {
+        emitText(cell, ret);
+      }
+    } catch (e) {
+      showPyError(cell, e);
+    } finally {
+      currentPyCell = null;
+    }
+  }
+
+  async function runPy(): Promise<void> {
+    const py = await ensurePy();
+    if (!py) return;
+    for (const id of plan.order) {
+      const cell = byId.get(id)!;
+      if (cell.lang === "py") await evalPy(py, cell);
+    }
+    // Propagate py-exposed values into any JS cells that import them.
+    if (jsDependsOnPy) runJs();
+  }
+
+  // Single-flight py runs: a slider move during a run queues exactly one rerun.
+  let pyRunning = false;
+  let pyPending = false;
+  let pyTimer: ReturnType<typeof setTimeout> | undefined;
+  async function runPySafe(): Promise<void> {
+    if (pyRunning) {
+      pyPending = true;
+      return;
+    }
+    pyRunning = true;
+    try {
+      await runPy();
+    } finally {
+      pyRunning = false;
+      if (pyPending) {
+        pyPending = false;
+        void runPySafe();
+      }
+    }
+  }
+  function schedulePy(): void {
+    if (pyTimer) clearTimeout(pyTimer);
+    pyTimer = setTimeout(() => void runPySafe(), PY_DEBOUNCE_MS);
+  }
+
+  // --- Initial evaluation --------------------------------------------------
+
+  runJs(); // synchronous: JS-only decks are fully painted here.
+  if (pyCells.some((c) => ordered.has(c.id))) {
+    for (const c of pyCells) if (ordered.has(c.id)) setLoading(c, "Preparing Python…");
+    void runPySafe();
+  }
+
+  // --- Reactivity: one dependent on the shared graph -----------------------
+
   const sliderDeps = new Set<string>();
   for (const c of cells) for (const s of c.readsSliders) sliderDeps.add(s);
+  const anyPyReadsSlider = pyCells.some((c) => c.readsSliders.size > 0);
+
   if (sliderDeps.size > 0) {
-    let scheduled = false;
+    let jsScheduled = false;
     graph.addDependent([...sliderDeps], () => {
-      if (scheduled) return;
-      scheduled = true;
-      raf(() => {
-        scheduled = false;
-        runAll();
-      });
+      if (!jsScheduled) {
+        jsScheduled = true;
+        raf(() => {
+          jsScheduled = false;
+          runJs();
+        });
+      }
+      if (anyPyReadsSlider) schedulePy();
     });
   }
 }

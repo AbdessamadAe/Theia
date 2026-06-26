@@ -10,3 +10,9 @@ export {
   type CellSpec,
   type CellPlan,
 } from "./order.js";
+
+export {
+  discoverPython,
+  pythonPackages,
+  type PythonDiscovery,
+} from "./discover-python.js";
