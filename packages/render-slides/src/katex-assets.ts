@@ -6,6 +6,7 @@ import katex from "katex";
 const require = createRequire(import.meta.url);
 
 let cachedCss: string | null = null;
+let cachedJs: string | null = null;
 
 /**
  * Return KaTeX's stylesheet with every `woff2` font reference rewritten to an
@@ -36,6 +37,18 @@ export function inlinedKatexCss(): string {
 
   cachedCss = css;
   return css;
+}
+
+/**
+ * Return KaTeX's browser bundle (the UMD `katex.min.js`, which defines the
+ * global `katex`). Inlined into the deck so the reactive runtime can re-render
+ * math client-side, offline, when a slider changes. Computed once and cached.
+ */
+export function inlinedKatexJs(): string {
+  if (cachedJs !== null) return cachedJs;
+  const jsPath = require.resolve("katex/dist/katex.min.js");
+  cachedJs = readFileSync(jsPath, "utf8");
+  return cachedJs;
 }
 
 /** Render a LaTeX string to HTML using KaTeX. Errors render in place (as red

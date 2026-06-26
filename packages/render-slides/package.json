@@ -1,0 +1,27 @@
+{
+  "name": "@chalk/render-slides",
+  "version": "0.1.0",
+  "description": "Render a Chalk AST into a self-contained interactive slide-deck bundle.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@chalk/ast": "0.1.0",
+    "@chalk/runtime": "0.1.0",
+    "esbuild": "^0.21.5",
+    "katex": "^0.16.11"
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7"
+  }
+}

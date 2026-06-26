@@ -123,6 +123,11 @@ body {
 .slide__body > :last-child { margin-bottom: 0; }
 
 .chalk-math-display { margin: 18px 0; overflow-x: auto; }
+
+/* Reactive math: a subtle accent tint marks formulae that move with a slider. */
+.chalk-reactive { border-radius: 4px; }
+span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
+.chalk-math-display.chalk-reactive { background: color-mix(in srgb, var(--accent) 7%, transparent); padding: 6px 10px; }
 .chalk-code-inline {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   background: var(--code-bg);
@@ -193,10 +198,19 @@ body {
   vertical-align: middle;
 }
 
+/* ---- Live interactive blocks (slider / plot / geo) ---- */
+.chalk-slider, .chalk-plot, .chalk-geo {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin: 18px 0;
+  background: var(--code-bg);
+}
+
 .chalk-slider { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .chalk-slider__name { font-weight: 700; font-style: italic; font-size: 1.05em; }
-.chalk-slider__input { flex: 1 1 220px; accent-color: var(--accent); }
-.chalk-slider__value { font-variant-numeric: tabular-nums; color: var(--muted); }
+.chalk-slider__input { flex: 1 1 220px; accent-color: var(--accent); cursor: pointer; height: 6px; }
+.chalk-slider__value { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 600; min-width: 4ch; }
 .chalk-slider__range { color: var(--muted); font-size: 0.85em; }
 
 .chalk-plot__head, .chalk-geo__head, .chalk-code__head {
@@ -209,14 +223,30 @@ body {
 .chalk-plot__deps, .chalk-geo__note, .chalk-code__note { color: var(--muted); font-size: 0.8em; }
 .chalk-plot__deps code { font-family: inherit; }
 .chalk-plot__canvas {
-  height: 150px;
-  display: grid;
-  place-items: center;
-  color: var(--muted);
+  display: block;
+  width: 100%;
+  height: 280px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--surface);
-  font-size: 0.85em;
+}
+
+/* ---- Geometry (GeoGebra) embed ---- */
+.chalk-geo__applet {
+  width: 100%;
+  height: 380px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+.chalk-geo__error {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 24px;
+  font-size: 0.9em;
 }
 
 .chalk-geo__source, .chalk-code__source {
@@ -266,4 +296,25 @@ body {
   line-height: 1;
 }
 .chalk-bar__btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ---- Code-cell output / errors (live with the compute layer) ---- */
+.chalk-cell__output { margin-top: 10px; }
+.chalk-cell__error {
+  margin-top: 10px;
+  border: 1px solid #ef4444;
+  border-left: 4px solid #ef4444;
+  background: color-mix(in srgb, var(--surface) 88%, #ef4444 12%);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8em;
+  white-space: pre-wrap;
+}
+
+/* ---- Respect reduced-motion: disable reveal/scale transitions ---- */
+@media (prefers-reduced-motion: reduce) {
+  body, .chalk-bar__progress { transition: none; }
+  .chalk-step { transition: none; transform: none; }
+}
 `;

@@ -15,9 +15,10 @@ describe("renderDeck(limits.chalk)", () => {
   it("emits a complete, self-contained HTML document", () => {
     expect(html.startsWith("<!doctype html>")).toBe(true);
     expect(html).toContain("<title>Limits and Continuity</title>");
-    // No external network requests: fonts inlined, no stylesheet/script links.
+    // No external resources referenced from HTML: everything is inlined.
     expect(html).not.toContain("<link");
-    expect(html).not.toContain("src=\"http");
+    expect(html).not.toContain("<script src=");
+    expect(html).not.toContain('href="http');
     expect(html).toContain("data:font/woff2;base64,");
   });
 
@@ -26,10 +27,14 @@ describe("renderDeck(limits.chalk)", () => {
     expect(count).toBe(6);
   });
 
-  it("renders math with KaTeX (server-side, no client KaTeX needed)", () => {
+  it("renders math with KaTeX and inlines KaTeX's JS for client re-render", () => {
     expect(html).toContain('class="katex"');
-    // Display math from the :::definition is present.
     expect(html).toContain("katex-display");
+    // Two inline scripts are shipped: the KaTeX browser bundle and the runtime.
+    const scripts = (html.match(/<script>/g) ?? []).length;
+    expect(scripts).toBe(2);
+    // A token unique to the KaTeX bundle confirms its JS (not just CSS) is inlined.
+    expect(html).toContain("ParseError");
   });
 
   it("styles theorem-family blocks distinctly", () => {
@@ -42,23 +47,52 @@ describe("renderDeck(limits.chalk)", () => {
     expect(html).toContain('data-step="0"');
     expect(html).toContain('data-step="1"');
     expect(html).toContain('data-step="2"');
-    // The proof slide advertises three steps to the runtime.
     expect(html).toContain('data-steps="3"');
   });
 
-  it("renders sliders, plots, geo, and code as labeled placeholders", () => {
-    expect(html).toContain("chalk-slider");
+  it("renders a live (enabled) slider carrying its name", () => {
     expect(html).toContain('data-slider="a"');
-    expect(html).toContain("chalk-plot");
-    expect(html).toContain("reacts to"); // plot records its slider dependency
-    expect(html).toContain("chalk-geo");
-    expect(html).toContain("chalk-code");
-    expect(html).toContain("const f = (x) =&gt; 3 * x + 1;"); // code escaped
+    expect(html).toContain("chalk-slider chalk-interactive");
+    // The slider input is interactive now, not disabled.
+    const sliderBlock = html.slice(html.indexOf('data-slider="a"'));
+    const input = sliderBlock.slice(0, sliderBlock.indexOf("</div>"));
+    expect(input).toContain('type="range"');
+    expect(input).not.toContain("disabled");
   });
 
-  it("includes navigation runtime and both themes", () => {
-    expect(html).toContain("ArrowRight");
+  it("renders a live plot with a canvas and recorded slider dependency", () => {
+    expect(html).toContain("chalk-plot chalk-interactive");
+    expect(html).toContain('data-expr="a*x^2"');
+    expect(html).toContain('data-vars="a"');
+    expect(html).toContain('data-xvar="x"');
+    expect(html).toContain("<canvas");
+    expect(html).toContain("reacts to");
+  });
+
+  it("marks math that references a slider as reactive, with its template + vars", () => {
+    // $f(x) = a x^2$ on the parabola slide reads slider `a`.
+    expect(html).toContain("data-chalk-math=");
+    expect(html).toContain('data-chalk-vars="a"');
+    // The template keeps the symbolic variable; the initial render substitutes 1.
+    expect(html).toMatch(/data-chalk-math="f\(x\) = a x\^2"/);
+  });
+
+  it("renders a real geo embed target with its source in a data attribute", () => {
+    expect(html).toContain("chalk-geo chalk-interactive");
+    expect(html).toContain("data-geo-src=");
+    expect(html).toContain("chalk-geo__applet");
+    expect(html).toContain("A = Point(1, 0)");
+  });
+
+  it("keeps code cells as labeled placeholders (compute layer is later)", () => {
+    expect(html).toContain("chalk-code");
+    expect(html).toContain("const f = (x) =&gt; 3 * x + 1;");
+  });
+
+  it("includes the reactive runtime, both themes, and reduced-motion handling", () => {
+    expect(html).toContain("ArrowRight"); // navigation runtime present
     expect(html).toContain('[data-theme="dark"]');
     expect(html).toContain("prefers-color-scheme: dark");
+    expect(html).toContain("prefers-reduced-motion: reduce");
   });
 });

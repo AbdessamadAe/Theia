@@ -10,7 +10,8 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./browser": "./src/browser.ts"
+    "./browser": "./src/browser.ts",
+    "./package.json": "./package.json"
   },
   "files": ["dist", "src"],
   "scripts": {
