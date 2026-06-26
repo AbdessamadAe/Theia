@@ -24,7 +24,7 @@ describe("renderDeck(limits.chalk)", () => {
 
   it("renders one section per slide", () => {
     const count = (html.match(/<section class="slide/g) ?? []).length;
-    expect(count).toBe(6);
+    expect(count).toBe(9);
   });
 
   it("renders math with KaTeX and inlines KaTeX's JS for client re-render", () => {
@@ -92,6 +92,19 @@ describe("renderDeck(limits.chalk)", () => {
     expect(html).toContain("const f = (x) =&gt; 3 * x + 1;");
     // Cell source is HTML-escaped in the <pre>; the runtime decodes it.
     expect(html).toContain("chalk.slider(&quot;a&quot;)");
+  });
+
+  it("renders py code cells as live compute cells (Pyodide)", () => {
+    expect(html).toContain('data-chalk-cell="py"');
+    expect(html).toContain("import sympy as sp");
+    expect(html).toContain("import matplotlib.pyplot as plt");
+  });
+
+  it("marks the two-parameter plot as depending on both sliders", () => {
+    expect(html).toContain('data-slider="m"');
+    expect(html).toContain('data-slider="c"');
+    expect(html).toContain('data-expr="m*x + c"');
+    expect(html).toMatch(/data-vars="m,c"|data-vars="c,m"/);
   });
 
   it("includes the reactive runtime, both themes, and reduced-motion handling", () => {

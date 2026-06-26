@@ -45,17 +45,20 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(doc.title).toBe("Limits and Continuity");
   });
 
-  it("splits into the expected slides (one title, five content)", () => {
+  it("splits into the expected slides (one title, eight content)", () => {
     const titleSlides = doc.children.filter((s) => s.kind === "title");
     const contentSlides = doc.children.filter((s) => s.kind === "content");
     expect(titleSlides).toHaveLength(1);
-    expect(contentSlides).toHaveLength(5);
+    expect(contentSlides).toHaveLength(8);
     expect(headingText(titleSlides[0]!)).toBe("Limits and Continuity");
     expect(contentSlides.map(headingText)).toEqual([
       "The intuition behind a limit",
       "Watching a parabola change",
       "A first epsilon–delta proof",
+      "The squeeze theorem",
+      "Lines: two live parameters",
       "Continuity, geometrically",
+      "Seeing the tangent in Python",
       "Checking continuity numerically",
     ]);
   });
@@ -126,6 +129,25 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
       .filter((c): c is InlineMath => c.type === "inlineMath")
       .pop()!;
     expect(lastMath.tex).toBe("\\blacksquare");
+  });
+
+  it("parses the theorem family: theorem, lemma, and example", () => {
+    const slide = slideByHeading("The squeeze theorem");
+    const kinds = slide.children
+      .filter((b): b is TheoremBlock => b.type === "theorem")
+      .map((b) => b.kind);
+    expect(kinds).toEqual(["theorem", "lemma", "example"]);
+  });
+
+  it("parses two sliders and a plot that depends on both", () => {
+    const slide = slideByHeading("Lines: two live parameters");
+    const sliders = slide.children.filter(
+      (b): b is Slider => b.type === "slider",
+    );
+    expect(sliders.map((s) => s.name)).toEqual(["m", "c"]);
+    const plot = slide.children.find((b): b is Plot => b.type === "plot")!;
+    expect(plot.expr).toBe("m*x + c");
+    expect(plot.vars.sort()).toEqual(["c", "m"]);
   });
 
   it("parses a :::geo block, keeping its body verbatim", () => {

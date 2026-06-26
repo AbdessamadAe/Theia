@@ -92,8 +92,9 @@ describe("deck runtime (executed in jsdom)", () => {
   });
 
   it("jumps to the last slide with End and the first with Home", () => {
+    const lastIndex = doc.querySelectorAll(".slide").length - 1;
     press(window, "End");
-    expect(activeIndex(doc)).toBe(5);
+    expect(activeIndex(doc)).toBe(lastIndex);
     press(window, "Home");
     expect(activeIndex(doc)).toBe(0);
   });
