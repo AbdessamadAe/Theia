@@ -137,6 +137,39 @@ body {
 .chalk-derive__stage { position: relative; min-height: 1.6em; }
 .chalk-derive__state { display: block; }
 
+/* Reactive display math morphs in place too; its state child is the stage. */
+.chalk-morph { position: relative; }
+.chalk-morph__state { display: inline-block; }
+
+/* Emphasis effects (Part C). */
+.chalk-emph-highlight {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 4px;
+  padding: 0 2px;
+}
+.chalk-emph-ring {
+  pointer-events: none;
+  border: 2.5px solid var(--accent);
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+/* Follower value label, positioned over the plot canvas by the runtime. */
+.chalk-plot__label {
+  position: absolute;
+  font-size: 0.72em;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
 .chalk-reactive { border-radius: 4px; }
 span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }

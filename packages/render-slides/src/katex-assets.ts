@@ -55,12 +55,23 @@ export function inlinedKatexJs(): string {
  * text) rather than aborting the whole build, so one bad formula is visible
  * and fixable without losing the rest of the deck. `trust` enables author
  * markup like `\htmlClass{ck-…}{…}` (used for derive match hints). */
-export function renderMath(tex: string, display: boolean, trust = false): string {
+export function renderMath(
+  tex: string,
+  display: boolean,
+  trust = false,
+  macros?: Record<string, string>,
+): string {
   return katex.renderToString(tex, {
     displayMode: display,
     throwOnError: false,
     output: "html",
     trust,
     strict: false,
+    macros,
   });
 }
+
+/** KaTeX macro making `\mark{…}` a targetable span for emphasis effects. */
+export const MARK_MACRO: Record<string, string> = {
+  "\\mark": "\\htmlClass{ck-mark}{#1}",
+};

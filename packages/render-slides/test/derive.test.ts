@@ -80,3 +80,87 @@ describe("derive ↔ navigation integration (jsdom)", () => {
     expect(stageText(w)).not.toContain("+ c");
   });
 });
+
+/** A slide combining +step (reveal), +to (morph) and +emphasize on one flow. */
+const combined = renderDeck(
+  parse(
+    [
+      "## Combined",
+      "",
+      ":::example Why",
+      "+step one",
+      "+step two",
+      ":::",
+      "",
+      ":::derive",
+      "$$ a + b $$",
+      "+to $$ \\mark{b} + a + c $$",
+      "+emphasize highlight b",
+      ":::",
+      "",
+    ].join("\n"),
+  ),
+);
+
+describe("combined +step / +to / +emphasize advance ordering (jsdom)", () => {
+  async function bootCombined(): Promise<Window & typeof globalThis> {
+    const dom = new JSDOM(combined, {
+      runScripts: "dangerously",
+      pretendToBeVisual: true,
+      url: "https://example.test/",
+    });
+    const w = dom.window as unknown as Window & typeof globalThis;
+    for (let i = 0; i < 50; i++) {
+      if (w.document.querySelector(".slide.is-active")) return w;
+      await new Promise((r) => setTimeout(r, 0));
+    }
+    throw new Error("runtime did not boot");
+  }
+
+  const revealedSteps = (w: Window): number =>
+    w.document.querySelectorAll(".chalk-step.is-revealed").length;
+
+  it("counts 3 advances: two steps then one morph", async () => {
+    const w = await bootCombined();
+    expect(w.document.querySelector(".slide")!.getAttribute("data-steps")).toBe(
+      "3",
+    );
+  });
+
+  it("sequences forward (steps, then morph + emphasis) and reverses on ←", async () => {
+    const w = await bootCombined();
+    const stage = () =>
+      w.document.querySelector(".chalk-derive__stage")?.textContent ?? "";
+    const hasHighlight = () =>
+      !!w.document.querySelector(".chalk-derive__stage .chalk-emph-highlight");
+
+    // Forward: step 1, step 2, then the derive morphs and emphasizes.
+    press(w, "ArrowRight");
+    await tick();
+    expect(revealedSteps(w)).toBe(1);
+    expect(stage()).toContain("a + b"); // derive not yet advanced
+
+    press(w, "ArrowRight");
+    await tick();
+    expect(revealedSteps(w)).toBe(2);
+    expect(stage()).toContain("a + b");
+
+    press(w, "ArrowRight");
+    await tick();
+    expect(stage()).toContain("+ a + c"); // morphed to the second state
+    expect(hasHighlight()).toBe(true); // emphasis fired on the marked term
+
+    // Reverse: the derive (last advance) un-does first, steps remain.
+    press(w, "ArrowLeft");
+    await tick();
+    expect(stage()).toContain("a + b");
+    expect(hasHighlight()).toBe(false); // emphasis cleared on reverse
+    expect(revealedSteps(w)).toBe(2);
+
+    press(w, "ArrowLeft");
+    await tick();
+    expect(revealedSteps(w)).toBe(1);
+  });
+});
+
+const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));

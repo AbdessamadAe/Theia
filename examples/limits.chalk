@@ -70,12 +70,19 @@ We show $\lim_{x \to 2} (3x + 1) = 7$.
 
 ## Completing the square
 
-Manipulating an equation should *move*, not blink. Advance the slide (→) and the
-terms that survive glide to their new homes while the rest morph in and out.
+Manipulating an equation should *move*, not blink. Advance the slide (→): first
+the reasoning reveals step by step, then the equation morphs and the new term is
+circled. Steps, morphs, and emphasis all ride one advance flow.
+
+:::example Why it works
++step Factor $a$ out of the first two terms.
++step Add and subtract $\left(\tfrac{b}{2a}\right)^2$ to complete the square.
+:::
 
 :::derive
 $$ a x^2 + b x + c $$
-+to $$ a\left(x + \tfrac{b}{2a}\right)^2 + \left(c - \tfrac{b^2}{4a}\right) $$
++to $$ a\left(x + \mark{\tfrac{b}{2a}}\right)^2 + \left(c - \tfrac{b^2}{4a}\right) $$
++emphasize circumscribe
 :::
 
 When two terms look alike, tag them with `\htmlClass{ck-NAME}{…}` so the matcher
@@ -169,6 +176,26 @@ if (ctx) {
   ctx.stroke();
 }
 ```
+
+## Following a point along the curve
+
+Drag $t$: the point $P$ glides along $f(x) = x^2$, the **tangent** line and a
+**dropline** track it, the value **label** updates, and the coordinates below
+re-morph to match — all driven by the one slider through the reactive graph.
+
+@slider t [-2, 2] = 0.6
+
+@plot f(x) = x^2
+
+@point P = (t, f(t))
+
+@follow tangent at P
+
+@follow dropline at P
+
+@follow label at P
+
+$$ P = \left(t,\ t^2\right) $$
 
 ## Continuity, geometrically
 

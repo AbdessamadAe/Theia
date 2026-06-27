@@ -24,7 +24,12 @@ describe("renderDeck(limits.chalk)", () => {
 
   it("renders one section per slide", () => {
     const count = (html.match(/<section class="slide/g) ?? []).length;
-    expect(count).toBe(10);
+    expect(count).toBe(11);
+  });
+
+  it("emits follower attributes on a plot with @point/@follow (Part B)", () => {
+    expect(html).toContain('data-point-x="t"');
+    expect(html).toContain('data-follow="tangent,dropline,label"');
   });
 
   it("renders :::derive blocks with state JSON and advance metadata", () => {

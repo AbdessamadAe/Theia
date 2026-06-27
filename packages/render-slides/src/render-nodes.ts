@@ -13,7 +13,7 @@ import type {
 } from "@chalk/ast";
 import { formatValue, referencedVars, substituteLatex } from "@chalk/runtime";
 import { escapeHtml } from "./escape.js";
-import { renderMath } from "./katex-assets.js";
+import { MARK_MACRO, renderMath } from "./katex-assets.js";
 
 /**
  * Per-slide rendering state.
@@ -153,13 +153,15 @@ function renderDerive(block: DeriveBlock, ctx: SlideCtx): string {
   const base = ctx.advance;
   ctx.advance += transitions;
 
-  const statesJson = JSON.stringify(states.map((s) => s.tex)).replace(
-    /</g,
-    "\\u003c", // keep the JSON safe inside the <script> tag
-  );
+  // Each state carries its tex plus any +emphasize specs, for the runtime.
+  const statesJson = JSON.stringify(
+    states.map((s) =>
+      s.emphasis ? { tex: s.tex, emphasis: s.emphasis } : { tex: s.tex },
+    ),
+  ).replace(/</g, "\\u003c"); // keep the JSON safe inside the <script> tag
 
   return `<div class="chalk-block chalk-derive" data-advance-base="${base}" data-transitions="${transitions}" data-driver="${block.driver}">
-  <div class="chalk-derive__stage">${renderMath(initialTex, true, true)}</div>
+  <div class="chalk-derive__stage">${renderMath(initialTex, true, true, MARK_MACRO)}</div>
   <script type="application/json" class="chalk-derive__states">${statesJson}</script>
 </div>`;
 }
@@ -218,11 +220,18 @@ function renderPlot(block: Plot): string {
           .map((v) => `<code>${escapeHtml(v)}</code>`)
           .join(", ")}</span>`
       : `<span class="chalk-plot__deps">static curve</span>`;
+  // Follower attributes (Part B): a tracking point + tangent/dropline/label.
+  const followAttrs =
+    block.pointX !== undefined
+      ? ` data-point-x="${escapeHtml(block.pointX)}" data-follow="${escapeHtml(
+          (block.follows ?? []).join(","),
+        )}"`
+      : "";
   return `<div class="chalk-block chalk-plot chalk-interactive" data-expr="${escapeHtml(
     block.expr,
   )}" data-vars="${escapeHtml(block.vars.join(","))}" data-xvar="${escapeHtml(
     deriveXVar(block.lhs),
-  )}" data-xmin="-5" data-xmax="5">
+  )}" data-xmin="-5" data-xmax="5"${followAttrs}>
   <div class="chalk-plot__head"><span class="chalk-tag">plot</span><code class="chalk-plot__expr">${escapeHtml(
     label,
   )}</code>${deps}</div>
