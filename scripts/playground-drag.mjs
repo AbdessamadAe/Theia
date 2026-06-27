@@ -1,5 +1,5 @@
 // Phase 12 drag-on-preview — real-browser checks (Playwright).
-// Run a preview server first: npm run preview -w @chalk/playground
+// Run a preview server first: npm run preview -w chalk
 import { chromium } from "@playwright/test";
 import { parse } from "@chalk/parser";
 import lzString from "lz-string";

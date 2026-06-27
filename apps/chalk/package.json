@@ -1,8 +1,8 @@
 {
-  "name": "@chalk/playground",
+  "name": "chalk",
   "version": "0.1.0",
   "private": true,
-  "description": "A zero-install browser playground for Chalk: edit .chalk, see the live deck, share by URL — all compiled client-side with the engine packages.",
+  "description": "The Chalk web app: landing page, zero-install playground, gallery, and docs — edit .chalk and see the live deck, all compiled client-side with the engine packages.",
   "type": "module",
   "scripts": {
     "prebuild": "node scripts/prebuild.mjs",

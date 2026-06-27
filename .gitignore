@@ -4,7 +4,7 @@ packages/*/dist/
 .DS_Store
 # compiled decks emitted next to sources
 examples/*.html
-# playground (apps/) build output + prebuilt (generated) engine assets/examples
-apps/playground/dist/
-apps/playground/dist-tsc/
-apps/playground/src/generated/
+# web app (apps/) build output + prebuilt (generated) engine assets/examples
+apps/*/dist/
+apps/*/dist-tsc/
+apps/*/src/generated/

@@ -1,5 +1,5 @@
 // Phase 15 media — real-browser checks (Playwright) against the running playground.
-// Run a preview server first: npm run preview -w @chalk/playground
+// Run a preview server first: npm run preview -w chalk
 import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import lzString from "lz-string";

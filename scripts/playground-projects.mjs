@@ -1,5 +1,5 @@
 // Phase 17 file & project management — real-browser checks (Playwright).
-// Run a preview server first: npm run preview -w @chalk/playground
+// Run a preview server first: npm run preview -w chalk
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.PG_URL || "http://localhost:5173/";

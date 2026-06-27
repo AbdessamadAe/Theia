@@ -1,5 +1,5 @@
 // Phase 11 authoring assists — real-browser checks (Playwright) against the
-// running playground. Run a preview server first (npm run preview -w @chalk/playground).
+// running playground. Run a preview server first (npm run preview -w chalk).
 import { chromium } from "@playwright/test";
 import { parse } from "@chalk/parser";
 import lzString from "lz-string";
