@@ -34,9 +34,9 @@ export function PreviewFrame({
   const wide = useMediaQuery("(min-width: 1024px)");
   const [easelOn, setEaselOn] = React.useState<boolean>(() => {
     try {
-      return localStorage.getItem("chalk-easel") !== "off"; // default ON
+      return localStorage.getItem("chalk-easel") === "on"; // default OFF
     } catch {
-      return true;
+      return false;
     }
   });
   const showEasel = wide && easelOn;
