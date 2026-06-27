@@ -1,6 +1,9 @@
 import { compileChalk } from "@chalk/render-slides/core";
+import type { EditorView } from "@codemirror/view";
 import * as React from "react";
 import { Editor } from "@/components/Editor";
+import { InsertPalette } from "@/components/InsertPalette";
+import { Outline } from "@/components/Outline";
 import { Preview } from "@/components/Preview";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -13,6 +16,8 @@ import {
 } from "@/components/ui/select";
 import { ASSETS } from "@/generated/assets";
 import { EXAMPLES } from "@/generated/examples";
+import { applySnippet, chalkSlashPalette } from "@/lib/insert";
+import type { SnippetDef } from "@/lib/snippets";
 import { buildShareUrl, readShareFromHash, SHARE_LIMIT } from "@/share";
 
 function compile(source: string): { html: string; slides: number; error?: string } {
@@ -32,8 +37,39 @@ export function App(): React.ReactElement {
   const [toast, setToast] = React.useState<string | null>(null);
 
   const [freshKey, setFreshKey] = React.useState(0);
+  const [paletteOpen, setPaletteOpen] = React.useState(false);
+  const [showOutline, setShowOutline] = React.useState(true);
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const [editorView, setEditorView] = React.useState<EditorView | null>(null);
   const timer = React.useRef<number | undefined>(undefined);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const slashExtension = React.useMemo(() => [chalkSlashPalette()], []);
+
+  // Reflect the preview's active slide in the outline (srcdoc iframes are
+  // same-origin, so we can read the deck's active slide). Read-only.
+  React.useEffect(() => {
+    const id = window.setInterval(() => {
+      try {
+        const doc = iframeRef.current?.contentDocument;
+        const active = doc?.querySelector(".slide.is-active");
+        const idx = active ? Number(active.getAttribute("data-index")) : 0;
+        setCurrentSlide((c) => (Number.isFinite(idx) && idx !== c ? idx : c));
+      } catch {
+        /* opaque-origin guard */
+      }
+    }, 400);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const onInsert = (def: SnippetDef): void => {
+    if (editorView) applySnippet(editorView, def);
+  };
+
+  // Read-only test hook: lets e2e tests assert the canonical document text.
+  React.useEffect(() => {
+    (window as unknown as { __chalkDoc?: () => string }).__chalkDoc = () =>
+      editorView?.state.doc.toString() ?? "";
+  }, [editorView]);
 
   const showToast = React.useCallback((msg: string, ms = 3500) => {
     setToast(msg);
@@ -125,6 +161,18 @@ export function App(): React.ReactElement {
             ))}
           </SelectContent>
         </Select>
+        <Button id="insert" variant="secondary" size="sm" onClick={() => setPaletteOpen(true)}>
+          + Insert
+        </Button>
+        <Button
+          id="toggle-outline"
+          variant="ghost"
+          size="sm"
+          aria-pressed={showOutline}
+          onClick={() => setShowOutline((v) => !v)}
+        >
+          Outline
+        </Button>
         <div className="flex-1" />
         <Button id="present" variant="outline" size="sm" onClick={onPresent}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -140,9 +188,26 @@ export function App(): React.ReactElement {
         </Button>
       </header>
 
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
-        <ResizablePanel defaultSize={50} minSize={25} className="relative">
-          <Editor value={source} onChange={onSourceChange} />
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="flex-1"
+        key={showOutline ? "with-outline" : "no-outline"}
+      >
+        {showOutline && (
+          <>
+            <ResizablePanel defaultSize={20} minSize={12} className="bg-card/40">
+              <Outline source={source} view={editorView} currentSlide={currentSlide} />
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+          </>
+        )}
+        <ResizablePanel defaultSize={showOutline ? 42 : 52} minSize={25} className="relative">
+          <Editor
+            value={source}
+            onChange={onSourceChange}
+            extensions={slashExtension}
+            onReady={setEditorView}
+          />
           {error && (
             <div
               role="alert"
@@ -153,13 +218,15 @@ export function App(): React.ReactElement {
           )}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={50} minSize={25} className="relative">
+        <ResizablePanel defaultSize={showOutline ? 38 : 48} minSize={25} className="relative">
           <Preview html={html} freshKey={freshKey} iframeRef={iframeRef} />
           <div className="text-muted-foreground bg-background/70 pointer-events-none absolute bottom-2 right-2 rounded-md px-2 py-0.5 text-[11px]">
             {slides ? `${slides} slide${slides === 1 ? "" : "s"}` : ""}
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      <InsertPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onPick={onInsert} />
 
       {toast && (
         <div className="bg-foreground text-background fixed bottom-5 left-1/2 z-50 max-w-[80%] -translate-x-1/2 rounded-lg px-4 py-2 text-sm shadow-lg">

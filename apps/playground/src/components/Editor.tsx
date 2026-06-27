@@ -1,3 +1,4 @@
+import type { Extension } from "@codemirror/state";
 import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
@@ -7,16 +8,22 @@ import { chalk } from "@/chalk-lang";
 interface EditorProps {
   value: string;
   onChange: (value: string) => void;
+  /** Extra editor extensions (e.g. the slash insert palette). */
+  extensions?: Extension[];
+  /** Receives the live EditorView (for palette/outline edits). */
+  onReady?: (view: EditorView) => void;
 }
 
 /** A CodeMirror 6 editor with Chalk highlighting, wrapped for React. External
- * `value` changes (e.g. loading an example) are synced into the editor without
- * clobbering live typing. */
-export function Editor({ value, onChange }: EditorProps): React.ReactElement {
+ * `value` changes (e.g. loading an example) are synced in without clobbering
+ * live typing; the view is exposed via `onReady` for programmatic edits. */
+export function Editor({ value, onChange, extensions, onReady }: EditorProps): React.ReactElement {
   const host = React.useRef<HTMLDivElement>(null);
   const view = React.useRef<EditorView | null>(null);
   const onChangeRef = React.useRef(onChange);
+  const onReadyRef = React.useRef(onReady);
   onChangeRef.current = onChange;
+  onReadyRef.current = onReady;
 
   React.useEffect(() => {
     if (!host.current) return;
@@ -28,6 +35,7 @@ export function Editor({ value, onChange }: EditorProps): React.ReactElement {
           basicSetup,
           chalk(),
           EditorView.lineWrapping,
+          ...(extensions ?? []),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) onChangeRef.current(u.state.doc.toString());
           }),
@@ -35,6 +43,7 @@ export function Editor({ value, onChange }: EditorProps): React.ReactElement {
       }),
     });
     view.current = v;
+    onReadyRef.current?.(v);
     return () => v.destroy();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
