@@ -13,11 +13,18 @@
     "./browser": "./src/browser.ts",
     "./package.json": "./package.json"
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@chalk/compute": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.185.0",
+    "three": "^0.160.1"
   }
 }

@@ -17,6 +17,7 @@
  */
 import { type CoordSystem, makeCoordSystem, niceStep, parseRange } from "./coord.js";
 import { type CompiledExpr, compileExpr } from "./expr.js";
+import { initScene3D, type Scene3DOptions } from "./scene3d.js";
 
 interface GraphLike {
   get(name: string): number | undefined;
@@ -100,10 +101,11 @@ function compileSafe(src: string | undefined): CompiledExpr | undefined {
   }
 }
 
-export function initScenes(graph: GraphLike): void {
-  document
-    .querySelectorAll<HTMLElement>(".chalk-scene")
-    .forEach((host) => setupScene(host, graph));
+export function initScenes(graph: GraphLike, options: Scene3DOptions = {}): void {
+  document.querySelectorAll<HTMLElement>(".chalk-scene").forEach((host) => {
+    if (host.getAttribute("data-3d") === "true") initScene3D(host, graph, options);
+    else setupScene(host, graph);
+  });
 }
 
 function setupScene(host: HTMLElement, graph: GraphLike): void {

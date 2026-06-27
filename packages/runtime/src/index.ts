@@ -49,3 +49,11 @@ export {
   type CoordSystem,
   type PixelRect,
 } from "./coord.js";
+
+export {
+  makeCoordSystem3D,
+  projectToScreen,
+  applyMat4,
+  type CoordSystem3D,
+  type ScreenPoint,
+} from "./proj3d.js";
