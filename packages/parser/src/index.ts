@@ -6,9 +6,11 @@ import type {
   DeriveState,
   DisplayMath,
   DocumentNode,
+  EmphasisSpec,
   GeoBlock,
   Paragraph,
   Plot,
+  PlotFollower,
   Slide,
   Slider,
   Step,
@@ -32,6 +34,8 @@ function isBlockStart(trimmed: string): boolean {
     trimmed.startsWith("$$") ||
     trimmed.startsWith("@slider") ||
     trimmed.startsWith("@plot") ||
+    trimmed.startsWith("@point") ||
+    trimmed.startsWith("@follow") ||
     /^#{1,2}[ \t]+/.test(trimmed)
   );
 }
@@ -55,6 +59,28 @@ function collectSliderNames(lines: { text: string }[]): Set<string> {
     if (m) names.add(m[1]!);
   }
   return names;
+}
+
+/** The most recent Plot in a block list (for attaching @point / @follow). */
+function lastPlot(blocks: Block[]): Plot | undefined {
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const b = blocks[i]!;
+    if (b.type === "plot") return b;
+  }
+  return undefined;
+}
+
+/** Parse the tail of a `+emphasize` directive into an effect + optional target. */
+function parseEmphasis(rest: string): EmphasisSpec {
+  const trimmed = rest.trim();
+  const m = /^(highlight|pulse|circumscribe)\b\s*(.*)$/.exec(trimmed);
+  if (m) {
+    const target = m[2]!.trim();
+    return target
+      ? { effect: m[1] as EmphasisSpec["effect"], target }
+      : { effect: m[1] as EmphasisSpec["effect"] };
+  }
+  return trimmed ? { effect: "pulse", target: trimmed } : { effect: "pulse" };
 }
 
 /** Identifiers in `expr` that name a declared slider, in first-seen order. */
@@ -291,6 +317,29 @@ export function parse(source: string): DocumentNode {
         }
       }
 
+      // --- @point P = (t, f(t)) — a tracking point on the preceding plot ----
+      if (t.startsWith("@point")) {
+        const m = /^@point\s+(\w+)\s*=\s*\(([^,]+),(.*)\)\s*$/.exec(t);
+        const plot = lastPlot(blocks);
+        if (m && plot) {
+          plot.pointName = m[1]!;
+          plot.pointX = m[2]!.trim();
+          k++;
+          continue;
+        }
+      }
+
+      // --- @follow <kind> at P — a follower tracking the point --------------
+      if (t.startsWith("@follow")) {
+        const m = /^@follow\s+(tangent|dropline|label)\b/.exec(t);
+        const plot = lastPlot(blocks);
+        if (m && plot) {
+          (plot.follows ??= []).push(m[1] as PlotFollower);
+          k++;
+          continue;
+        }
+      }
+
       // --- Paragraph: accumulate consecutive prose lines -------------------
       let e = k + 1;
       while (e < end) {
@@ -400,6 +449,14 @@ export function parse(source: string): DocumentNode {
     while (s < bodyEnd) {
       let txt = lines[s]!.text;
       if (txt.trim() === "") {
+        s++;
+        continue;
+      }
+      // `+emphasize [effect] [target]` attaches to the most recent state.
+      const em = /^\s*\+emphasize\b\s*(.*)$/.exec(txt);
+      if (em) {
+        const last = states[states.length - 1];
+        if (last) (last.emphasis ??= []).push(parseEmphasis(em[1]!));
         s++;
         continue;
       }

@@ -141,7 +141,10 @@ export interface Slider extends NodeBase {
   step?: number;
 }
 
-/** A `@plot expr` declaration. */
+/** Follower kinds that can track a plot's point (Manim "updaters"). */
+export type PlotFollower = "tangent" | "dropline" | "label";
+
+/** A `@plot expr` declaration, optionally with a tracking point + followers. */
 export interface Plot extends NodeBase {
   type: "plot";
   /** The right-hand side actually plotted (e.g. `a*x^2`). */
@@ -150,6 +153,12 @@ export interface Plot extends NodeBase {
   lhs?: string;
   /** Slider variable names that appear in `expr` — the live dependencies. */
   vars: string[];
+  /** `@point P = (t, f(t))`: the point's x-expression (it rides the curve). */
+  pointX?: string;
+  /** Optional name of the tracking point (from `@point P = …`). */
+  pointName?: string;
+  /** `@follow …` attachments that track the point live. */
+  follows?: PlotFollower[];
 }
 
 /** A `:::geo … :::` geometry block; `source` is its verbatim body. */
@@ -190,12 +199,22 @@ export interface DeriveBlock extends NodeBase {
   states: DeriveState[];
 }
 
+/** An emphasis effect fired on arrival at a derive state (Part C). */
+export type EmphasisEffect = "highlight" | "pulse" | "circumscribe";
+
+/** A single `+emphasize [effect] [target]` directive. `target` is the marked
+ * sub-expression text (`\mark{…}`); omitted means every mark in the state. */
+export interface EmphasisSpec {
+  effect: EmphasisEffect;
+  target?: string;
+}
+
 /** One state of a {@link DeriveBlock}. `tex` is the verbatim KaTeX source. */
 export interface DeriveState extends NodeBase {
   type: "deriveState";
   tex: string;
-  /** Future: token keys to emphasize/highlight on arrival at this state. */
-  emphasis?: string[];
+  /** `+emphasize` directives fired when this state is reached. */
+  emphasis?: EmphasisSpec[];
 }
 
 // ---------------------------------------------------------------------------

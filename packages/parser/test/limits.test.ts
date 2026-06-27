@@ -46,11 +46,11 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(doc.title).toBe("Limits and Continuity");
   });
 
-  it("splits into the expected slides (one title, nine content)", () => {
+  it("splits into the expected slides (one title, ten content)", () => {
     const titleSlides = doc.children.filter((s) => s.kind === "title");
     const contentSlides = doc.children.filter((s) => s.kind === "content");
     expect(titleSlides).toHaveLength(1);
-    expect(contentSlides).toHaveLength(9);
+    expect(contentSlides).toHaveLength(10);
     expect(headingText(titleSlides[0]!)).toBe("Limits and Continuity");
     expect(contentSlides.map(headingText)).toEqual([
       "The intuition behind a limit",
@@ -59,6 +59,7 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
       "Completing the square",
       "The squeeze theorem",
       "Lines: two live parameters",
+      "Following a point along the curve",
       "Continuity, geometrically",
       "Seeing the tangent in Python",
       "Checking continuity numerically",
@@ -133,7 +134,7 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(lastMath.tex).toBe("\\blacksquare");
   });
 
-  it("parses a :::derive block into ordered equation states", () => {
+  it("parses a :::derive block into ordered equation states with emphasis", () => {
     const slide = slideByHeading("Completing the square");
     const derives = slide.children.filter(
       (b): b is DeriveBlock => b.type === "derive",
@@ -144,8 +145,18 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(square.states).toHaveLength(2);
     expect(square.states[0]!.tex).toBe("a x^2 + b x + c");
     expect(square.states[1]!.tex).toContain("\\left(x +");
+    // The +emphasize directive attaches to the state it follows (Part C).
+    expect(square.states[1]!.emphasis).toEqual([{ effect: "circumscribe" }]);
     // The hinted derive keeps its \htmlClass match hints verbatim in the tex.
     expect(derives[1]!.states[0]!.tex).toContain("\\htmlClass{ck-sin}");
+  });
+
+  it("parses @point and @follow followers onto the preceding @plot (Part B)", () => {
+    const slide = slideByHeading("Following a point");
+    const plot = slide.children.find((b): b is Plot => b.type === "plot")!;
+    expect(plot.pointName).toBe("P");
+    expect(plot.pointX).toBe("t");
+    expect(plot.follows).toEqual(["tangent", "dropline", "label"]);
   });
 
   it("parses the theorem family: theorem, lemma, and example", () => {
