@@ -6,6 +6,7 @@ import type {
   Inline,
   ListBlock,
   Plot,
+  SceneBlock,
   Slide,
   Slider,
   TheoremBlock,
@@ -135,7 +136,42 @@ function renderBlock(block: Block, ctx: SlideCtx): string {
       return renderList(block, ctx);
     case "derive":
       return renderDerive(block, ctx);
+    case "scene":
+      return renderScene(block, ctx);
   }
+}
+
+/**
+ * A `:::scene` block (Phase 8): a canvas the runtime draws coordinate systems
+ * and objects onto, a DOM overlay for labels, and a JSON description of the
+ * objects + animations. Its `+animate` verbs occupy advance stops, recorded as
+ * `data-advance-base` + `data-transitions`, so they share the one advance flow.
+ */
+function renderScene(block: SceneBlock, ctx: SlideCtx): string {
+  const transitions = block.steps.length;
+  const base = ctx.advance;
+  ctx.advance += transitions;
+
+  const model = {
+    objects: block.objects.map((o) =>
+      o.on !== undefined
+        ? { kind: o.kind, name: o.name, on: o.on, args: o.args }
+        : { kind: o.kind, name: o.name, args: o.args },
+    ),
+    anims: block.steps.map((s) => ({
+      verb: s.verb,
+      target: s.target,
+      args: s.args,
+      index: s.index,
+    })),
+  };
+  const json = JSON.stringify(model).replace(/</g, "\\u003c");
+
+  return `<div class="chalk-block chalk-scene" data-advance-base="${base}" data-transitions="${transitions}">
+  <canvas class="chalk-scene__canvas"></canvas>
+  <div class="chalk-scene__overlay"></div>
+  <script type="application/json" class="chalk-scene__data">${json}</script>
+</div>`;
 }
 
 /**

@@ -24,7 +24,16 @@ describe("renderDeck(limits.chalk)", () => {
 
   it("renders one section per slide", () => {
     const count = (html.match(/<section class="slide/g) ?? []).length;
-    expect(count).toBe(11);
+    expect(count).toBe(12);
+  });
+
+  it("renders a :::scene with a canvas, overlay, and object/anim JSON (Phase 8A)", () => {
+    expect(html).toContain("chalk-scene__canvas");
+    expect(html).toContain("chalk-scene__overlay");
+    expect(html).toContain('class="chalk-scene__data"');
+    expect(html).toContain('"kind":"axes"');
+    expect(html).toContain('"verb":"write"');
+    expect(html).toContain('data-transitions="6"'); // six +animate verbs
   });
 
   it("emits follower attributes on a plot with @point/@follow (Part B)", () => {

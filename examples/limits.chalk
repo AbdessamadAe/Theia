@@ -197,6 +197,32 @@ re-morph to match — all driven by the one slider through the reactive graph.
 
 $$ P = \left(t,\ t^2\right) $$
 
+## A graphing scene
+
+A `:::scene` draws on real axes. Here the parabola $f(x)=k x^2$, the area under
+it up to $s$ (as Riemann rectangles), a point $P$ on the curve, and the tangent
+there are all **reactive** — drag $k$ to reshape the curve and $s$ to slide the
+point, and every object updates live on one canvas.
+
+@slider k [0.2, 3] = 1
+
+@slider s [-2.5, 2.5] = 1.2
+
+:::scene
+@axes ax x:[-3, 3] y:[-1, 9] xlabel:"x" ylabel:"y" grid
+@area ar on ax under f from 0 to s rects 12
+@plot f on ax : k*x^2
+@tangent tan on ax to f at P
+@point P on ax at (s, k*s^2)
+@label lab on ax at (-1.7, 7.5) "f(x) = k x^2"
++animate create ax
++animate write f
++animate fade-in ar
++animate grow P
++animate fade-in tan
++animate indicate P
+:::
+
 ## Continuity, geometrically
 
 A function is **continuous** at $a$ when its limit there equals its value:

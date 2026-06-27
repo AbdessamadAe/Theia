@@ -170,6 +170,28 @@ body {
   box-shadow: var(--shadow);
 }
 
+/* ---- Scenes (Phase 8 graphing) ---- */
+.chalk-scene { position: relative; margin: 18px 0; }
+.chalk-scene__canvas {
+  display: block;
+  width: 100%;
+  height: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.chalk-scene__overlay { position: absolute; inset: 0; pointer-events: none; }
+.chalk-scene__label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 0.8em;
+  color: var(--fg);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  padding: 0 4px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
 .chalk-reactive { border-radius: 4px; }
 span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
