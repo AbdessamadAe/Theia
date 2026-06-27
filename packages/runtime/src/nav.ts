@@ -62,7 +62,14 @@ export function initNav(): void {
       titleEl.textContent = h ? h.textContent : "";
     }
     if (`#${current + 1}` !== location.hash) {
-      history.replaceState(null, "", `#${current + 1}`);
+      // Wrapped: replaceState throws in an opaque-origin (about:srcdoc) iframe,
+      // e.g. when a deck is embedded in the playground preview. Hash sync is a
+      // nicety; never let it break navigation.
+      try {
+        history.replaceState(null, "", `#${current + 1}`);
+      } catch {
+        /* embedded deck: skip URL hash sync */
+      }
     }
   }
 
