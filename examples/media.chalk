@@ -1,0 +1,48 @@
+# Images & video
+
+In Chalk, media is a first-class object: **named, positioned, reactive, and
+choreographed by advance** — just like a plot or a point.
+
+## A figure inside a scene
+
+An `@image` is a scene object — placed `on` the axes, sized in axis units, and
+carrying *alt text* for accessibility. Here a label card sits beside the curve.
+
+:::scene
+@axes ax x:[-4, 4] y:[-1, 7] grid
+@plot f on ax : 0.5*x^2
+@image card on ax of "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='90'><rect width='160' height='90' rx='10' fill='%230891b2'/><text x='80' y='54' font-size='26' fill='white' text-anchor='middle'>y = ½x²</text></svg>" at (-2.2, 5.2) width:2.6 alt:"A card labelling the parabola y = one half x squared"
+:::
+
+## A media property bound to a slider
+
+Bind opacity (or position, or size) to a slider and the figure updates live —
+the same reactive graph that drives everything else.
+
+@slider a [0, 1] = 0.65
+
+:::scene
+@axes ax x:[-4, 4] y:[-1, 7] grid
+@plot f on ax : 0.5*x^2
+@image ghost on ax of "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='130' height='130'><circle cx='65' cy='65' r='60' fill='%23f59e0b'/><text x='65' y='75' font-size='30' fill='white' text-anchor='middle'>!</text></svg>" at (2, 4.2) width:2.2 opacity:a alt:"A fading annotation marker"
+:::
+
+Drag `a` to fade the marker in and out.
+
+## A figure in prose
+
+Inline markdown images work in ordinary text too — drop ![a small glyph](data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='22' height='22'><circle cx='11' cy='11' r='10' fill='%230891b2'/></svg>) right in a sentence, mapped to the same image rendering.
+
+## A video segment on advance
+
+A `@video` integrates with the advance flow: advancing plays the **0:03–0:09**
+segment, and a later advance pauses it. Leaving the slide stops it too.
+
+:::scene
+@axes ax x:[-5, 5] y:[-3, 5]
+@video clip on ax of "https://mdn.github.io/shared-assets/videos/flower.mp4" at (0, 1) width:7
++animate play clip from 0:03 to 0:09
++animate pause clip
+:::
+
+*(The video is a remote CC0 sample, so this slide needs a network connection.)*
