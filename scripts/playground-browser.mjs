@@ -26,6 +26,13 @@ page.on("pageerror", (e) => errors.push(String(e)));
 const deck = page.frameLocator("#preview");
 const slideCount = async () => deck.locator(".slide").count();
 
+// Drive the shadcn (Radix) Select instead of a native <select>.
+async function selectExample(nameRe) {
+  await page.getByTestId("examples").click();
+  await page.getByRole("option", { name: nameRe }).click();
+  await sleep(300);
+}
+
 await page.goto(URL);
 await page.waitForSelector(".cm-editor");
 await page.waitForFunction(() => {
@@ -44,6 +51,14 @@ ok(
   "deck is scaled to fit the preview pane (no overflow)",
   !!deckBox && !!iframeBox && deckBox.width <= iframeBox.width + 2 && deckBox.height <= iframeBox.height + 2,
   `deck ${Math.round(deckBox?.width)}×${Math.round(deckBox?.height)} ⊂ pane ${Math.round(iframeBox?.width)}×${Math.round(iframeBox?.height)}`,
+);
+// The deck is centred (symmetric left/right gaps) — no spurious left padding.
+const leftGap = Math.round(deckBox.x - iframeBox.x);
+const rightGap = Math.round(iframeBox.x + iframeBox.width - (deckBox.x + deckBox.width));
+ok(
+  "deck is centred in the pane (no left padding / right overflow)",
+  Math.abs(leftGap - rightGap) <= 2 && leftGap >= 0,
+  `left ${leftGap}px vs right ${rightGap}px`,
 );
 
 // Typing recompiles live AND keeps the current slide.
@@ -72,14 +87,17 @@ ok("live recompile keeps you on the current slide", activeIdx === "1", `active s
 await page.locator(".cm-content").click();
 await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home");
 await page.keyboard.type("## Broken math\n\n$\\frac{1}{$ oops\n\n");
-await sleep(600);
-const stillHasSlides = (await slideCount()) > 0;
-const hasKatexError = await deck.locator(".katex-error, [style*='cc0000'], [style*='#c00']").count();
-ok("a math error renders inline, the pane is not blank", stillHasSlides && hasKatexError > 0, `katex-error nodes: ${hasKatexError}`);
+// KaTeX renders parse errors in place with its error colour (#cc0000); check
+// the compiled srcdoc (synchronous) to avoid the iframe reload race.
+await page.waitForFunction(() => /cc0000|katex-error/i.test(document.querySelector("#preview").srcdoc || ""), null, { timeout: 4000 }).catch(() => {});
+const srcdoc = await page.evaluate(() => document.querySelector("#preview").srcdoc || "");
+const stillHasSlides = (srcdoc.match(/<section class="slide/g) || []).length > 0;
+const hasKatexError = /cc0000|katex-error/i.test(srcdoc);
+ok("a math error renders inline, the pane is not blank", stillHasSlides && hasKatexError, `slides ${(srcdoc.match(/<section class="slide/g) || []).length}, error markup: ${hasKatexError}`);
 await page.screenshot({ path: `${SHOTS}/02-inline-error.png` });
 
 // Switch to the 3D example → three.js lazy-loads with a calm state.
-await page.selectOption("#examples", "surfaces");
+await selectExample(/surfaces/i);
 await sleep(400);
 await page.evaluate(() => {
   const f = document.querySelector("#preview");
@@ -107,13 +125,13 @@ if (threeLoaded) {
 }
 
 // Switch to a py example and confirm the editor stays responsive (no block).
-await page.selectOption("#examples", "limits");
+await selectExample(/Limits/i);
 await sleep(400);
 const editorResponsive = await page.evaluate(() => !!document.querySelector(".cm-content"));
 ok("py-cell example loads without blocking the editor", editorResponsive);
 
 // Share → opens a fresh tab reproducing the exact source.
-await page.selectOption("#examples", "morphing");
+await selectExample(/morphing/i);
 await sleep(500);
 const sourceNow = await page.evaluate(() => document.querySelector(".cm-content").innerText);
 const popupP = ctx.waitForEvent("page");
