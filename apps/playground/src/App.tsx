@@ -1,6 +1,7 @@
 import { compileChalk } from "@chalk/render-slides/core";
 import type { EditorView } from "@codemirror/view";
 import * as React from "react";
+import logoUrl from "../assets/logo.png";
 import { BoardIcon, WordmarkFlourish } from "@/components/chalk-art";
 import { Editor } from "@/components/Editor";
 import {
@@ -315,12 +316,18 @@ export function App(): React.ReactElement {
         />
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="bg-card/60 flex items-center gap-2 border-b px-3 py-2 backdrop-blur sm:gap-3 sm:px-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <img
+              src={logoUrl}
+              alt="Chalk"
+              width={28}
+              height={28}
+              className="ring-border size-7 rounded-lg shadow-1 ring-1"
+            />
             <span className="chalk-wordmark relative font-serif text-xl font-semibold tracking-tight">
               Chalk
               <WordmarkFlourish className="chalk-flourish text-live absolute -bottom-1.5 left-0 hidden h-2 w-full" />
             </span>
-            <span className="text-muted-foreground hidden text-sm sm:inline">playground</span>
           </div>
 
           <div className="bg-border mx-1 hidden h-5 w-px sm:block" />
