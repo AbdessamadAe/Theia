@@ -71,6 +71,9 @@ export function InsertPalette({ open, onClose, onPick }: InsertPaletteProps): Re
           e.preventDefault();
           inputRef.current?.focus();
         }}
+        // Don't yank focus back to the trigger on close — applySnippet has just
+        // focused the editor and placed the caret on the first tab-stop; keep it.
+        onCloseAutoFocus={(e) => e.preventDefault()}
         aria-label="Insert a Chalk construct"
       >
         <DialogTitle className="sr-only">Insert a Chalk construct</DialogTitle>

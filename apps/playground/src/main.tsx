@@ -3,10 +3,23 @@ import { createRoot } from "react-dom/client";
 import { App } from "@/App";
 import "@/index.css";
 
-// Follow the OS colour scheme for the shadcn theme (the deck iframe themes
-// itself independently).
-if (window.matchMedia?.("(prefers-color-scheme: dark)").matches) {
-  document.documentElement.classList.add("dark");
+// Decide the initial theme once, before render: a stored choice wins, else the
+// OS preference. We persist it under the SAME key the deck runtime already reads
+// ("chalk-theme"), so the deck inside the iframe boots in the matching theme.
+const stored = (() => {
+  try {
+    return localStorage.getItem("chalk-theme");
+  } catch {
+    return null;
+  }
+})();
+const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+const theme = stored === "light" || stored === "dark" ? stored : prefersDark ? "dark" : "light";
+document.documentElement.classList.toggle("dark", theme === "dark");
+try {
+  localStorage.setItem("chalk-theme", theme);
+} catch {
+  /* storage unavailable */
 }
 
 createRoot(document.getElementById("root")!).render(

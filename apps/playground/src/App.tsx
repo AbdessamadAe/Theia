@@ -2,11 +2,21 @@ import { compileChalk } from "@chalk/render-slides/core";
 import type { EditorView } from "@codemirror/view";
 import * as React from "react";
 import { Editor } from "@/components/Editor";
+import {
+  DownloadIcon,
+  MoonIcon,
+  PanelLeftIcon,
+  PresentIcon,
+  ShareIcon,
+  SparkIcon,
+  SunIcon,
+} from "@/components/icons";
 import { InsertPalette } from "@/components/InsertPalette";
 import { Outline } from "@/components/Outline";
-import { Preview } from "@/components/Preview";
+import { PreviewFrame } from "@/components/PreviewFrame";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Segmented } from "@/components/ui/segmented";
 import {
   Select,
   SelectContent,
@@ -14,11 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Hint, TooltipProvider } from "@/components/ui/tooltip";
 import { ASSETS } from "@/generated/assets";
 import { EXAMPLES } from "@/generated/examples";
 import { coordEdits } from "@/lib/drag";
 import { applySnippet, chalkSlashPalette } from "@/lib/insert";
 import type { SnippetDef } from "@/lib/snippets";
+import { useMediaQuery } from "@/lib/use-media-query";
 import { buildShareUrl, readShareFromHash, SHARE_LIMIT } from "@/share";
 
 function compile(source: string): { html: string; slides: number; error?: string } {
@@ -42,9 +55,31 @@ export function App(): React.ReactElement {
   const [showOutline, setShowOutline] = React.useState(true);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [editorView, setEditorView] = React.useState<EditorView | null>(null);
+  const [theme, setTheme] = React.useState<"light" | "dark">(() =>
+    document.documentElement.classList.contains("dark") ? "dark" : "light",
+  );
+  const [mobileView, setMobileView] = React.useState<"editor" | "preview">("preview");
+  const compact = useMediaQuery("(max-width: 1023px)");
+
   const timer = React.useRef<number | undefined>(undefined);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
   const slashExtension = React.useMemo(() => [chalkSlashPalette()], []);
+
+  // Apply the theme to the chrome and sync the live deck via the engine's
+  // existing data-theme attribute + the shared localStorage key it reads.
+  React.useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    try {
+      localStorage.setItem("chalk-theme", theme);
+    } catch {
+      /* storage unavailable */
+    }
+    try {
+      iframeRef.current?.contentDocument?.documentElement.setAttribute("data-theme", theme);
+    } catch {
+      /* opaque-origin guard */
+    }
+  }, [theme, html]);
 
   // Reflect the preview's active slide in the outline (srcdoc iframes are
   // same-origin, so we can read the deck's active slide). Read-only.
@@ -156,97 +191,188 @@ export function App(): React.ReactElement {
     URL.revokeObjectURL(a.href);
   };
 
-  return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center gap-3 border-b px-4 py-2">
-        <span className="font-semibold tracking-tight">
-          Chalk <span className="text-muted-foreground font-normal">playground</span>
-        </span>
-        <span className="text-muted-foreground text-sm">Example</span>
-        <Select value={EXAMPLES.some((e) => e.id === currentId) ? currentId : undefined} onValueChange={loadExample}>
-          <SelectTrigger className="w-[260px]" data-testid="examples" aria-label="Load an example lecture">
-            <SelectValue placeholder="Choose an example…" />
-          </SelectTrigger>
-          <SelectContent>
-            {EXAMPLES.map((ex) => (
-              <SelectItem key={ex.id} value={ex.id}>
-                {ex.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button id="insert" variant="secondary" size="sm" onClick={() => setPaletteOpen(true)}>
-          + Insert
-        </Button>
-        <Button
-          id="toggle-outline"
-          variant="ghost"
-          size="sm"
-          aria-pressed={showOutline}
-          onClick={() => setShowOutline((v) => !v)}
+  const editorPane = (
+    <div className="relative h-full">
+      <Editor
+        value={source}
+        onChange={onSourceChange}
+        extensions={slashExtension}
+        onReady={setEditorView}
+      />
+      {error && (
+        <div
+          role="alert"
+          className="bg-destructive/10 text-destructive-foreground absolute inset-x-3 bottom-3 z-10 max-h-[40%] overflow-auto rounded-lg border border-destructive/40 shadow-2"
         >
-          Outline
-        </Button>
-        <div className="flex-1" />
-        <Button id="present" variant="outline" size="sm" onClick={onPresent}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3m13-5v3a2 2 0 0 1-2 2h-3" />
-          </svg>
-          Present
-        </Button>
-        <Button id="share" variant="outline" size="sm" onClick={() => void onShare()}>
-          Share
-        </Button>
-        <Button id="download" variant="default" size="sm" onClick={onDownload}>
-          Download
-        </Button>
-      </header>
-
-      <ResizablePanelGroup
-        direction="horizontal"
-        className="flex-1"
-        key={showOutline ? "with-outline" : "no-outline"}
-      >
-        {showOutline && (
-          <>
-            <ResizablePanel defaultSize={20} minSize={12} className="bg-card/40">
-              <Outline source={source} view={editorView} currentSlide={currentSlide} />
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-          </>
-        )}
-        <ResizablePanel defaultSize={showOutline ? 42 : 52} minSize={25} className="relative">
-          <Editor
-            value={source}
-            onChange={onSourceChange}
-            extensions={slashExtension}
-            onReady={setEditorView}
-          />
-          {error && (
-            <div
-              role="alert"
-              className="absolute inset-x-0 bottom-0 z-10 max-h-[40%] overflow-auto border-t-2 border-destructive bg-destructive/10 px-4 py-2 font-mono text-xs whitespace-pre-wrap"
-            >
-              {error}
-            </div>
-          )}
-        </ResizablePanel>
-        <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={showOutline ? 38 : 48} minSize={25} className="relative">
-          <Preview html={html} freshKey={freshKey} iframeRef={iframeRef} />
-          <div className="text-muted-foreground bg-background/70 pointer-events-none absolute bottom-2 right-2 rounded-md px-2 py-0.5 text-[11px]">
-            {slides ? `${slides} slide${slides === 1 ? "" : "s"}` : ""}
+          <div className="text-destructive flex items-center gap-2 border-b border-destructive/20 px-3 py-1.5 text-xs font-semibold">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" />
+            </svg>
+            Compile error
           </div>
-        </ResizablePanel>
-      </ResizablePanelGroup>
-
-      <InsertPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onPick={onInsert} />
-
-      {toast && (
-        <div className="bg-foreground text-background fixed bottom-5 left-1/2 z-50 max-w-[80%] -translate-x-1/2 rounded-lg px-4 py-2 text-sm shadow-lg">
-          {toast}
+          <pre className="text-foreground/80 px-3 py-2 font-mono text-xs whitespace-pre-wrap">
+            {error.replace(/^Compile error:\s*/, "")}
+          </pre>
         </div>
       )}
     </div>
+  );
+
+  const previewPane = (
+    <PreviewFrame
+      html={html}
+      freshKey={freshKey}
+      iframeRef={iframeRef}
+      slides={slides}
+      currentSlide={currentSlide}
+    />
+  );
+
+  return (
+    <TooltipProvider delayDuration={350} skipDelayDuration={200}>
+      <div className="bg-background flex h-full flex-col">
+        {/* ── Header ─────────────────────────────────────────────────────── */}
+        <header className="bg-card/60 flex items-center gap-2 border-b px-3 py-2 backdrop-blur sm:gap-3 sm:px-4">
+          <div className="flex items-center gap-2">
+            <span className="font-serif text-xl font-semibold tracking-tight">Chalk</span>
+            <span className="text-muted-foreground hidden text-sm sm:inline">playground</span>
+          </div>
+
+          <div className="bg-border mx-1 hidden h-5 w-px sm:block" />
+
+          <Select
+            value={EXAMPLES.some((e) => e.id === currentId) ? currentId : undefined}
+            onValueChange={loadExample}
+          >
+            <SelectTrigger
+              className="h-8 w-[150px] sm:w-[230px]"
+              data-testid="examples"
+              aria-label="Load an example lecture"
+            >
+              <SelectValue placeholder="Choose an example…" />
+            </SelectTrigger>
+            <SelectContent>
+              {EXAMPLES.map((ex) => (
+                <SelectItem key={ex.id} value={ex.id}>
+                  {ex.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="hidden items-center gap-1 lg:flex">
+            <Hint label="Insert a construct (⌘K)">
+              <Button id="insert" variant="secondary" size="sm" onClick={() => setPaletteOpen(true)}>
+                <SparkIcon />
+                Insert
+              </Button>
+            </Hint>
+            <Hint label={showOutline ? "Hide outline" : "Show outline"}>
+              <Button
+                id="toggle-outline"
+                variant={showOutline ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                aria-pressed={showOutline}
+                aria-label="Toggle outline"
+                onClick={() => setShowOutline((v) => !v)}
+              >
+                <PanelLeftIcon />
+              </Button>
+            </Hint>
+          </div>
+
+          <div className="flex-1" />
+
+          {compact && (
+            <Segmented
+              aria-label="Editor or preview"
+              value={mobileView}
+              onChange={setMobileView}
+              options={[
+                { value: "editor", label: "Edit" },
+                { value: "preview", label: "Preview" },
+              ]}
+            />
+          )}
+
+          <div className="hidden items-center gap-1.5 sm:flex">
+            <Hint label="Present fullscreen">
+              <Button id="present" variant="outline" size="sm" onClick={onPresent}>
+                <PresentIcon />
+                <span className="hidden md:inline">Present</span>
+              </Button>
+            </Hint>
+            <Hint label="Copy a shareable link">
+              <Button id="share" variant="outline" size="sm" onClick={() => void onShare()}>
+                <ShareIcon />
+                <span className="hidden md:inline">Share</span>
+              </Button>
+            </Hint>
+            <Hint label="Download a standalone .html deck">
+              <Button id="download" variant="live" size="sm" onClick={onDownload}>
+                <DownloadIcon />
+                <span className="hidden md:inline">Download</span>
+              </Button>
+            </Hint>
+          </div>
+
+          <div className="bg-border mx-0.5 h-5 w-px" />
+
+          <Hint label={theme === "dark" ? "Switch to light" : "Switch to dark"}>
+            <label className="flex cursor-pointer items-center gap-2">
+              <SunIcon className={`size-4 ${theme === "dark" ? "text-muted-foreground" : "text-foreground"}`} />
+              <Switch
+                checked={theme === "dark"}
+                onCheckedChange={(c) => setTheme(c ? "dark" : "light")}
+                aria-label="Toggle dark mode"
+              />
+              <MoonIcon className={`size-4 ${theme === "dark" ? "text-foreground" : "text-muted-foreground"}`} />
+            </label>
+          </Hint>
+        </header>
+
+        {/* ── Body ───────────────────────────────────────────────────────── */}
+        {compact ? (
+          <div className="relative min-h-0 flex-1">
+            <div className={mobileView === "editor" ? "h-full" : "hidden"}>{editorPane}</div>
+            <div className={mobileView === "preview" ? "h-full" : "hidden"}>{previewPane}</div>
+          </div>
+        ) : (
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="min-h-0 flex-1"
+            key={showOutline ? "with-outline" : "no-outline"}
+          >
+            {showOutline && (
+              <>
+                <ResizablePanel defaultSize={20} minSize={12} className="bg-card/40">
+                  <Outline source={source} view={editorView} currentSlide={currentSlide} />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+              </>
+            )}
+            <ResizablePanel defaultSize={showOutline ? 42 : 52} minSize={25}>
+              {editorPane}
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+            <ResizablePanel defaultSize={showOutline ? 38 : 48} minSize={25}>
+              {previewPane}
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        )}
+
+        <InsertPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} onPick={onInsert} />
+
+        {toast && (
+          <div
+            role="status"
+            className="bg-foreground text-background fixed bottom-5 left-1/2 z-50 max-w-[80%] -translate-x-1/2 rounded-lg px-4 py-2 text-sm shadow-3"
+          >
+            {toast}
+          </div>
+        )}
+      </div>
+    </TooltipProvider>
   );
 }

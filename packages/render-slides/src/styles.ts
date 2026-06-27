@@ -11,7 +11,8 @@ export const DECK_CSS = `
   --fg: #1c2024;
   --muted: #6b7280;
   --border: #e2e5ea;
-  --accent: #2563eb;
+  --accent: #0891b2; /* signature "live" cyan — reactive things */
+  --accent-soft: rgba(8, 145, 178, 0.12);
   --code-bg: #f3f4f6;
   --code-fg: #1f2937;
   --tag-bg: #eef2ff;
@@ -32,7 +33,8 @@ export const DECK_CSS = `
   --fg: #e6e9ef;
   --muted: #9aa4b2;
   --border: #283041;
-  --accent: #60a5fa;
+  --accent: #22d3ee; /* chalk cyan, brighter to glow on the board */
+  --accent-soft: rgba(34, 211, 238, 0.16);
   --code-bg: #0f141c;
   --code-fg: #d7dde7;
   --tag-bg: #1e2738;
@@ -330,11 +332,51 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   background: var(--code-bg);
 }
 
-.chalk-slider { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.chalk-slider__name { font-weight: 700; font-style: italic; font-size: 1.05em; }
-.chalk-slider__input { flex: 1 1 220px; accent-color: var(--accent); cursor: pointer; height: 6px; }
-.chalk-slider__value { font-variant-numeric: tabular-nums; color: var(--fg); font-weight: 600; min-width: 4ch; }
-.chalk-slider__range { color: var(--muted); font-size: 0.85em; }
+/* The slider is the hero of the reactive story: a left accent rail, a live
+ * name pill, an accent-tracked range, and a prominent value readout. */
+.chalk-slider {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  border-left: 3px solid var(--accent);
+  background: linear-gradient(to right, var(--accent-soft), transparent 40%), var(--surface);
+}
+.chalk-slider__name {
+  font-weight: 700; font-style: italic; font-size: 1.05em; color: var(--accent);
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.chalk-slider__name::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.chalk-slider__input {
+  flex: 1 1 220px; cursor: pointer; height: 22px;
+  -webkit-appearance: none; appearance: none; background: transparent;
+}
+.chalk-slider__input::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px;
+  background: linear-gradient(var(--border), var(--border));
+}
+.chalk-slider__input::-moz-range-track { height: 6px; border-radius: 999px; background: var(--border); }
+.chalk-slider__input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+.chalk-slider__input::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--accent); border: 2px solid var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+.chalk-slider__input:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
+.chalk-slider__input:active::-webkit-slider-thumb { transform: scale(1.1); }
+.chalk-slider__input:focus-visible { outline: none; }
+.chalk-slider__input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
+.chalk-slider__value {
+  font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700;
+  min-width: 4ch; font-size: 1.05em;
+}
+.chalk-slider__range { color: var(--muted); font-size: 0.85em; font-variant-numeric: tabular-nums; }
 
 .chalk-plot__head, .chalk-geo__head, .chalk-code__head {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
