@@ -12,6 +12,19 @@ export interface PlotColors {
   text: string;
 }
 
+/** The data↔pixel mapping a finished plot exposes, so followers (a tracking
+ * point, tangent, dropline, label) can position themselves on the same axes. */
+export interface PlotMap {
+  sx(x: number): number;
+  sy(y: number): number;
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+  width: number;
+  height: number;
+}
+
 export interface PlotOptions {
   xMin: number;
   xMax: number;
@@ -21,6 +34,8 @@ export interface PlotOptions {
   xVar?: string;
   samples?: number;
   colors: PlotColors;
+  /** Draw followers on top, in the same canvas space, after the curve. */
+  overlay?: (ctx: CanvasRenderingContext2D, map: PlotMap) => void;
 }
 
 /** Choose a "nice" grid step (1, 2, 5 × 10^k) near the requested span/divisions. */
@@ -38,9 +53,9 @@ export function drawPlot(
   expr: CompiledExpr,
   scope: Record<string, number>,
   options: PlotOptions,
-): void {
+): PlotMap | null {
   const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  if (!ctx) return null;
 
   const dpr = (globalThis.devicePixelRatio as number) || 1;
   const cssW = canvas.clientWidth || 600;
@@ -162,4 +177,17 @@ export function drawPlot(
     }
   }
   ctx.stroke();
+
+  const map: PlotMap = {
+    sx,
+    sy,
+    xMin,
+    xMax,
+    yMin: yMin!,
+    yMax: yMax!,
+    width: cssW,
+    height: cssH,
+  };
+  if (options.overlay) options.overlay(ctx, map);
+  return map;
 }

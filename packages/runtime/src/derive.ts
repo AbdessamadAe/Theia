@@ -1,16 +1,15 @@
 /**
- * `:::derive` blocks: advance-driven equation morphing.
+ * `:::derive` blocks: advance-driven equation morphing + emphasis.
  *
- * Each block carries an ordered list of state tex strings (emitted as JSON by
- * the renderer) and its position in the slide's advance sequence. It listens
- * for the `chalk:advance` event from the navigation controller (the SAME
- * advance flow as `+step` reveal — no parallel controller) and morphs to the
- * state implied by the current reveal count. Going backward reverses the morph.
- *
- * Author match hints ride inside the tex as `\htmlClass{ck-…}{…}`, so KaTeX is
- * rendered here with `trust` enabled.
+ * Each block carries an ordered list of states (tex + optional emphasis specs)
+ * emitted as JSON, and its position in the slide's advance sequence. It listens
+ * for the navigation controller's `chalk:advance` event — the SAME flow as
+ * `+step` reveal and slider updates — and morphs to the implied state, then
+ * fires that state's emphasis. Going backward reverses the morph; persistent
+ * highlights re-apply, transient pulses/rings do not replay.
  */
-import { morph } from "./morph.js";
+import { emphasize, type EmphasisSpec } from "./emphasis.js";
+import { MorphController } from "./morph.js";
 
 interface KatexLike {
   render(tex: string, el: HTMLElement, opts: Record<string, unknown>): void;
@@ -18,6 +17,13 @@ interface KatexLike {
 function katex(): KatexLike | undefined {
   return (globalThis as unknown as { katex?: KatexLike }).katex;
 }
+
+interface StateSpec {
+  tex: string;
+  emphasis?: EmphasisSpec[];
+}
+
+const MARK_MACRO = { "\\mark": "\\htmlClass{ck-mark}{#1}" };
 
 function renderState(tex: string): HTMLElement {
   const span = document.createElement("span");
@@ -30,6 +36,7 @@ function renderState(tex: string): HTMLElement {
         throwOnError: false,
         trust: true,
         strict: false,
+        macros: MARK_MACRO,
       });
     } catch {
       span.textContent = tex;
@@ -40,69 +47,59 @@ function renderState(tex: string): HTMLElement {
   return span;
 }
 
-interface DeriveController {
-  block: HTMLElement;
-  base: number;
-  transitions: number;
-}
-
 export function initDerive(): void {
   const blocks = Array.from(
     document.querySelectorAll<HTMLElement>(".chalk-derive"),
   );
   if (blocks.length === 0) return;
 
-  const controllers: DeriveController[] = [];
-
   for (const block of blocks) {
     const stage = block.querySelector<HTMLElement>(".chalk-derive__stage");
     const statesEl = block.querySelector(".chalk-derive__states");
     if (!stage || !statesEl) continue;
 
-    let texList: string[];
+    let states: StateSpec[];
     try {
-      texList = JSON.parse(statesEl.textContent ?? "[]") as string[];
+      states = JSON.parse(statesEl.textContent ?? "[]") as StateSpec[];
     } catch {
       continue;
     }
-    if (texList.length === 0) continue;
+    if (states.length === 0) continue;
 
     const base = parseInt(block.getAttribute("data-advance-base") || "0", 10);
-    const transitions = Math.max(0, texList.length - 1);
+    const transitions = Math.max(0, states.length - 1);
     let currentState = 0;
-    let animating: Promise<void> = Promise.resolve();
 
-    // Re-render the initial state client-side so its glyph structure matches
-    // the states we morph to (same KaTeX version + options, incl. trust).
-    stage.replaceChildren(renderState(texList[0]!));
+    // Re-render the initial state so its glyph structure matches the states we
+    // morph to (same KaTeX options, including trust + the \mark macro).
+    stage.replaceChildren(renderState(states[0]!.tex));
+    const morpher = new MorphController(stage);
 
-    const setState = (target: number, animate: boolean): void => {
-      const clamped = Math.max(0, Math.min(transitions, target));
-      if (clamped === currentState) return;
-      const toEl = renderState(texList[clamped]!);
-      const fromEl = stage.firstElementChild as HTMLElement | null;
-      const single = Math.abs(clamped - currentState) === 1;
-      currentState = clamped;
-
-      if (!animate || !single || !fromEl) {
-        stage.replaceChildren(toEl); // jump: instant
-        return;
-      }
-      // Serialize overlapping morphs (rapid advances) to avoid visual races.
-      animating = animating
-        .then(() => morph(fromEl, toEl))
-        .catch(() => {
-          try {
-            stage.replaceChildren(toEl);
-          } catch {
-            /* ignore */
-          }
-        });
+    const fireEmphasis = (stateIndex: number, transient: boolean): void => {
+      const specs = states[stateIndex]?.emphasis;
+      if (!specs) return;
+      const target = stage.firstElementChild as HTMLElement | null;
+      if (!target) return;
+      for (const spec of specs) emphasize(target, spec, transient);
     };
 
-    // Expose for the advance listener.
+    const setState = (rawTarget: number, animate: boolean): void => {
+      const target = Math.max(0, Math.min(transitions, rawTarget));
+      if (target === currentState) return;
+      const single = Math.abs(target - currentState) === 1;
+      const forward = target > currentState;
+      const toEl = renderState(states[target]!.tex);
+
+      if (animate && single) morpher.morphTo(toEl);
+      else morpher.setInstant(toEl);
+
+      currentState = target;
+      // Pulses/rings only on a forward single-step advance; highlights always.
+      fireEmphasis(target, animate && single && forward);
+    };
+
     (block as unknown as { __setState?: typeof setState }).__setState = setState;
-    controllers.push({ block, base, transitions });
+    block.setAttribute("data-advance-base", String(base));
   }
 
   document.addEventListener("chalk:advance", (event) => {
@@ -111,14 +108,14 @@ export function initDerive(): void {
       revealed: number;
       animate: boolean;
     };
-    if (!detail || !detail.slide) return;
-    for (const ctrl of controllers) {
-      if (!detail.slide.contains(ctrl.block)) continue;
-      const target = detail.revealed - ctrl.base;
-      const setState = (ctrl.block as unknown as {
+    if (!detail?.slide) return;
+    for (const block of blocks) {
+      if (!detail.slide.contains(block)) continue;
+      const base = parseInt(block.getAttribute("data-advance-base") || "0", 10);
+      const setState = (block as unknown as {
         __setState?: (t: number, a: boolean) => void;
       }).__setState;
-      setState?.(target, detail.animate);
+      setState?.(detail.revealed - base, detail.animate);
     }
   });
 }

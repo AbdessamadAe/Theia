@@ -1,25 +1,20 @@
 /**
- * `morph(fromEl, toEl)` — the reusable equation-morph primitive.
+ * Equation morphing — the reusable FLIP primitive.
  *
- * Given two KaTeX-rendered expressions sharing a parent "stage", it glides the
- * glyphs that survive from one to the other (FLIP with CSS transforms, for
- * 60fps), fades out glyphs that disappear, and fades in glyphs that are new.
- * It is the shared building block for advance-driven derivations now and for
- * slider-driven morphs / reactive followers later.
+ * A `MorphController` owns a "stage" element whose single child is the currently
+ * shown expression. `morphTo(toEl)` glides the glyphs that survive from the old
+ * child to the new one (FLIP via CSS transforms), fades the rest, and leaves
+ * `toEl` cleanly in place. It is re-entrant: calling `morphTo` again while a
+ * morph is mid-flight measures the glyphs at their *current animated positions*
+ * first, then retargets — so continuous slider drags never stack or snap back.
  *
- * Fallbacks, so it never produces a broken jumble:
- *   - prefers-reduced-motion (or no Web Animations API): instant swap.
- *   - low match confidence: a clean cross-fade between the whole expressions.
- *
- * Token matching is delegated to the pure `match.ts`; this module only does DOM
- * measurement and animation.
+ * Fallbacks: prefers-reduced-motion / no Web Animations API → instant swap; low
+ * match confidence → clean cross-fade. Token matching is the pure `match.ts`.
  */
 import { type Atom, matchAtoms, shouldCrossfade } from "./match.js";
 
 export interface MorphOptions {
-  /** Tween duration in ms (default 480). */
   duration?: number;
-  /** Force the reduced-motion path (otherwise read from the media query). */
   reducedMotion?: boolean;
 }
 
@@ -40,7 +35,6 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-/** Leaf glyph spans: KaTeX renders each character as a childless span. */
 function extractGlyphs(root: HTMLElement): HTMLElement[] {
   const out: HTMLElement[] = [];
   root.querySelectorAll<HTMLElement>("span").forEach((span) => {
@@ -51,10 +45,9 @@ function extractGlyphs(root: HTMLElement): HTMLElement[] {
   return out;
 }
 
-/** Nearest ancestor author key (`ck-…` class from a `\htmlClass` hint). */
 function keyOf(glyph: HTMLElement, root: HTMLElement): string | null {
   let el: HTMLElement | null = glyph;
-  while (el && el !== root.parentElement) {
+  while (el) {
     for (const cls of el.classList) if (cls.startsWith("ck-")) return cls;
     if (el === root) break;
     el = el.parentElement;
@@ -95,137 +88,181 @@ function floatClone(html: string, rect: Rect): HTMLElement {
   return holder;
 }
 
-async function settle(animations: Animation[]): Promise<void> {
-  await Promise.all(
-    animations.map((a) => a.finished.then(() => undefined).catch(() => undefined)),
-  );
+/** Owns a stage and morphs between successive expression states, interruptibly. */
+export class MorphController {
+  private current: HTMLElement | null;
+  private anims: Animation[] = [];
+  private overlay: HTMLElement | null = null;
+
+  constructor(private readonly stage: HTMLElement) {
+    this.current = stage.firstElementChild as HTMLElement | null;
+  }
+
+  /** Swap to `el` with no animation (jumps, reduced-motion). */
+  setInstant(el: HTMLElement): void {
+    this.teardown();
+    this.stage.replaceChildren(el);
+    this.current = el;
+  }
+
+  /** Cancel the in-flight tween and remove its overlay (visual stays where the
+   * DOM currently is — we always measure before calling this). */
+  private teardown(): void {
+    for (const a of this.anims) {
+      try {
+        a.cancel();
+      } catch {
+        /* already gone */
+      }
+    }
+    this.anims = [];
+    if (this.overlay) {
+      this.overlay.remove();
+      this.overlay = null;
+    }
+  }
+
+  /**
+   * Morph the current child into `toEl`. Re-entrant: a call mid-flight measures
+   * current animated positions, then retargets toward `toEl`.
+   */
+  morphTo(toEl: HTMLElement, options: MorphOptions = {}): void {
+    const fromEl = this.current;
+    const reduced = options.reducedMotion ?? prefersReducedMotion();
+    const canAnimate = typeof (toEl as HTMLElement).animate === "function";
+    if (!fromEl || reduced || !canAnimate) {
+      this.setInstant(toEl);
+      return;
+    }
+
+    // Measure the "from" glyphs at their CURRENT positions (mid-tween aware),
+    // and snapshot the appearance, BEFORE tearing down the previous animation.
+    const origin0 = this.stage.getBoundingClientRect();
+    const fromGlyphs = extractGlyphs(fromEl);
+    const fromAtoms = atomsOf(fromGlyphs, fromEl);
+    const fromInfo = fromGlyphs.map((g) => ({
+      rect: relRect(g, origin0),
+      html: g.outerHTML,
+    }));
+    const fromClone = fromEl.cloneNode(true) as HTMLElement;
+
+    this.teardown();
+    this.stage.replaceChildren(toEl);
+    this.current = toEl;
+    if (this.stage.style.position === "") this.stage.style.position = "relative";
+
+    const origin1 = this.stage.getBoundingClientRect();
+    const toGlyphs = extractGlyphs(toEl);
+    const toRects = toGlyphs.map((g) => relRect(g, origin1));
+    const result = matchAtoms(fromAtoms, atomsOf(toGlyphs, toEl));
+
+    const duration = options.duration ?? 460;
+
+    if (shouldCrossfade(result)) {
+      this.crossfade(fromClone, toEl, Math.round(duration * 0.7));
+      return;
+    }
+
+    const anims: Animation[] = [];
+    const matchedTo = new Set<number>();
+    for (const { from: fi, to: ti } of result.pairs) {
+      matchedTo.add(ti);
+      const f = fromInfo[fi]!.rect;
+      const t = toRects[ti]!;
+      const dx = f.left - t.left;
+      const dy = f.top - t.top;
+      const sx = t.width ? f.width / t.width : 1;
+      const sy = t.height ? f.height / t.height : 1;
+      anims.push(
+        toGlyphs[ti]!.animate(
+          [
+            { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
+            { transform: "none" },
+          ],
+          { duration, easing: EASING, fill: "both" },
+        ),
+      );
+    }
+    for (let j = 0; j < toGlyphs.length; j++) {
+      if (matchedTo.has(j)) continue;
+      anims.push(
+        toGlyphs[j]!.animate([{ opacity: 0 }, { opacity: 1 }], {
+          duration: Math.round(duration * 0.8),
+          delay: Math.round(duration * 0.2),
+          easing: EASING,
+          fill: "both",
+        }),
+      );
+    }
+    const overlay = makeOverlay(this.stage);
+    for (const fi of result.unmatchedFrom) {
+      const clone = floatClone(fromInfo[fi]!.html, fromInfo[fi]!.rect);
+      overlay.appendChild(clone);
+      anims.push(
+        clone.animate([{ opacity: 1 }, { opacity: 0 }], {
+          duration: Math.round(duration * 0.6),
+          easing: EASING,
+          fill: "both",
+        }),
+      );
+    }
+
+    this.anims = anims;
+    this.overlay = overlay;
+    void Promise.all(
+      anims.map((a) => a.finished.then(() => undefined).catch(() => undefined)),
+    ).then(() => {
+      if (this.overlay === overlay) {
+        overlay.remove();
+        this.overlay = null;
+        this.anims = [];
+      }
+    });
+  }
+
+  private crossfade(
+    fromClone: HTMLElement,
+    toEl: HTMLElement,
+    duration: number,
+  ): void {
+    const overlay = makeOverlay(this.stage);
+    fromClone.style.position = "absolute";
+    fromClone.style.left = "0";
+    fromClone.style.top = "0";
+    overlay.appendChild(fromClone);
+    const anims = [
+      fromClone.animate([{ opacity: 1 }, { opacity: 0 }], {
+        duration,
+        easing: EASING,
+        fill: "both",
+      }),
+      toEl.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration,
+        easing: EASING,
+        fill: "both",
+      }),
+    ];
+    this.anims = anims;
+    this.overlay = overlay;
+    void Promise.all(
+      anims.map((a) => a.finished.then(() => undefined).catch(() => undefined)),
+    ).then(() => {
+      if (this.overlay === overlay) {
+        overlay.remove();
+        this.overlay = null;
+        this.anims = [];
+      }
+    });
+  }
 }
 
-/** Cross-fade the whole "from" appearance out while the new "to" fades in. */
-async function crossfade(
-  stage: HTMLElement,
-  fromClone: HTMLElement,
-  toEl: HTMLElement,
-  duration: number,
-): Promise<void> {
-  const overlay = makeOverlay(stage);
-  fromClone.style.position = "absolute";
-  fromClone.style.left = "0";
-  fromClone.style.top = "0";
-  overlay.appendChild(fromClone);
-  const anims = [
-    fromClone.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration,
-      easing: EASING,
-      fill: "both",
-    }),
-    toEl.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration,
-      easing: EASING,
-      fill: "both",
-    }),
-  ];
-  await settle(anims);
-  overlay.remove();
-}
-
-/**
- * Morph the expression currently shown (`fromEl`, in the stage) into `toEl`.
- * On return, the stage holds `toEl` cleanly. Errors fall back to an instant
- * swap rather than leaving a half-finished animation.
- */
-export async function morph(
+/** One-shot convenience: morph the element currently in its parent to `toEl`. */
+export function morph(
   fromEl: HTMLElement,
   toEl: HTMLElement,
   options: MorphOptions = {},
-): Promise<void> {
+): void {
   const stage = fromEl.parentElement;
   if (!stage) return;
-
-  const duration = options.duration ?? 480;
-  const reduced = options.reducedMotion ?? prefersReducedMotion();
-  const canAnimate = typeof (fromEl as HTMLElement).animate === "function";
-
-  // Measure the "from" glyphs and snapshot the whole appearance BEFORE swapping.
-  const stageOrigin0 = stage.getBoundingClientRect();
-  const fromGlyphs = extractGlyphs(fromEl);
-  const fromAtoms = atomsOf(fromGlyphs, fromEl);
-  const fromInfo = fromGlyphs.map((g) => ({
-    rect: relRect(g, stageOrigin0),
-    html: g.outerHTML,
-  }));
-  const fromClone = fromEl.cloneNode(true) as HTMLElement;
-
-  // Swap in the target (defines the final layout).
-  stage.replaceChildren(toEl);
-
-  if (reduced || !canAnimate) return; // instant swap
-
-  if (stage.style.position === "") stage.style.position = "relative";
-
-  const stageOrigin1 = stage.getBoundingClientRect();
-  const toGlyphs = extractGlyphs(toEl);
-  const toAtoms = atomsOf(toGlyphs, toEl);
-  const toRects = toGlyphs.map((g) => relRect(g, stageOrigin1));
-
-  const result = matchAtoms(fromAtoms, toAtoms);
-
-  // Low confidence → clean cross-fade rather than a meaningless scramble.
-  if (shouldCrossfade(result)) {
-    await crossfade(stage, fromClone, toEl, Math.round(duration * 0.7));
-    return;
-  }
-
-  const anims: Animation[] = [];
-  const matchedTo = new Set<number>();
-
-  // Matched glyphs: glide the target glyph from its old box to its new one.
-  for (const { from: fi, to: ti } of result.pairs) {
-    matchedTo.add(ti);
-    const f = fromInfo[fi]!.rect;
-    const t = toRects[ti]!;
-    const dx = f.left - t.left;
-    const dy = f.top - t.top;
-    const sx = t.width ? f.width / t.width : 1;
-    const sy = t.height ? f.height / t.height : 1;
-    anims.push(
-      toGlyphs[ti]!.animate(
-        [
-          { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
-          { transform: "none" },
-        ],
-        { duration, easing: EASING, fill: "both" },
-      ),
-    );
-  }
-
-  // New glyphs: fade in (slightly delayed so motion reads first).
-  for (let j = 0; j < toGlyphs.length; j++) {
-    if (matchedTo.has(j)) continue;
-    anims.push(
-      toGlyphs[j]!.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: Math.round(duration * 0.8),
-        delay: Math.round(duration * 0.2),
-        easing: EASING,
-        fill: "both",
-      }),
-    );
-  }
-
-  // Vanishing glyphs: overlay clones at their old positions, fade out.
-  const overlay = makeOverlay(stage);
-  for (const fi of result.unmatchedFrom) {
-    const clone = floatClone(fromInfo[fi]!.html, fromInfo[fi]!.rect);
-    overlay.appendChild(clone);
-    anims.push(
-      clone.animate([{ opacity: 1 }, { opacity: 0 }], {
-        duration: Math.round(duration * 0.6),
-        easing: EASING,
-        fill: "both",
-      }),
-    );
-  }
-
-  await settle(anims);
-  overlay.remove();
+  new MorphController(stage).morphTo(toEl, options);
 }

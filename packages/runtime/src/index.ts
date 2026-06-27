@@ -27,4 +27,17 @@ export {
   type MatchPair,
 } from "./match.js";
 
-export { morph, type MorphOptions } from "./morph.js";
+export { morph, MorphController, type MorphOptions } from "./morph.js";
+
+export {
+  RetargetController,
+  type AnimHandle,
+  type RetargetOptions,
+} from "./retarget.js";
+
+export {
+  emphasize,
+  findMarks,
+  type EmphasisEffect,
+  type EmphasisSpec,
+} from "./emphasis.js";
