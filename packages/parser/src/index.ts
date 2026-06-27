@@ -93,18 +93,12 @@ function parseEmphasis(rest: string): EmphasisSpec {
  * later sub-phases) still capture `on` + key:value/flag args generically.
  */
 function parseSceneObjectArgs(
-  kind: string,
+  _kind: string,
   rest: string,
 ): { on?: string; args: Record<string, string> } {
   const args: Record<string, string> = {};
   let on: string | undefined;
   let body = rest.trim();
-
-  const onMatch = /\bon\s+([A-Za-z_]\w*)/.exec(body);
-  if (onMatch) {
-    on = onMatch[1]!;
-    body = (body.slice(0, onMatch.index) + body.slice(onMatch.index + onMatch[0].length)).trim();
-  }
 
   const grab = (re: RegExp): string | undefined => {
     const m = re.exec(body);
@@ -112,77 +106,105 @@ function parseSceneObjectArgs(
     body = (body.slice(0, m.index) + body.slice(m.index + m[0].length)).trim();
     return m[1];
   };
+  const unquote = (s: string): string =>
+    s.startsWith('"') && s.endsWith('"') ? s.slice(1, -1) : s;
+  /** Extract the balanced-paren content following `keyword (`, e.g. for
+   * coordinate tuples whose components may themselves contain parens. */
+  const grabBalanced = (keyword: string): string | undefined => {
+    const m = new RegExp(`\\b${keyword}\\s*\\(`).exec(body);
+    if (!m) return undefined;
+    let depth = 1;
+    let i = m.index + m[0].length;
+    const start = i;
+    for (; i < body.length && depth > 0; i++) {
+      if (body[i] === "(") depth++;
+      else if (body[i] === ")") depth--;
+    }
+    const content = body.slice(start, i - 1);
+    body = (body.slice(0, m.index) + body.slice(i)).trim();
+    return content;
+  };
+  /** Split on commas that are not nested inside parentheses. */
+  const splitTop = (s: string): string[] => {
+    const out: string[] = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of s) {
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        out.push(cur);
+        cur = "";
+      } else cur += ch;
+    }
+    out.push(cur);
+    return out.map((p) => p.trim());
+  };
+  const tuple = (raw: string, into: string[]): void => {
+    splitTop(raw).forEach((v, i) => {
+      if (v) args[into[i]!] = v;
+    });
+  };
 
-  // Common pieces shared across kinds.
-  const label = grab(/\blabel\s+"([^"]*)"/);
-  if (label !== undefined) args.label = label;
+  // Host coordinate system.
+  on = grab(/\bon\s+([A-Za-z_]\w*)/);
 
-  switch (kind) {
-    case "axes": {
-      const x = grab(/\bx:\s*(\[[^\]]*\])/);
-      const y = grab(/\by:\s*(\[[^\]]*\])/);
-      const xl = grab(/\bxlabel:\s*"([^"]*)"/);
-      const yl = grab(/\bylabel:\s*"([^"]*)"/);
-      if (x) args.x = x;
-      if (y) args.y = y;
-      if (xl !== undefined) args.xlabel = xl;
-      if (yl !== undefined) args.ylabel = yl;
-      if (/\bgrid\b/.test(body)) args.grid = "true";
-      break;
-    }
-    case "numberline": {
-      const r = grab(/(\[[^\]]*\])/);
-      if (r) args.range = r;
-      break;
-    }
-    case "plot": {
-      const c = body.indexOf(":");
-      if (c >= 0) {
-        args.expr = body.slice(c + 1).trim();
-        body = body.slice(0, c).trim();
-      }
-      break;
-    }
-    case "point": {
-      const m = /at\s*\(\s*([^,]+?)\s*,\s*(.+?)\s*\)/.exec(body);
-      if (m) {
-        args.x = m[1]!.trim();
-        args.y = m[2]!.trim();
-      }
-      break;
-    }
-    case "tangent": {
-      const to = grab(/\bto\s+([A-Za-z_]\w*)/);
-      const at = grab(/\bat\s+([A-Za-z_]\w*)/);
-      if (to) args.to = to;
-      if (at) args.at = at;
-      break;
-    }
-    case "area": {
-      const under = grab(/\bunder\s+([A-Za-z_]\w*)/);
-      // bounds may be simple expressions (a number or a slider like `t`).
-      const from = grab(/\bfrom\s+(\S+)/);
-      const to = grab(/\bto\s+(\S+)/);
-      const rects = grab(/\brects\s+(\d+)/);
-      if (under) args.under = under;
-      if (from) args.from = from;
-      if (to) args.to = to;
-      if (rects) args.rects = rects;
-      break;
-    }
-    case "label": {
-      const m = /at\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/.exec(body);
-      if (m) {
-        args.x = m[1]!.trim();
-        args.y = m[2]!.trim();
-      }
-      const text = grab(/"([^"]*)"/);
-      if (text !== undefined) args.text = text;
-      break;
-    }
-    default:
-      break;
+  // `label "…"` and a bare trailing `"…"` both become text-ish args.
+  const labelText = grab(/\blabel\s+"([^"]*)"/);
+  if (labelText !== undefined) args.label = labelText;
+
+  // `at (x, y[, z])` for coordinates, or bare `at NAME` (e.g. tangent at P).
+  const at = grabBalanced("at");
+  if (at !== undefined) tuple(at, ["x", "y", "z"]);
+  else {
+    const atName = grab(/\bat\s+([A-Za-z_]\w*)/);
+    if (atName) args.at = atName;
   }
+
+  // `from (…) to (…)` (3D arrows/lines) or scalar `from … to …` (2D area).
+  const fromParen = grabBalanced("from");
+  if (fromParen !== undefined) args.from = fromParen;
+  else {
+    const f = grab(/\bfrom\s+(\S+)/);
+    if (f) args.from = f;
+  }
+  const toParen = grabBalanced("to");
+  if (toParen !== undefined) args.to = toParen;
+  else {
+    const t = grab(/\bto\s+(\S+)/);
+    if (t) args.to = t;
+  }
+
+  // Reference keywords.
+  const under = grab(/\bunder\s+([A-Za-z_]\w*)/);
+  if (under) args.under = under;
+  const rects = grab(/\brects\s+(\d+)/);
+  if (rects) args.rects = rects;
+
+  // `key:value` pairs (ranges, r:, phi:, colorscale:, color:, …).
+  for (;;) {
+    const m = /\b([A-Za-z_]\w*):\s*("[^"]*"|\[[^\]]*\]|\S+)/.exec(body);
+    if (!m) break;
+    args[m[1]!] = unquote(m[2]!);
+    body = (body.slice(0, m.index) + body.slice(m.index + m[0].length)).trim();
+  }
+
+  // A leading `:` introduces an expression (plot/surface/parametric/curve).
+  const exprM = /(?:^|\s):\s+(.+)$/.exec(body);
+  if (exprM) {
+    args.expr = exprM[1]!.trim();
+    body = body.slice(0, exprM.index).trim();
+  }
+
+  // A trailing quoted string is label text (e.g. `@label L at (…) "f(x)"`).
+  const text = grab(/"([^"]*)"/);
+  if (text !== undefined && args.text === undefined) args.text = text;
+
+  // Remaining bare words are boolean flags (grid, autorotate, wireframe, …).
+  for (const word of body.split(/\s+/)) {
+    if (word) args[word] = "true";
+  }
+
   return on === undefined ? { args } : { on, args };
 }
 
@@ -289,7 +311,7 @@ export function parse(source: string): DocumentNode {
           continue;
         }
 
-        if (keyword === "scene") {
+        if (keyword === "scene" || keyword === "scene3d") {
           blocks.push(
             parseScene(
               bodyStart,
@@ -297,6 +319,7 @@ export function parse(source: string): DocumentNode {
               line.start,
               blockEnd,
               titleText || undefined,
+              keyword === "scene3d" ? "3d" : "2d",
             ),
           );
           k = close + 1;
@@ -640,6 +663,7 @@ export function parse(source: string): DocumentNode {
     blockStart: number,
     blockEnd: number,
     name: string | undefined,
+    dimension: "2d" | "3d",
   ): SceneBlock {
     const objects: SceneObject[] = [];
     const steps: SceneAnim[] = [];
@@ -685,6 +709,7 @@ export function parse(source: string): DocumentNode {
 
     const node: SceneBlock = {
       type: "scene",
+      dimension,
       objects,
       steps,
       loc: src.loc(blockStart, blockEnd),

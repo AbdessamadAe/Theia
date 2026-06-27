@@ -233,6 +233,8 @@ export interface DeriveState extends NodeBase {
 export interface SceneBlock extends NodeBase {
   type: "scene";
   name?: string;
+  /** "2d" (canvas/SVG) or "3d" (WebGL via three.js). Defaults to "2d". */
+  dimension: "2d" | "3d";
   objects: SceneObject[];
   steps: SceneAnim[];
 }
