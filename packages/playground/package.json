@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "prebuild": "node scripts/prebuild.mjs",
-    "build": "node scripts/prebuild.mjs && node scripts/build.mjs",
-    "dev": "node scripts/prebuild.mjs && node scripts/build.mjs --serve",
+    "dev": "npm run prebuild && vite",
+    "build": "npm run prebuild && vite build",
+    "preview": "vite preview --port 5173 --strictPort",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -21,6 +22,6 @@
     "lz-string": "^1.5.0"
   },
   "devDependencies": {
-    "esbuild": "^0.21.5"
+    "vite": "^5.4.0"
   }
 }
