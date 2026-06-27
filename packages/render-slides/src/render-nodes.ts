@@ -1,6 +1,7 @@
 import type {
   Block,
   CodeCell,
+  DeriveBlock,
   GeoBlock,
   Inline,
   ListBlock,
@@ -16,13 +17,15 @@ import { renderMath } from "./katex-assets.js";
 
 /**
  * Per-slide rendering state.
- *  - `stepCount` gives each `+step` a stable 0-based index the runtime reveals.
+ *  - `advance` is the running count of advance stops on the slide — `+step`
+ *    reveals and `:::derive` `+to` morphs share one ordered sequence, so the
+ *    navigation controller drives both with a single counter.
  *  - `sliders` maps every slider name declared anywhere on the slide to its
  *    default value, gathered in a pre-pass so that math appearing *before* its
  *    slider (as on the parabola slide) is still detected as reactive.
  */
 interface SlideCtx {
-  stepCount: number;
+  advance: number;
   sliders: Map<string, number>;
 }
 
@@ -130,7 +133,35 @@ function renderBlock(block: Block, ctx: SlideCtx): string {
       return renderCode(block);
     case "list":
       return renderList(block, ctx);
+    case "derive":
+      return renderDerive(block, ctx);
   }
+}
+
+/**
+ * A `:::derive` block. The initial state is rendered server-side (so the deck
+ * reads without JS); every state's tex is emitted as JSON for the runtime,
+ * which re-renders and morphs between them. Each `+to` transition consumes one
+ * advance stop, recorded as `data-advance-base` + `data-transitions`.
+ *
+ * `trust` is enabled so author match hints (`\htmlClass{ck-…}{…}`) render.
+ */
+function renderDerive(block: DeriveBlock, ctx: SlideCtx): string {
+  const states = block.states;
+  const initialTex = states[0]?.tex ?? "";
+  const transitions = Math.max(0, states.length - 1);
+  const base = ctx.advance;
+  ctx.advance += transitions;
+
+  const statesJson = JSON.stringify(states.map((s) => s.tex)).replace(
+    /</g,
+    "\\u003c", // keep the JSON safe inside the <script> tag
+  );
+
+  return `<div class="chalk-block chalk-derive" data-advance-base="${base}" data-transitions="${transitions}" data-driver="${block.driver}">
+  <div class="chalk-derive__stage">${renderMath(initialTex, true, true)}</div>
+  <script type="application/json" class="chalk-derive__states">${statesJson}</script>
+</div>`;
 }
 
 function renderTheorem(block: TheoremBlock, ctx: SlideCtx): string {
@@ -141,7 +172,7 @@ function renderTheorem(block: TheoremBlock, ctx: SlideCtx): string {
   const body = renderBlocks(block.children, ctx);
   const steps = block.steps
     .map((step) => {
-      const index = ctx.stepCount++;
+      const index = ctx.advance++;
       return `<div class="chalk-step" data-step="${index}">${renderBlocks(
         step.children,
         ctx,
@@ -246,7 +277,7 @@ export function renderSlide(
 ): { html: string; steps: number } {
   const sliders = new Map<string, number>();
   collectSliders(slide.children, sliders);
-  const ctx: SlideCtx = { stepCount: 0, sliders };
+  const ctx: SlideCtx = { advance: 0, sliders };
 
   const heading = renderInline(slide.heading, ctx);
   const body = renderBlocks(slide.children, ctx);
@@ -256,21 +287,21 @@ export function renderSlide(
       ? `<h1 class="chalk-title">${heading}</h1>`
       : "";
     return {
-      html: `<section class="slide slide--title" data-index="${index}" data-steps="${ctx.stepCount}">
+      html: `<section class="slide slide--title" data-index="${index}" data-steps="${ctx.advance}">
   <div class="slide__inner">
     ${headingHtml}
     <div class="slide__lead">${body}</div>
   </div>
 </section>`,
-      steps: ctx.stepCount,
+      steps: ctx.advance,
     };
   }
 
   return {
-    html: `<section class="slide slide--content" data-index="${index}" data-steps="${ctx.stepCount}">
+    html: `<section class="slide slide--content" data-index="${index}" data-steps="${ctx.advance}">
   <header class="slide__header"><h2 class="chalk-heading">${heading}</h2></header>
   <div class="slide__body">${body}</div>
 </section>`,
-    steps: ctx.stepCount,
+    steps: ctx.advance,
   };
 }

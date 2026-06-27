@@ -68,6 +68,32 @@ We show $\lim_{x \to 2} (3x + 1) = 7$.
 +step Since such a $\delta$ exists for every $\varepsilon > 0$, the limit is $7$. $\blacksquare$
 :::
 
+## Completing the square
+
+Manipulating an equation should *move*, not blink. Advance the slide (→) and the
+terms that survive glide to their new homes while the rest morph in and out.
+
+:::derive
+$$ a x^2 + b x + c $$
++to $$ a\left(x + \tfrac{b}{2a}\right)^2 + \left(c - \tfrac{b^2}{4a}\right) $$
+:::
+
+When two terms look alike, tag them with `\htmlClass{ck-NAME}{…}` so the matcher
+glides the right one. Here the hints cross $\sin x$ and $\cos x$ correctly:
+
+:::derive
+$$ \htmlClass{ck-sin}{\sin x} + \htmlClass{ck-cos}{\cos x} $$
++to $$ \htmlClass{ck-cos}{\cos x} + \htmlClass{ck-sin}{\sin x} $$
+:::
+
+When two forms share almost nothing, Chalk cross-fades instead of forcing a
+misleading morph:
+
+:::derive
+$$ \int_0^1 x^2 \, dx $$
++to $$ \tfrac{1}{3} $$
+:::
+
 ## The squeeze theorem
 
 A hard limit can be pinned down by trapping a function between two others that

@@ -24,7 +24,17 @@ describe("renderDeck(limits.chalk)", () => {
 
   it("renders one section per slide", () => {
     const count = (html.match(/<section class="slide/g) ?? []).length;
-    expect(count).toBe(9);
+    expect(count).toBe(10);
+  });
+
+  it("renders :::derive blocks with state JSON and advance metadata", () => {
+    expect(html).toContain("chalk-derive");
+    expect(html).toContain("chalk-derive__stage");
+    expect(html).toContain('class="chalk-derive__states"');
+    expect(html).toContain("data-advance-base");
+    expect(html).toContain('data-transitions="1"');
+    // Initial state is server-rendered (KaTeX), with hint trust enabled.
+    expect(html).toContain('class="katex"');
   });
 
   it("renders math with KaTeX and inlines KaTeX's JS for client re-render", () => {

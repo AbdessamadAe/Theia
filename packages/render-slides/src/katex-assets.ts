@@ -53,11 +53,14 @@ export function inlinedKatexJs(): string {
 
 /** Render a LaTeX string to HTML using KaTeX. Errors render in place (as red
  * text) rather than aborting the whole build, so one bad formula is visible
- * and fixable without losing the rest of the deck. */
-export function renderMath(tex: string, display: boolean): string {
+ * and fixable without losing the rest of the deck. `trust` enables author
+ * markup like `\htmlClass{ck-…}{…}` (used for derive match hints). */
+export function renderMath(tex: string, display: boolean, trust = false): string {
   return katex.renderToString(tex, {
     displayMode: display,
     throwOnError: false,
     output: "html",
+    trust,
+    strict: false,
   });
 }

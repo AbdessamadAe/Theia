@@ -124,6 +124,19 @@ body {
 
 .chalk-math-display { margin: 18px 0; overflow-x: auto; }
 
+/* ---- Derivation morphs (:::derive) ---- */
+.chalk-derive {
+  position: relative;
+  margin: 22px 0;
+  padding: 12px 16px;
+  border-left: 4px solid var(--accent);
+  background: color-mix(in srgb, var(--surface) 90%, var(--accent) 10%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.chalk-derive__stage { position: relative; min-height: 1.6em; }
+.chalk-derive__state { display: block; }
+
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
 .chalk-reactive { border-radius: 4px; }
 span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
