@@ -88,6 +88,7 @@ function build(file: string, out: string | undefined): ReturnType<typeof buildFi
       result.bytes,
     )})\n`,
   );
+  for (const w of result.warnings) process.stderr.write(`  ⚠ ${w}\n`);
   return result;
 }
 

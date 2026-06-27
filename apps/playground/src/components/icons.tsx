@@ -49,3 +49,9 @@ export const MoonIcon = (p: P): React.ReactElement => (
     <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
   </svg>
 );
+export const ImageIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <circle cx="9" cy="9" r="1.5" /><path d="m21 15-4.5-4.5L7 20" />
+  </svg>
+);

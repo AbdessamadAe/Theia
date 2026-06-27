@@ -36,6 +36,8 @@ export function loadNodeAssets(): DeckAssets {
 
 export interface RenderDeckOptions {
   title?: string;
+  /** Rewrite a media reference (CLI embeds local files; see render-core). */
+  resolveMedia?: (ref: string) => string;
 }
 
 /** Render a parsed Document to a self-contained HTML deck (Node convenience). */

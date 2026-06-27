@@ -14,6 +14,15 @@ import {
 /** Soft cap on the encoded fragment length (chars). Conservative for sharing. */
 export const SHARE_LIMIT = 14000;
 
+/**
+ * Largest raw image size we inline (as a `data:` URI) when ingesting media in
+ * the playground. Below this, the image lives in the .chalk source and so
+ * round-trips through the share-URL; above it (and for ALL video) we refuse to
+ * inline and steer the user to a remote URL or Download, so a shared link never
+ * silently fails to load its media.
+ */
+export const MEDIA_INLINE_BUDGET = 256 * 1024;
+
 export function encodeSource(source: string): string {
   return compressToEncodedURIComponent(source);
 }

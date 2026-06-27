@@ -4,6 +4,7 @@ import * as React from "react";
 import { Editor } from "@/components/Editor";
 import {
   DownloadIcon,
+  ImageIcon,
   MoonIcon,
   PanelLeftIcon,
   PresentIcon,
@@ -32,7 +33,7 @@ import { coordEdits } from "@/lib/drag";
 import { applySnippet, chalkSlashPalette } from "@/lib/insert";
 import type { SnippetDef } from "@/lib/snippets";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { buildShareUrl, readShareFromHash, SHARE_LIMIT } from "@/share";
+import { buildShareUrl, MEDIA_INLINE_BUDGET, readShareFromHash, SHARE_LIMIT } from "@/share";
 
 function compile(source: string): { html: string; slides: number; error?: string } {
   return compileChalk(source, { assets: ASSETS });
@@ -63,6 +64,8 @@ export function App(): React.ReactElement {
 
   const timer = React.useRef<number | undefined>(undefined);
   const iframeRef = React.useRef<HTMLIFrameElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const mediaCounter = React.useRef(0);
   const slashExtension = React.useMemo(() => [chalkSlashPalette()], []);
 
   // Apply the theme to the chrome and sync the live deck via the engine's
@@ -191,6 +194,62 @@ export function App(): React.ReactElement {
     URL.revokeObjectURL(a.href);
   };
 
+  // Insert a standalone @image block (a data: URI) at the caret — canonical
+  // source, so it round-trips through the share-URL within budget.
+  const insertImage = (dataUrl: string, alt: string): void => {
+    const view = editorView;
+    if (!view) return;
+    const name = `img${++mediaCounter.current}`;
+    const line = view.state.doc.lineAt(view.state.selection.main.head);
+    const insert = `\n\n@image ${name} of "${dataUrl}" alt:"${alt.replace(/"/g, "")}"\n`;
+    view.dispatch({
+      changes: { from: line.to, insert },
+      selection: { anchor: line.to + insert.length },
+    });
+    view.focus();
+  };
+
+  // Ingest a dropped/picked asset. The hard rule: never inline anything that
+  // would silently break a shared link.
+  const ingestFile = React.useCallback(
+    (file: File): void => {
+      if (file.type.startsWith("video/")) {
+        showToast(
+          'Videos can’t be embedded in the playground. Reference a remote URL: @video clip of "https://…".',
+          6500,
+        );
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        showToast("Only image files can be dropped in (videos need a remote https URL).", 5000);
+        return;
+      }
+      if (file.size > MEDIA_INLINE_BUDGET) {
+        showToast(
+          `This image is ${(file.size / 1024 / 1024).toFixed(1)} MB — too large to embed in a shareable link. ` +
+            "Use a remote https URL, or Download a self-contained file.",
+          7000,
+        );
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (): void => {
+        insertImage(String(reader.result), file.name.replace(/\.[^.]+$/, ""));
+        showToast(`Embedded “${file.name}” (${(file.size / 1024).toFixed(0)} KB) — shareable via link.`);
+      };
+      reader.readAsDataURL(file);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editorView, showToast],
+  );
+
+  const onDrop = (e: React.DragEvent): void => {
+    const file = Array.from(e.dataTransfer.files)[0];
+    if (!file) return;
+    e.preventDefault();
+    ingestFile(file);
+  };
+
   const editorPane = (
     <div className="relative h-full">
       <Editor
@@ -230,7 +289,23 @@ export function App(): React.ReactElement {
 
   return (
     <TooltipProvider delayDuration={350} skipDelayDuration={200}>
-      <div className="bg-background flex h-full flex-col">
+      <div
+        className="bg-background flex h-full flex-col"
+        onDragOver={(e) => e.preventDefault()}
+        onDrop={onDrop}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          aria-hidden="true"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) ingestFile(f);
+            e.target.value = "";
+          }}
+        />
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="bg-card/60 flex items-center gap-2 border-b px-3 py-2 backdrop-blur sm:gap-3 sm:px-4">
           <div className="flex items-center gap-2">
@@ -265,6 +340,18 @@ export function App(): React.ReactElement {
               <Button id="insert" variant="secondary" size="sm" onClick={() => setPaletteOpen(true)}>
                 <SparkIcon />
                 Insert
+              </Button>
+            </Hint>
+            <Hint label="Insert an image (or drop one in)">
+              <Button
+                id="insert-image"
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Insert an image"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <ImageIcon />
               </Button>
             </Hint>
             <Hint label={showOutline ? "Hide outline" : "Show outline"}>
