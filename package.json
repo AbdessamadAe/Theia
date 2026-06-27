@@ -14,7 +14,7 @@
     "packages/runtime",
     "packages/render-slides",
     "packages/cli",
-    "packages/playground"
+    "apps/*"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
