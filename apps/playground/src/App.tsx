@@ -1,7 +1,10 @@
 import * as React from "react";
 import logoUrl from "../assets/logo.png";
 import { Dashboard } from "@/components/Dashboard";
+import { Docs } from "@/components/Docs";
 import { EditorView } from "@/components/EditorView";
+import { Gallery } from "@/components/Gallery";
+import { Landing } from "@/components/Landing";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { type ChalkFile, createProject, getPrimaryFile, getProject, type Project } from "@/lib/db";
 import { DASHBOARD_PATH, navigate, projectPath, useRoute } from "@/lib/router";
@@ -23,6 +26,19 @@ export function App(): React.ReactElement {
     applyTheme(t);
   }, []);
   React.useEffect(() => applyTheme(theme), [theme]);
+
+  // Per-route document title (basic SEO / tab clarity).
+  React.useEffect(() => {
+    const titles: Record<string, string> = {
+      landing: "Chalk — Live, interactive math slides from plain text",
+      gallery: "Gallery — Chalk",
+      docs: "Docs — Chalk",
+      dashboard: "Your projects — Chalk",
+      project: "Editor — Chalk",
+      shared: "Shared deck — Chalk",
+    };
+    document.title = titles[route.kind] ?? "Chalk";
+  }, [route.kind]);
 
   // Load the project named by /projects/:id.
   const [loaded, setLoaded] = React.useState<{ project: Project; file?: ChalkFile } | "loading">(
@@ -63,7 +79,13 @@ export function App(): React.ReactElement {
   );
 
   let body: React.ReactElement;
-  if (route.kind === "dashboard") {
+  if (route.kind === "landing") {
+    body = <Landing theme={theme} setTheme={setTheme} />;
+  } else if (route.kind === "gallery") {
+    body = <Gallery theme={theme} setTheme={setTheme} />;
+  } else if (route.kind === "docs") {
+    body = <Docs theme={theme} setTheme={setTheme} page={route.page} />;
+  } else if (route.kind === "dashboard") {
     body = <Dashboard theme={theme} setTheme={setTheme} onOpen={(id) => navigate(projectPath(id))} />;
   } else if (route.kind === "shared") {
     body = (
