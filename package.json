@@ -13,7 +13,8 @@
     "packages/compute",
     "packages/runtime",
     "packages/render-slides",
-    "packages/cli"
+    "packages/cli",
+    "packages/playground"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",

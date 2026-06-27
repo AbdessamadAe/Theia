@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chalk Playground</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --surface: #fff; --fg: #1c2024; --muted: #6b7280;
+    --border: #e2e5ea; --accent: #2563eb;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0b0e14; --surface:#151a23; --fg:#e6e9ef; --muted:#9aa4b2; --border:#283041; --accent:#60a5fa; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+  }
+  .bar {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 12px;
+    padding: 8px 14px; background: var(--surface); border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .brand { font-weight: 750; letter-spacing: -0.01em; }
+  .brand small { color: var(--muted); font-weight: 500; }
+  .bar label { color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .bar .grow { flex: 1 1 auto; }
+  select, button {
+    font: inherit; color: var(--fg); background: var(--bg);
+    border: 1px solid var(--border); border-radius: 7px; padding: 5px 10px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  #present { font-weight: 600; }
+  .mobile-only { display: none; }
+
+  .split { flex: 1 1 auto; display: grid; grid-template-columns: 1fr 1fr; min-height: 0; }
+  .pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+  .editor-pane { border-right: 1px solid var(--border); }
+  #editor { height: 100%; overflow: auto; }
+  .cm-editor { height: 100%; font-size: 14px; }
+  .cm-scroller { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  iframe#preview { width: 100%; height: 100%; border: 0; background: var(--bg); }
+
+  .error {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
+    background: color-mix(in srgb, var(--surface) 85%, #ef4444 15%);
+    color: var(--fg); border-top: 2px solid #ef4444;
+    padding: 8px 14px; font-family: ui-monospace, Menlo, monospace; font-size: 12px;
+    white-space: pre-wrap; max-height: 40%; overflow: auto;
+  }
+  .status {
+    position: absolute; right: 10px; bottom: 8px; font-size: 11px; color: var(--muted);
+    background: color-mix(in srgb, var(--surface) 70%, transparent); padding: 2px 8px;
+    border-radius: 6px; pointer-events: none;
+  }
+  .toast {
+    position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 20;
+    max-width: 80%; background: var(--fg); color: var(--bg);
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  }
+
+  @media (max-width: 800px) {
+    .split { grid-template-columns: 1fr; }
+    .mobile-only { display: inline-block; }
+    /* Edit view by default; .show-deck flips to the preview. */
+    .preview-pane { display: none; }
+    .editor-pane { border-right: 0; }
+    body.show-deck .preview-pane { display: block; }
+    body.show-deck .editor-pane { display: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="bar">
+    <span class="brand">Chalk <small>playground</small></span>
+    <label>Example
+      <select id="examples" aria-label="Load an example lecture"></select>
+    </label>
+    <span class="grow"></span>
+    <button id="present" aria-label="Present the deck fullscreen">Present ⛶</button>
+    <button id="share" aria-label="Copy a shareable link">Share</button>
+    <button id="download" aria-label="Download the deck as a file">Download</button>
+    <button id="view-toggle" class="mobile-only" aria-label="Toggle editor and deck">Deck</button>
+  </header>
+  <main class="split">
+    <section class="pane editor-pane" id="editor-pane">
+      <div id="editor"></div>
+      <div id="error" class="error" role="alert" hidden></div>
+    </section>
+    <section class="pane preview-pane">
+      <iframe id="preview" title="Live deck preview"></iframe>
+      <div id="status" class="status" aria-live="polite"></div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

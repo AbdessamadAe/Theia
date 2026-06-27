@@ -1,0 +1,26 @@
+{
+  "name": "@chalk/playground",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A zero-install browser playground for Chalk: edit .chalk, see the live deck, share by URL — all compiled client-side with the engine packages.",
+  "type": "module",
+  "scripts": {
+    "prebuild": "node scripts/prebuild.mjs",
+    "build": "node scripts/prebuild.mjs && node scripts/build.mjs",
+    "dev": "node scripts/prebuild.mjs && node scripts/build.mjs --serve",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@chalk/parser": "0.1.0",
+    "@chalk/render-slides": "0.1.0",
+    "@codemirror/language": "^6.10.0",
+    "@codemirror/state": "^6.4.0",
+    "@codemirror/view": "^6.34.0",
+    "@lezer/highlight": "^1.2.0",
+    "codemirror": "^6.0.1",
+    "lz-string": "^1.5.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5"
+  }
+}

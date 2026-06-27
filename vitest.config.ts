@@ -11,6 +11,7 @@ export default defineConfig({
       "@chalk/parser": r("./packages/parser/src/index.ts"),
       "@chalk/runtime": r("./packages/runtime/src/index.ts"),
       "@chalk/compute": r("./packages/compute/src/index.ts"),
+      "@chalk/render-slides/core": r("./packages/render-slides/src/render-core.ts"),
       "@chalk/render-slides": r("./packages/render-slides/src/index.ts"),
     },
   },

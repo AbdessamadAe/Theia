@@ -1,0 +1,27 @@
+# Equation morphing
+
+When you manipulate an equation, the surviving terms should *glide* — not blink.
+
+## Completing the square
+
+Advance with → : the reasoning reveals, then the equation morphs and the new
+term is circled.
+
+:::example Why it works
++step Factor $a$ from the first two terms.
++step Add and subtract $\left(\tfrac{b}{2a}\right)^2$.
+:::
+
+:::derive
+$$ a x^2 + b x + c $$
++to $$ a\left(x + \mark{\tfrac{b}{2a}}\right)^2 + \left(c - \tfrac{b^2}{4a}\right) $$
++emphasize circumscribe
+:::
+
+## A coefficient you can drag
+
+The display equation re-morphs as you drag $a$:
+
+@slider a [0, 3] = 1
+
+$$ f(x) = a x^2 $$

@@ -1,0 +1,27 @@
+# Graphing scenes
+
+A `:::scene` draws on real axes — curves, areas, points, and tangents, all
+reactive to sliders, on one canvas.
+
+## A reactive parabola
+
+Drag $k$ to reshape the curve and $s$ to slide the point; the area (as Riemann
+rectangles) and the tangent track them live.
+
+@slider k [0.2, 3] = 1
+
+@slider s [-2.5, 2.5] = 1.2
+
+:::scene
+@axes ax x:[-3, 3] y:[-1, 9] xlabel:"x" ylabel:"y" grid
+@area ar on ax under f from 0 to s rects 12
+@plot f on ax : k*x^2
+@tangent tan on ax to f at P
+@point P on ax at (s, k*s^2)
+@label lab on ax at (-1.7, 7.5) "f(x) = k x^2"
++animate create ax
++animate write f
++animate fade-in ar
++animate grow P
++animate fade-in tan
+:::
