@@ -67,17 +67,22 @@ body {
 
 .stage {
   flex: 1 1 auto;
-  display: grid;
-  place-items: center;
+  position: relative;
   overflow: hidden;
   min-height: 0;
 }
 
+/* The deck is absolutely positioned and scaled from its top-left corner; the
+ * runtime's fit() translates it to centre the scaled canvas. (Centring an
+ * oversized element via grid/flex fails in narrow containers, where the start
+ * edge is clamped — so it would drift right with a left gap.) */
 .deck {
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: var(--canvas-w);
   height: var(--canvas-h);
-  transform-origin: center center;
+  transform-origin: top left;
 }
 
 .slide {

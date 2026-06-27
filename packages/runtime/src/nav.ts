@@ -104,7 +104,11 @@ export function initNav(): void {
     // Guard against a not-yet-laid-out stage/deck (0 size → Infinity scale).
     if (availW <= 0 || availH <= 0 || w <= 0 || h <= 0) return;
     const scale = Math.min(availW / w, availH / h);
-    deck!.style.transform = `scale(${scale})`;
+    // Scale from the top-left, then translate to centre the scaled canvas in
+    // the full stage — robust even when the stage is narrower than the canvas.
+    const tx = (stage.clientWidth - w * scale) / 2;
+    const ty = (stage.clientHeight - h * scale) / 2;
+    deck!.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
   }
 
   function setTheme(theme: string): void {
