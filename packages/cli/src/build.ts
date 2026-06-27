@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { parse } from "@chalk/parser";
-import { renderDeck } from "@chalk/render-slides";
+import { compileChalk } from "@chalk/render-slides";
 
 /** Derive the output `.html` path for a given `.chalk` source path. */
 export function outputPathFor(input: string): string {
@@ -25,14 +24,14 @@ export interface BuildResult {
 export function buildFile(input: string, outPath?: string): BuildResult {
   const inputAbs = resolve(input);
   const source = readFileSync(inputAbs, "utf8");
-  const doc = parse(source);
-  const html = renderDeck(doc);
+  const { html, slides, error } = compileChalk(source);
+  if (error) throw new Error(error);
   const output = outPath ? resolve(outPath) : outputPathFor(inputAbs);
   writeFileSync(output, html, "utf8");
   return {
     input: inputAbs,
     output,
-    slides: doc.children.length,
+    slides,
     bytes: Buffer.byteLength(html, "utf8"),
   };
 }

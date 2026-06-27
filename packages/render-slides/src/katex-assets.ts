@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import katex from "katex";
 
 const require = createRequire(import.meta.url);
 
@@ -50,28 +49,3 @@ export function inlinedKatexJs(): string {
   cachedJs = readFileSync(jsPath, "utf8");
   return cachedJs;
 }
-
-/** Render a LaTeX string to HTML using KaTeX. Errors render in place (as red
- * text) rather than aborting the whole build, so one bad formula is visible
- * and fixable without losing the rest of the deck. `trust` enables author
- * markup like `\htmlClass{ck-…}{…}` (used for derive match hints). */
-export function renderMath(
-  tex: string,
-  display: boolean,
-  trust = false,
-  macros?: Record<string, string>,
-): string {
-  return katex.renderToString(tex, {
-    displayMode: display,
-    throwOnError: false,
-    output: "html",
-    trust,
-    strict: false,
-    macros,
-  });
-}
-
-/** KaTeX macro making `\mark{…}` a targetable span for emphasis effects. */
-export const MARK_MACRO: Record<string, string> = {
-  "\\mark": "\\htmlClass{ck-mark}{#1}",
-};

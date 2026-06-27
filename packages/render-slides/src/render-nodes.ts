@@ -14,7 +14,7 @@ import type {
 } from "@chalk/ast";
 import { formatValue, referencedVars, substituteLatex } from "@chalk/runtime";
 import { escapeHtml } from "./escape.js";
-import { MARK_MACRO, renderMath } from "./katex-assets.js";
+import { MARK_MACRO, renderMath } from "./katex-render.js";
 
 /**
  * Per-slide rendering state.

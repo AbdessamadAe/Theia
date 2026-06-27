@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/render-core.d.ts",
+      "default": "./dist/render-core.js"
     }
   },
   "files": ["dist"],
@@ -17,6 +21,7 @@
   },
   "dependencies": {
     "@chalk/ast": "0.1.0",
+    "@chalk/parser": "0.1.0",
     "@chalk/runtime": "0.1.0",
     "esbuild": "^0.21.5",
     "katex": "^0.16.11"
