@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { ASSETS } from "@/generated/assets";
 import { EXAMPLES } from "@/generated/examples";
+import { coordEdits } from "@/lib/drag";
 import { applySnippet, chalkSlashPalette } from "@/lib/insert";
 import type { SnippetDef } from "@/lib/snippets";
 import { buildShareUrl, readShareFromHash, SHARE_LIMIT } from "@/share";
@@ -69,6 +70,19 @@ export function App(): React.ReactElement {
   React.useEffect(() => {
     (window as unknown as { __chalkDoc?: () => string }).__chalkDoc = () =>
       editorView?.state.doc.toString() ?? "";
+  }, [editorView]);
+
+  // Drag-on-preview write-back: the deck posts new coords for a free-position
+  // object; we rewrite ONLY its `at (…)` numbers as one transaction (one undo).
+  React.useEffect(() => {
+    const onMessage = (e: MessageEvent): void => {
+      const d = e.data as { source?: string; type?: string; span?: [number, number]; x?: number; y?: number };
+      if (d?.source !== "chalk" || d.type !== "coords" || !editorView || !d.span) return;
+      const edits = coordEdits(editorView.state.doc.toString(), d.span, d.x ?? 0, d.y ?? 0);
+      if (edits) editorView.dispatch({ changes: edits });
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
   }, [editorView]);
 
   const showToast = React.useCallback((msg: string, ms = 3500) => {
