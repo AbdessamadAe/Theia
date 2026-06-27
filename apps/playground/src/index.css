@@ -93,6 +93,46 @@
     --shadow-2: 0 2px 10px hsl(0 0% 0% / 0.5), 0 1px 2px hsl(0 0% 0% / 0.4);
     --shadow-3: 0 14px 40px hsl(0 0% 0% / 0.6), 0 2px 8px hsl(0 0% 0% / 0.5);
   }
+
+  /* Chalkboard — a deep, warm blackboard-green chrome with chalk-white ink.
+     A third, selectable theme; light/dark are unchanged. AA-verified pairings
+     (ink 15:1, secondary chalk 9.7:1, live accent 9.8:1, destructive 6.5:1). */
+  .chalkboard {
+    --background: 158 20% 9%; /* darkest board */
+    --foreground: 48 33% 92%; /* soft warm chalk-white */
+    --card: 158 16% 13%; /* board panel */
+    --card-foreground: 48 33% 92%;
+    --popover: 156 15% 16%; /* raised board */
+    --popover-foreground: 48 33% 92%;
+    --primary: 48 33% 92%; /* chalk-white actions */
+    --primary-foreground: 158 22% 10%;
+    --secondary: 156 12% 20%;
+    --secondary-foreground: 48 30% 92%;
+    --muted: 156 12% 18%;
+    --muted-foreground: 45 14% 74%; /* dim chalk */
+    --accent: 156 12% 22%;
+    --accent-foreground: 48 33% 92%;
+    --destructive: 8 80% 68%; /* chalk-coral, readable on board */
+    --destructive-foreground: 158 25% 10%;
+    --border: 150 10% 30%; /* faint chalk line */
+    --input: 150 10% 30%;
+
+    /* the live / reactive colour — chalk-cyan, brightened to pop on green */
+    --live: 186 68% 62%;
+    --live-foreground: 158 25% 10%;
+    --ring: 186 68% 62%;
+
+    --cm-keyword: 265 62% 80%; /* chalk-violet */
+    --cm-string: 160 48% 66%; /* chalk-green */
+    --cm-emphasis: 48 33% 92%;
+
+    /* handwriting display face — wordmark + empty-state headline ONLY */
+    --font-display: "Caveat", "Segoe Print", "Bradley Hand", cursive;
+
+    --shadow-1: 0 1px 2px hsl(0 0% 0% / 0.45);
+    --shadow-2: 0 2px 10px hsl(0 0% 0% / 0.55), 0 1px 2px hsl(0 0% 0% / 0.45);
+    --shadow-3: 0 16px 44px hsl(0 0% 0% / 0.62), 0 2px 8px hsl(0 0% 0% / 0.5);
+  }
 }
 
 @layer base {
@@ -129,4 +169,25 @@
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.7;
+}
+
+/* ===========================================================================
+   Chalkboard theme — chrome-only garnish. A faint, STATIC chalk-dust grain on
+   the board background (never on content), disabled under reduced motion. The
+   editor gets a solid board panel so code never sits on texture.
+   =========================================================================== */
+/* Grain rides on the app-root background; chrome (translucent header/panels)
+   reveals it subtly, while opaque/solid surfaces (the editor, the slide card)
+   paint over it cleanly. Static image — no animation, no jank. */
+.chalkboard [data-app-root] {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23c)' opacity='0.045'/%3E%3C/svg%3E");
+}
+@media (prefers-reduced-motion: reduce) {
+  .chalkboard [data-app-root] {
+    background-image: none;
+  }
+}
+/* Code sits on a solid board surface (crisp, grain-free, AA contrast). */
+.chalkboard .cm-editor {
+  background: hsl(var(--card));
 }
