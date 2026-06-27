@@ -30,6 +30,70 @@ export function BoardIcon(props: SVG): React.ReactElement {
   );
 }
 
+/**
+ * A standing chalkboard on an easel — a single flat-vector illustration (board
+ * in the brand deep-green, muted-wood frame/legs, a minimal tray with chalk +
+ * eraser). DECORATION ONLY: `aria-hidden`, and memoized with no props so it
+ * renders exactly once and never repaints (e.g. while a slider is dragged).
+ * The live preview is mounted over the board's inner surface — see EASEL_MOUNT.
+ */
+export const EaselFrame = React.memo(function EaselFrame(props: SVG): React.ReactElement {
+  return (
+    <svg
+      viewBox="0 0 400 360"
+      preserveAspectRatio="xMidYMid meet"
+      fill="none"
+      aria-hidden="true"
+      {...props}
+    >
+      {/* easel legs (behind the board) */}
+      <g
+        stroke="hsl(var(--easel-frame))"
+        strokeWidth={7}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M118 70 L74 334" />
+        <path d="M282 70 L326 334" />
+        <path d="M206 150 L242 342" />
+        <path d="M96 284 H304" />
+      </g>
+      {/* board: muted-wood frame + brand-green surface */}
+      <rect x="36" y="26" width="328" height="218" rx="11" fill="hsl(var(--easel-frame))" />
+      <rect
+        x="48"
+        y="38"
+        width="304"
+        height="194"
+        rx="5"
+        fill="hsl(var(--board))"
+        stroke="hsl(var(--board-edge))"
+        strokeWidth="2"
+      />
+      {/* chalk tray */}
+      <rect x="42" y="246" width="316" height="14" rx="4" fill="hsl(var(--easel-tray))" />
+      <rect x="42" y="246" width="316" height="3" rx="1.5" fill="hsl(var(--easel-frame))" opacity="0.7" />
+      {/* eraser */}
+      <rect x="112" y="238" width="46" height="12" rx="2" fill="hsl(var(--easel-frame))" />
+      <rect x="112" y="238" width="46" height="5" rx="2" fill="hsl(var(--chalk-stick))" opacity="0.35" />
+      {/* a stick of chalk */}
+      <rect
+        x="244"
+        y="240"
+        width="40"
+        height="7"
+        rx="3.5"
+        fill="hsl(var(--chalk-stick))"
+        transform="rotate(-4 264 243)"
+      />
+    </svg>
+  );
+});
+
+/** The live preview's mount rect within the easel wrapper (matches the board's
+ * inner surface in EaselFrame's viewBox). */
+export const EASEL_MOUNT = { left: "14%", top: "13%", width: "72%", height: "50%" } as const;
+
 /** A chalk swoosh, sized to underline the wordmark. Decorative. */
 export function WordmarkFlourish(props: SVG): React.ReactElement {
   return (

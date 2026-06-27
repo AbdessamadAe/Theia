@@ -41,6 +41,13 @@
     --cm-string: 168 64% 32%; /* $math$, code fences */
     --cm-emphasis: 222 24% 12%;
 
+    /* chalkboard easel illustration (brand deep-green board + muted wood) */
+    --board: 158 42% 17%; /* brand deep green — matches the logo */
+    --board-edge: 158 44% 11%;
+    --easel-frame: 28 14% 38%; /* muted wood */
+    --easel-tray: 28 16% 29%;
+    --chalk-stick: 48 40% 92%;
+
     --radius: 0.625rem;
 
     /* typography */
@@ -88,6 +95,10 @@
     --cm-keyword: 258 80% 76%;
     --cm-string: 165 58% 56%;
     --cm-emphasis: 210 20% 92%;
+
+    /* easel reads well on a dark UI: same green board, a touch lighter wood */
+    --easel-frame: 28 13% 46%;
+    --easel-tray: 28 14% 36%;
 
     --shadow-1: 0 1px 2px hsl(0 0% 0% / 0.4);
     --shadow-2: 0 2px 10px hsl(0 0% 0% / 0.5), 0 1px 2px hsl(0 0% 0% / 0.4);
