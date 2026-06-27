@@ -1,8 +1,13 @@
 // Drive the running playground (http://localhost:5173) with Playwright.
 import { chromium } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
+import lzString from "lz-string";
 
-const URL = process.env.PG_URL || "http://localhost:5173/";
+const BASE = process.env.PG_URL || "http://localhost:5173/";
+// Land directly in the editor via a share link (the dashboard is the default
+// landing for a fresh device; a #c= deck opens the editor straight away).
+const INITIAL = "## One\n\n$$ f(x) = x^2 $$\n\nText one.\n\n## Two\n\nText two.\n";
+const URL = `${BASE}#c=${lzString.compressToEncodedURIComponent(INITIAL)}`;
 const SHOTS = "/tmp/chalk-pg";
 mkdirSync(SHOTS, { recursive: true });
 
@@ -26,11 +31,28 @@ page.on("pageerror", (e) => errors.push(String(e)));
 const deck = page.frameLocator("#preview");
 const slideCount = async () => deck.locator(".slide").count();
 
-// Drive the shadcn (Radix) Select instead of a native <select>.
+// Examples are no longer an in-editor picker; load one by opening its source as
+// a share-link deck (reads the example .chalk from disk).
+const EXAMPLE_FILES = {
+  surfaces: "surfaces.chalk",
+  limits: "limits.chalk",
+  morphing: "morphing.chalk",
+  graphing: "graphing.chalk",
+};
 async function selectExample(nameRe) {
-  await page.getByTestId("examples").click();
-  await page.getByRole("option", { name: nameRe }).click();
-  await sleep(300);
+  const key = Object.keys(EXAMPLE_FILES).find((k) => nameRe.test(k));
+  const src = readFileSync(`examples/${EXAMPLE_FILES[key]}`, "utf8");
+  await page.goto(`${BASE}#c=${lzString.compressToEncodedURIComponent(src)}`);
+  await page.reload(); // goto between two #c= URLs is hash-only (no SPA reload); force one
+  await page.waitForSelector(".cm-editor");
+  await page.waitForFunction(() => {
+    const f = document.querySelector("#preview");
+    return f && f.srcdoc && f.srcdoc.includes("<section");
+  });
+  // Wait for the freshly-loaded deck to boot inside the new iframe (avoids a
+  // detached-frame race right after navigation).
+  await deck.locator(".slide.is-active").first().waitFor({ timeout: 8000 }).catch(() => {});
+  await sleep(400);
 }
 
 await page.goto(URL);
@@ -154,7 +176,6 @@ await page.click("#download");
 const dl = await dlP;
 const path = `${SHOTS}/downloaded-${dl.suggestedFilename()}`;
 await dl.saveAs(path);
-const { readFileSync } = await import("node:fs");
 const content = readFileSync(path, "utf8");
 ok("Download produces a self-contained deck bundle", content.startsWith("<!doctype html>") && content.includes("data:font/woff2;base64,"), dl.suggestedFilename());
 

@@ -2,10 +2,11 @@ import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
-// Static, client-side playground (no server). `base: "./"` keeps asset URLs
-// relative for subpath hosting. React + Tailwind + shadcn-style components.
+// Static, client-side playground (no server). `base: "/"` so deep client routes
+// (/projects/:id) resolve assets from the root on refresh. React + Tailwind +
+// shadcn-style components.
 export default defineConfig({
-  base: "./",
+  base: "/",
   plugins: [react()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

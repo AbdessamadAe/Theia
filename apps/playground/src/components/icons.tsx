@@ -55,3 +55,28 @@ export const ImageIcon = (p: P): React.ReactElement => (
     <circle cx="9" cy="9" r="1.5" /><path d="m21 15-4.5-4.5L7 20" />
   </svg>
 );
+export const HomeIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <path d="M3 10.5 12 3l9 7.5M5.5 9.5V20a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V9.5" />
+  </svg>
+);
+export const PlusIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+export const SearchIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" />
+  </svg>
+);
+export const UploadIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 9l5-5 5 5M12 4v12" />
+  </svg>
+);
+export const MoreIcon = (p: P): React.ReactElement => (
+  <svg {...base(p)}>
+    <circle cx="5" cy="12" r="1.4" /><circle cx="12" cy="12" r="1.4" /><circle cx="19" cy="12" r="1.4" />
+  </svg>
+);

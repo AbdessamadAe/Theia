@@ -72,7 +72,7 @@ export function PreviewFrame({
         <EmptyBoardSketch className="text-foreground/70 h-32 w-auto max-w-[70%]" />
         <div className="space-y-1">
           <p className="chalk-display text-foreground text-lg font-medium">Nothing on the board yet</p>
-          <p className="text-sm">Start typing, pick an example, or drop in an image.</p>
+          <p className="text-sm">Start typing, or drop in an image.</p>
         </div>
       </div>
     );
