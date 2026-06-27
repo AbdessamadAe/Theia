@@ -11,7 +11,6 @@ import {
   PresentIcon,
   ShareIcon,
   SparkIcon,
-  SunIcon,
 } from "@/components/icons";
 import { InsertPalette } from "@/components/InsertPalette";
 import { Outline } from "@/components/Outline";
@@ -57,10 +56,9 @@ export function App(): React.ReactElement {
   const [showOutline, setShowOutline] = React.useState(true);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [editorView, setEditorView] = React.useState<EditorView | null>(null);
-  const [theme, setTheme] = React.useState<"light" | "dark" | "chalkboard">(() => {
-    const c = document.documentElement.classList;
-    return c.contains("chalkboard") ? "chalkboard" : c.contains("dark") ? "dark" : "light";
-  });
+  const [theme, setTheme] = React.useState<"dark" | "chalkboard">(() =>
+    document.documentElement.classList.contains("dark") ? "dark" : "chalkboard",
+  );
   const [mobileView, setMobileView] = React.useState<"editor" | "preview">("preview");
   const compact = useMediaQuery("(max-width: 1023px)");
 
@@ -424,14 +422,8 @@ export function App(): React.ReactElement {
             onChange={setTheme}
             className="p-0.5"
             options={[
-              { value: "light", label: <SunIcon className="size-4" />, ariaLabel: "Light theme", title: "Light" },
+              { value: "chalkboard", label: <BoardIcon className="size-4" />, ariaLabel: "Chalk theme", title: "Chalk" },
               { value: "dark", label: <MoonIcon className="size-4" />, ariaLabel: "Dark theme", title: "Dark" },
-              {
-                value: "chalkboard",
-                label: <BoardIcon className="size-4" />,
-                ariaLabel: "Chalkboard theme",
-                title: "Chalkboard",
-              },
             ]}
           />
         </header>
