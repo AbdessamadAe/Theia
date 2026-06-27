@@ -1,6 +1,9 @@
 import type {
   Block,
   CodeCell,
+  DeriveBlock,
+  DeriveDriver,
+  DeriveState,
   DisplayMath,
   DocumentNode,
   GeoBlock,
@@ -153,6 +156,23 @@ export function parse(source: string): DocumentNode {
             source: geoSource,
             loc: src.loc(line.start, blockEnd),
           } satisfies GeoBlock);
+          k = close + 1;
+          continue;
+        }
+
+        if (keyword === "derive") {
+          // `:::derive` is advance-driven; `:::derive bind=a` is slider-driven
+          // (parsed now to prove the design; runtime wiring is a later phase).
+          let driver: DeriveDriver = "advance";
+          let bind: string | undefined;
+          const bm = /\bbind\s*=\s*([A-Za-z_]\w*)/.exec(header);
+          if (bm) {
+            driver = "slider";
+            bind = bm[1];
+          }
+          blocks.push(
+            parseDerive(bodyStart, bodyEnd, line.start, blockEnd, driver, bind),
+          );
           k = close + 1;
           continue;
         }
@@ -361,6 +381,81 @@ export function parse(source: string): DocumentNode {
       loc: src.loc(blockStart, blockEnd),
     };
     if (titleText.length > 0) node.title = titleText;
+    return node;
+  }
+
+  /** Parse a `:::derive` body into an ordered list of equation states. The
+   * first `$$…$$` is the initial state; each `+to $$…$$` appends another. */
+  function parseDerive(
+    bodyStart: number,
+    bodyEnd: number,
+    blockStart: number,
+    blockEnd: number,
+    driver: DeriveDriver,
+    bind: string | undefined,
+  ): DeriveBlock {
+    const states: DeriveState[] = [];
+    let s = bodyStart;
+
+    while (s < bodyEnd) {
+      let txt = lines[s]!.text;
+      if (txt.trim() === "") {
+        s++;
+        continue;
+      }
+      // An optional `+to` introduces the next state.
+      let lineStartOffset = lines[s]!.start;
+      const tm = /^\s*\+to\s*/.exec(txt);
+      if (tm) {
+        txt = txt.slice(tm[0].length);
+        lineStartOffset += tm[0].length;
+      }
+      const trimmed = txt.trim();
+      if (!trimmed.startsWith("$$")) {
+        s++; // ignore stray lines rather than mangle them
+        continue;
+      }
+
+      // Single-line `$$ … $$`.
+      if (trimmed.length > 4 && trimmed.endsWith("$$")) {
+        states.push({
+          type: "deriveState",
+          tex: trimmed.slice(2, -2).trim(),
+          loc: src.loc(lineStartOffset, lines[s]!.end),
+        });
+        s++;
+        continue;
+      }
+
+      // Multi-line: open `$$` here, close on a later line ending in `$$`.
+      const innerStart = lineStartOffset + txt.indexOf("$$") + 2;
+      let e = s + 1;
+      while (e < bodyEnd && !lines[e]!.text.trim().endsWith("$$")) e++;
+      let innerEnd: number;
+      let stateEnd: number;
+      if (e < bodyEnd) {
+        innerEnd = lines[e]!.start + lines[e]!.text.lastIndexOf("$$");
+        stateEnd = lines[e]!.end;
+      } else {
+        innerEnd = lines[bodyEnd - 1]!.end;
+        stateEnd = innerEnd;
+        e = bodyEnd - 1;
+      }
+      states.push({
+        type: "deriveState",
+        tex: src.source.slice(innerStart, innerEnd).trim(),
+        loc: src.loc(lines[s]!.start, stateEnd),
+      });
+      s = e + 1;
+    }
+
+    const node: DeriveBlock = {
+      type: "derive",
+      driver,
+      states,
+      loc: src.loc(blockStart, blockEnd),
+    };
+    if (bind !== undefined) node.bind = bind;
     return node;
   }
 

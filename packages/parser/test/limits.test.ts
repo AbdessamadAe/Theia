@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import type {
   Block,
   CodeCell,
+  DeriveBlock,
   DocumentNode,
   GeoBlock,
   Inline,
@@ -45,16 +46,17 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(doc.title).toBe("Limits and Continuity");
   });
 
-  it("splits into the expected slides (one title, eight content)", () => {
+  it("splits into the expected slides (one title, nine content)", () => {
     const titleSlides = doc.children.filter((s) => s.kind === "title");
     const contentSlides = doc.children.filter((s) => s.kind === "content");
     expect(titleSlides).toHaveLength(1);
-    expect(contentSlides).toHaveLength(8);
+    expect(contentSlides).toHaveLength(9);
     expect(headingText(titleSlides[0]!)).toBe("Limits and Continuity");
     expect(contentSlides.map(headingText)).toEqual([
       "The intuition behind a limit",
       "Watching a parabola change",
       "A first epsilon–delta proof",
+      "Completing the square",
       "The squeeze theorem",
       "Lines: two live parameters",
       "Continuity, geometrically",
@@ -129,6 +131,21 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
       .filter((c): c is InlineMath => c.type === "inlineMath")
       .pop()!;
     expect(lastMath.tex).toBe("\\blacksquare");
+  });
+
+  it("parses a :::derive block into ordered equation states", () => {
+    const slide = slideByHeading("Completing the square");
+    const derives = slide.children.filter(
+      (b): b is DeriveBlock => b.type === "derive",
+    );
+    expect(derives).toHaveLength(3);
+    const square = derives[0]!;
+    expect(square.driver).toBe("advance");
+    expect(square.states).toHaveLength(2);
+    expect(square.states[0]!.tex).toBe("a x^2 + b x + c");
+    expect(square.states[1]!.tex).toContain("\\left(x +");
+    // The hinted derive keeps its \htmlClass match hints verbatim in the tex.
+    expect(derives[1]!.states[0]!.tex).toContain("\\htmlClass{ck-sin}");
   });
 
   it("parses the theorem family: theorem, lemma, and example", () => {

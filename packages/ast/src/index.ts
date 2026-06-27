@@ -73,7 +73,8 @@ export type Block =
   | Slider
   | Plot
   | GeoBlock
-  | ListBlock;
+  | ListBlock
+  | DeriveBlock;
 
 /** A run of prose. Its children are inline nodes (text, inline math, …). */
 export interface Paragraph extends NodeBase {
@@ -164,6 +165,39 @@ export interface ListBlock extends NodeBase {
   items: Block[][];
 }
 
+/** What drives a `:::derive` block's transitions between states. */
+export type DeriveDriver = "advance" | "slider";
+
+/**
+ * A `:::derive` block: an ordered sequence of equation states that morph into
+ * one another. The first `$$…$$` is the initial state; each `+to $$…$$` appends
+ * the next state.
+ *
+ * Designed to serve future animation pillars without a parser change:
+ *   - `driver` distinguishes advance-driven (wired now) from slider-driven
+ *     morphs (`:::derive bind=a` parses to `"slider"`/`bind`, not yet wired),
+ *   - each {@link DeriveState} can carry `emphasis` keys for the future
+ *     highlight/emphasis pillar.
+ *
+ * Author match hints are expressed inside the tex via KaTeX `\htmlClass{ck-…}`,
+ * so the matcher needs no extra AST field.
+ */
+export interface DeriveBlock extends NodeBase {
+  type: "derive";
+  driver: DeriveDriver;
+  /** Slider name when `driver === "slider"`. */
+  bind?: string;
+  states: DeriveState[];
+}
+
+/** One state of a {@link DeriveBlock}. `tex` is the verbatim KaTeX source. */
+export interface DeriveState extends NodeBase {
+  type: "deriveState";
+  tex: string;
+  /** Future: token keys to emphasize/highlight on arrival at this state. */
+  emphasis?: string[];
+}
+
 // ---------------------------------------------------------------------------
 // Inline-level nodes
 // ---------------------------------------------------------------------------
@@ -201,7 +235,7 @@ export interface InlineCode extends NodeBase {
 // ---------------------------------------------------------------------------
 
 /** Any node in the tree. */
-export type AnyNode = DocumentNode | Slide | Step | Block | Inline;
+export type AnyNode = DocumentNode | Slide | Step | Block | DeriveState | Inline;
 
 const BLOCK_TYPES = new Set<string>([
   "paragraph",
@@ -212,6 +246,7 @@ const BLOCK_TYPES = new Set<string>([
   "plot",
   "geo",
   "list",
+  "derive",
 ]);
 
 const INLINE_TYPES = new Set<string>([
@@ -258,6 +293,8 @@ export function childrenOf(node: AnyNode): AnyNode[] {
       return node.children;
     case "list":
       return node.items.flat();
+    case "derive":
+      return node.states;
     default:
       return [];
   }
