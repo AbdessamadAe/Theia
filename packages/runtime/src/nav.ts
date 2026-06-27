@@ -30,18 +30,29 @@ export function initNav(): void {
   const stepCount = (i: number): number =>
     parseInt(slides[i]!.getAttribute("data-steps") || "0", 10);
 
-  function applySteps(i: number): void {
+  /**
+   * Apply the current reveal count to slide `i`. `+step` items toggle visible;
+   * other advance-driven widgets (e.g. `:::derive` morphs) listen for the
+   * `chalk:advance` event and update themselves. `animate` is false on jumps
+   * (slide change, Home/End, hash) so those snap instantly.
+   */
+  function applySteps(i: number, animate: boolean): void {
     const steps = slides[i]!.querySelectorAll<HTMLElement>(".chalk-step");
     steps.forEach((el) => {
       const idx = parseInt(el.getAttribute("data-step") || "0", 10);
       el.classList.toggle("is-revealed", idx < revealed[i]!);
     });
+    document.dispatchEvent(
+      new CustomEvent("chalk:advance", {
+        detail: { slide: slides[i], revealed: revealed[i], animate },
+      }),
+    );
   }
 
   function show(i: number): void {
     current = Math.max(0, Math.min(slides.length - 1, i));
     slides.forEach((s, k) => s.classList.toggle("is-active", k === current));
-    applySteps(current);
+    applySteps(current, false);
     if (counterEl) counterEl.textContent = `${current + 1} / ${slides.length}`;
     if (progressEl) {
       progressEl.style.width = `${((current + 1) / slides.length) * 100}%`;
@@ -58,7 +69,7 @@ export function initNav(): void {
   function next(): void {
     if (revealed[current]! < stepCount(current)) {
       revealed[current]!++;
-      applySteps(current);
+      applySteps(current, true);
     } else if (current < slides.length - 1) {
       revealed[current + 1] = 0;
       show(current + 1);
@@ -68,7 +79,7 @@ export function initNav(): void {
   function prev(): void {
     if (revealed[current]! > 0) {
       revealed[current]!--;
-      applySteps(current);
+      applySteps(current, true);
     } else if (current > 0) {
       revealed[current - 1] = stepCount(current - 1);
       show(current - 1);

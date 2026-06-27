@@ -17,3 +17,14 @@ export {
 export { compileExpr, type CompiledExpr } from "./expr.js";
 
 export { ReactiveGraph, type Dependent } from "./graph.js";
+
+export {
+  matchAtoms,
+  shouldCrossfade,
+  CROSSFADE_CONFIDENCE,
+  type Atom,
+  type MatchResult,
+  type MatchPair,
+} from "./match.js";
+
+export { morph, type MorphOptions } from "./morph.js";
