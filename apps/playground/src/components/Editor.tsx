@@ -3,6 +3,7 @@ import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import * as React from "react";
+import { chalkEditorTheme } from "@/chalk-cm-theme";
 import { chalk } from "@/chalk-lang";
 
 interface EditorProps {
@@ -34,6 +35,7 @@ export function Editor({ value, onChange, extensions, onReady }: EditorProps): R
         extensions: [
           basicSetup,
           chalk(),
+          chalkEditorTheme(),
           EditorView.lineWrapping,
           ...(extensions ?? []),
           EditorView.updateListener.of((u) => {
