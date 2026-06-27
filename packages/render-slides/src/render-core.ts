@@ -23,15 +23,23 @@ export interface RenderOptions {
   /** Document <title>; defaults to the lecture title or "Chalk deck". */
   title?: string;
   assets: DeckAssets;
+  /**
+   * Rewrite a media reference (image/video `src`/`poster`). The CLI supplies a
+   * resolver that embeds local files (data URI or copy-alongside); the playground
+   * leaves data:/https refs untouched. Defaults to identity, so remote URLs and
+   * already-inlined data URIs pass straight through.
+   */
+  resolveMedia?: (ref: string) => string;
 }
 
 /** Render a parsed Document into a self-contained HTML deck string. */
 export function renderDeckHTML(doc: DocumentNode, options: RenderOptions): string {
   const title = options.title ?? doc.title ?? "Chalk deck";
   const { katexCss, katexJs, runtimeJs } = options.assets;
+  const resolveMedia = options.resolveMedia ?? ((ref: string) => ref);
 
   const slidesHtml = doc.children
-    .map((slide, i) => renderSlide(slide, i).html)
+    .map((slide, i) => renderSlide(slide, i, resolveMedia).html)
     .join("\n");
 
   return `<!doctype html>

@@ -3,8 +3,10 @@ import type {
   CodeCell,
   DeriveBlock,
   GeoBlock,
+  ImageInline,
   Inline,
   ListBlock,
+  MediaBlock,
   Plot,
   SceneBlock,
   Slide,
@@ -28,6 +30,8 @@ import { MARK_MACRO, renderMath } from "./katex-render.js";
 interface SlideCtx {
   advance: number;
   sliders: Map<string, number>;
+  /** Rewrite a media reference (identity unless the CLI embeds local files). */
+  resolveMedia: (ref: string) => string;
 }
 
 const THEOREM_LABELS: Record<TheoremKind, string> = {
@@ -107,7 +111,14 @@ function renderInlineNode(node: Inline, ctx: SlideCtx): string {
       return `<strong>${renderInline(node.children, ctx)}</strong>`;
     case "emphasis":
       return `<em>${renderInline(node.children, ctx)}</em>`;
+    case "image":
+      return renderInlineImage(node, ctx);
   }
+}
+
+/** A markdown inline image — the same `<img>` treatment as a standalone @image. */
+function renderInlineImage(node: ImageInline, ctx: SlideCtx): string {
+  return imageTag(ctx.resolveMedia(node.url), node.alt, { className: "chalk-image chalk-image--inline" });
 }
 
 // --- Blocks ----------------------------------------------------------------
@@ -138,7 +149,68 @@ function renderBlock(block: Block, ctx: SlideCtx): string {
       return renderDerive(block, ctx);
     case "scene":
       return renderScene(block, ctx);
+    case "media":
+      return renderMedia(block, ctx);
   }
+}
+
+// --- Media (standalone figures) --------------------------------------------
+
+/** A CSS width hint from a media `width:` arg: a bare number → rem (a sensible
+ * column width in prose); "60%"/"20rem"/"320px" pass through verbatim. */
+function widthStyle(width: string | undefined): string {
+  if (!width) return "";
+  const w = /^\d+(\.\d+)?$/.test(width) ? `${width}rem` : width;
+  return `width:${w};`;
+}
+
+/** A shared, accessible `<img>` (crisp, correct aspect ratio, lazy-loaded). */
+function imageTag(
+  src: string,
+  alt: string | undefined,
+  opts: { className?: string; style?: string } = {},
+): string {
+  const missing = alt === undefined || alt.trim() === "";
+  return `<img class="${opts.className ?? "chalk-image"}" src="${escapeHtml(src)}" alt="${escapeHtml(
+    alt ?? "",
+  )}" loading="lazy" decoding="async"${missing ? ' data-chalk-noalt="1"' : ""}${
+    opts.style ? ` style="${opts.style}"` : ""
+  } />`;
+}
+
+/** A standalone block-level figure: an image or a themed video player. */
+function renderMedia(block: MediaBlock, ctx: SlideCtx): string {
+  const src = ctx.resolveMedia(block.src);
+  const caption = block.caption
+    ? `<figcaption class="chalk-media__caption">${escapeHtml(block.caption)}</figcaption>`
+    : "";
+
+  if (block.mediaKind === "image") {
+    return `<figure class="chalk-block chalk-media chalk-media--image">${imageTag(src, block.alt, {
+      style: widthStyle(block.width),
+    })}${caption}</figure>`;
+  }
+
+  // Video: a clean themed player. Autoplay is muted-only (browser rule) and is
+  // suppressed under reduced motion by the runtime; poster shows until play.
+  const attrs = [
+    block.controls === false ? "" : "controls",
+    block.loop ? "loop" : "",
+    block.muted || block.autoplay ? "muted" : "",
+    block.autoplay ? 'data-chalk-autoplay="1"' : "",
+    block.poster ? `poster="${escapeHtml(ctx.resolveMedia(block.poster))}"` : "",
+    'preload="none"',
+    "playsinline",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const track = block.track
+    ? `<track kind="captions" src="${escapeHtml(ctx.resolveMedia(block.track))}" default />`
+    : "";
+  return `<figure class="chalk-block chalk-media chalk-media--video">
+  <video class="chalk-video" ${attrs} style="${widthStyle(block.width)}" aria-label="${escapeHtml(
+    block.alt ?? block.caption ?? "video",
+  )}"><source src="${escapeHtml(src)}" />${track}</video>${caption}</figure>`;
 }
 
 /**
@@ -158,9 +230,16 @@ function renderScene(block: SceneBlock, ctx: SlideCtx): string {
       // drag back to this object's `at (…)` for surgical text rewriting. It does
       // not affect how the object renders.
       const span: [number, number] = [o.loc.start.offset, o.loc.end.offset];
+      // Resolve media references (image/video) so the CLI can embed local files.
+      let args = o.args;
+      if ((o.kind === "image" || o.kind === "video") && (args.src || args.poster)) {
+        args = { ...args };
+        if (args.src) args.src = ctx.resolveMedia(args.src);
+        if (args.poster) args.poster = ctx.resolveMedia(args.poster);
+      }
       return o.on !== undefined
-        ? { kind: o.kind, name: o.name, on: o.on, args: o.args, span }
-        : { kind: o.kind, name: o.name, args: o.args, span };
+        ? { kind: o.kind, name: o.name, on: o.on, args, span }
+        : { kind: o.kind, name: o.name, args, span };
     }),
     anims: block.steps.map((s) => ({
       verb: s.verb,
@@ -333,10 +412,11 @@ function renderList(block: ListBlock, ctx: SlideCtx): string {
 export function renderSlide(
   slide: Slide,
   index: number,
+  resolveMedia: (ref: string) => string = (ref) => ref,
 ): { html: string; steps: number } {
   const sliders = new Map<string, number>();
   collectSliders(slide.children, sliders);
-  const ctx: SlideCtx = { advance: 0, sliders };
+  const ctx: SlideCtx = { advance: 0, sliders, resolveMedia };
 
   const heading = renderInline(slide.heading, ctx);
   const body = renderBlocks(slide.children, ctx);

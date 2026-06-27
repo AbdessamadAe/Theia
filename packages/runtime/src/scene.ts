@@ -18,6 +18,7 @@
 import { type CoordSystem, makeCoordSystem, niceStep, parseRange } from "./coord.js";
 import { boundVars, isDraggablePosition } from "./drag.js";
 import { type CompiledExpr, compileExpr } from "./expr.js";
+import { parseMediaSegment } from "./media.js";
 import { initScene3D, type Scene3DOptions } from "./scene3d.js";
 
 interface GraphLike {
@@ -298,6 +299,139 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     }
   }
 
+  // --- Media objects (image / video) as positioned overlay elements --------
+  // Media is a named scene object like any other: positioned via the same
+  // CoordSystem, sized in scene-x units (`width:`), faded by creation verbs,
+  // and reactive (width/opacity expressions re-evaluate on the graph). Video
+  // additionally responds to +animate play/pause verbs through advance.
+  interface SceneMedia {
+    o: SceneObj;
+    el: HTMLImageElement | HTMLVideoElement;
+    isVideo: boolean;
+    wExpr?: CompiledExpr;
+    opacityExpr?: CompiledExpr;
+    endGuard?: () => void;
+  }
+  const media: SceneMedia[] = [];
+  const mediaByName = new Map<string, SceneMedia>();
+  if (overlay) {
+    for (const o of objects) {
+      const kind = o.spec.kind;
+      if (kind !== "image" && kind !== "video") continue;
+      const src = o.spec.args.src;
+      if (!src) continue;
+      const isVideo = kind === "video";
+      const el = document.createElement(isVideo ? "video" : "img") as
+        | HTMLImageElement
+        | HTMLVideoElement;
+      el.className = "chalk-scene__media" + (isVideo ? " chalk-scene__media--video" : "");
+      if (isVideo) {
+        const v = el as HTMLVideoElement;
+        v.src = src;
+        v.preload = "none";
+        v.playsInline = true;
+        if (o.spec.args.controls !== "false") v.controls = true;
+        if (o.spec.args.loop === "true") v.loop = true;
+        if (o.spec.args.muted === "true" || o.spec.args.autoplay === "true") v.muted = true;
+        if (o.spec.args.poster) v.poster = o.spec.args.poster;
+        v.setAttribute("aria-label", o.spec.args.alt ?? o.spec.name);
+      } else {
+        const im = el as HTMLImageElement;
+        im.src = src;
+        im.alt = o.spec.args.alt ?? o.spec.args.text ?? "";
+        im.loading = "lazy";
+        im.decoding = "async";
+      }
+      overlay.appendChild(el);
+      const m: SceneMedia = {
+        o,
+        el,
+        isVideo,
+        wExpr: compileSafe(o.spec.args.width),
+        opacityExpr: compileSafe(o.spec.args.opacity),
+      };
+      media.push(m);
+      mediaByName.set(o.spec.name, m);
+    }
+  }
+
+  // Bound media width/opacity join the reactive deps (declared just below).
+  const mediaDepVars = (): string[] => {
+    const out: string[] = [];
+    for (const m of media) {
+      for (const e of [m.wExpr, m.opacityExpr]) {
+        if (e) for (const v of e.vars) out.push(v);
+      }
+    }
+    return out;
+  };
+
+  function positionMedia(scope: Record<string, number>, area: ReturnType<typeof areaRect>): void {
+    for (const m of media) {
+      const cs = coordFor(m.o.spec.on, area);
+      if (!cs) {
+        m.el.style.display = "none";
+        continue;
+      }
+      const [x, y] = coordsOf(m.o, scope);
+      const [px, py] = cs.toPixel(x, y);
+      const wUnits = m.wExpr ? m.wExpr.eval(scope) : 3;
+      const [sx] = cs.scale();
+      const bound = m.opacityExpr ? m.opacityExpr.eval(scope) : 1;
+      const op = Math.max(0, Math.min(1, m.o.appear * (Number.isFinite(bound) ? bound : 1)));
+      m.el.style.display = "";
+      m.el.style.left = `${px}px`;
+      m.el.style.top = `${py}px`;
+      m.el.style.width = `${Math.max(0, wUnits * sx)}px`;
+      m.el.style.opacity = String(op);
+      // An invisible (not-yet-created) element must not eat clicks/keys.
+      m.el.style.pointerEvents = op > 0.05 ? "auto" : "none";
+    }
+  }
+
+  // --- Advance-driven video playback ---------------------------------------
+  function playMedia(target: string, args: string[]): void {
+    const m = mediaByName.get(target);
+    if (!m || !m.isVideo) return;
+    const v = m.el as HTMLVideoElement;
+    const seg = parseMediaSegment(args);
+    m.endGuard?.(); // clear any prior segment guard
+    if (seg.start !== undefined) {
+      try {
+        v.currentTime = seg.start;
+      } catch {
+        /* not seekable yet; plays from current position */
+      }
+    }
+    if (seg.end !== undefined) {
+      const onTime = (): void => {
+        if (v.currentTime >= seg.end!) {
+          v.pause();
+          m.endGuard?.();
+        }
+      };
+      v.addEventListener("timeupdate", onTime);
+      m.endGuard = () => {
+        v.removeEventListener("timeupdate", onTime);
+        m.endGuard = undefined;
+      };
+    }
+    void v.play?.().catch(() => {
+      /* autoplay/gesture policy — leave on poster */
+    });
+  }
+  function pauseAllMedia(): void {
+    for (const m of media) {
+      if (!m.isVideo) continue;
+      m.endGuard?.();
+      try {
+        (m.el as HTMLVideoElement).pause();
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
   for (const o of objects) {
@@ -306,6 +440,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
     }
   }
+  for (const v of mediaDepVars()) if (graph.get(v) !== undefined) deps.add(v);
 
   // --- rAF scheduler shared by reactivity + animation ----------------------
   let rafId = 0;
@@ -434,6 +569,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     if (overlay) positionLabels(overlay, labels);
     lastArea = area;
     positionInteractives(scope, area);
+    positionMedia(scope, area);
   }
 
   // --- Advance flow --------------------------------------------------------
@@ -452,13 +588,28 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       if (!tween) o.appear = o.appearTarget;
     }
 
-    // A single forward step may also be an `indicate` pulse.
-    if (singleForward && !reduced) {
+    // A single forward step may also be an `indicate` pulse or a media verb.
+    if (singleForward) {
       const verb = anims[played];
-      if (verb && verb.verb === "indicate") {
+      if (verb && verb.verb === "indicate" && !reduced) {
         const target = byName.get(verb.target);
         if (target) target.flash = 1;
+      } else if (verb && verb.verb === "play") {
+        playMedia(verb.target, verb.args);
+      } else if (verb && verb.verb === "pause") {
+        const m = mediaByName.get(verb.target);
+        if (m?.isVideo) {
+          m.endGuard?.();
+          try {
+            (m.el as HTMLVideoElement).pause();
+          } catch {
+            /* ignore */
+          }
+        }
       }
+    } else if (next !== played) {
+      // A jump or reverse settles instantly — stop any playing clip.
+      pauseAllMedia();
     }
     played = next;
     if (tween && typeof requestAnimationFrame === "function") {
@@ -476,7 +627,13 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       revealed: number;
       animate: boolean;
     };
-    if (!detail?.slide || !detail.slide.contains(host)) return;
+    if (!detail?.slide) return;
+    // Leaving this slide (another slide advanced): stop our clips so audio/motion
+    // doesn't continue after you move on (covers present mode too).
+    if (!detail.slide.contains(host)) {
+      pauseAllMedia();
+      return;
+    }
     applyAdvance(detail.revealed, detail.animate);
   });
 

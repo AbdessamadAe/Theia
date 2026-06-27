@@ -396,6 +396,43 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   background: var(--surface);
 }
 
+/* ---- Media (images & video) ---- */
+.chalk-media { margin: 18px 0; }
+.chalk-media--image, .chalk-media--video { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.chalk-image {
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  image-rendering: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.chalk-image--inline { display: inline-block; vertical-align: middle; max-height: 1.6em; border: none; border-radius: 4px; margin: 0 2px; }
+.chalk-image[data-chalk-noalt] { outline: 2px dashed color-mix(in srgb, var(--thm-remark) 60%, transparent); outline-offset: 2px; }
+.chalk-video {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #000;
+  outline: none;
+}
+.chalk-video:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+.chalk-media__caption { color: var(--muted); font-size: 0.85em; font-style: italic; text-align: center; }
+
+/* Scene media: positioned overlay elements (image/video), sized in scene units. */
+.chalk-scene__media {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  object-fit: contain;
+  max-width: none;
+}
+.chalk-scene__media--video { background: #000; }
+
 /* ---- Geometry (GeoGebra) embed ---- */
 .chalk-geo__applet {
   width: 100%;

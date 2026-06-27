@@ -18,6 +18,8 @@ export { compileExpr, type CompiledExpr } from "./expr.js";
 
 export { isFreeLiteral, isDraggablePosition, boundVars } from "./drag.js";
 
+export { parseMediaTime, parseMediaSegment } from "./media.js";
+
 export { ReactiveGraph, type Dependent } from "./graph.js";
 
 export {
