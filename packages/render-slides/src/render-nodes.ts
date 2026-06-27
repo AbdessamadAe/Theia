@@ -153,11 +153,15 @@ function renderScene(block: SceneBlock, ctx: SlideCtx): string {
   ctx.advance += transitions;
 
   const model = {
-    objects: block.objects.map((o) =>
-      o.on !== undefined
-        ? { kind: o.kind, name: o.name, on: o.on, args: o.args }
-        : { kind: o.kind, name: o.name, args: o.args },
-    ),
+    objects: block.objects.map((o) => {
+      // `span` (source offsets) is additive metadata: it lets the editor map a
+      // drag back to this object's `at (…)` for surgical text rewriting. It does
+      // not affect how the object renders.
+      const span: [number, number] = [o.loc.start.offset, o.loc.end.offset];
+      return o.on !== undefined
+        ? { kind: o.kind, name: o.name, on: o.on, args: o.args, span }
+        : { kind: o.kind, name: o.name, args: o.args, span };
+    }),
     anims: block.steps.map((s) => ({
       verb: s.verb,
       target: s.target,

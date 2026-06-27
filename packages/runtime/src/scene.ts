@@ -16,6 +16,7 @@
  * a drag; labels are DOM so they can carry text/math.
  */
 import { type CoordSystem, makeCoordSystem, niceStep, parseRange } from "./coord.js";
+import { boundVars, isDraggablePosition } from "./drag.js";
 import { type CompiledExpr, compileExpr } from "./expr.js";
 import { initScene3D, type Scene3DOptions } from "./scene3d.js";
 
@@ -30,6 +31,8 @@ interface ObjSpec {
   name: string;
   on?: string;
   args: Record<string, string>;
+  /** Source offsets [start, end] of this object's line — for drag write-back. */
+  span?: [number, number];
 }
 interface AnimSpec {
   verb: string;
@@ -60,6 +63,8 @@ interface SceneObj {
   yExpr?: CompiledExpr;
   fromExpr?: CompiledExpr;
   toExpr?: CompiledExpr;
+  /** Live drag override in data coords; visual-only until committed to text. */
+  override?: [number, number] | null;
 }
 
 interface Colors {
@@ -146,6 +151,152 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     return obj;
   });
   const byName = new Map(objects.map((o) => [o.spec.name, o]));
+
+  // --- Direct-manipulation handles (editor only) ---------------------------
+  // Drag-to-edit is an AUTHORING affordance: enabled only when embedded in the
+  // playground (an editor in the parent frame). Standalone/shared decks get no
+  // handles, so their rendering and interaction are unchanged.
+  const embedded = typeof window !== "undefined" && window.parent !== window;
+  interface Interactive {
+    o: SceneObj;
+    free: boolean;
+    vars: string[];
+    node: HTMLElement;
+  }
+  const interactives: Interactive[] = [];
+  const interactiveByObj = new Map<SceneObj, Interactive>();
+  let lastArea: ReturnType<typeof areaRect> | null = null;
+
+  const coordsOf = (o: SceneObj, scope: Record<string, number>): [number, number] =>
+    o.override ?? [o.xExpr ? o.xExpr.eval(scope) : 0, o.yExpr ? o.yExpr.eval(scope) : 0];
+
+  function postEdit(span: [number, number] | undefined, x: number, y: number): void {
+    if (!span || !embedded) return;
+    window.parent.postMessage({ source: "chalk", type: "coords", span, x, y }, "*");
+  }
+
+  function csForObject(o: SceneObj): CoordSystem | null {
+    if (!lastArea) return null;
+    return coordFor(o.spec.on, lastArea);
+  }
+
+  function setupHandle(it: Interactive): void {
+    const { node, o } = it;
+    node.tabIndex = 0;
+    node.style.pointerEvents = "auto";
+    if (!it.free) {
+      node.style.cursor = "not-allowed";
+      node.setAttribute("data-chalk-derived", "true");
+      node.title = it.vars.length
+        ? `Bound to ${it.vars.join(", ")} — drag the slider to move this`
+        : "Computed position — not draggable";
+      return;
+    }
+    node.setAttribute("data-chalk-free", "true");
+    node.setAttribute("role", "button");
+    node.setAttribute("aria-label", `Move ${o.spec.name} (drag, or arrow keys to nudge)`);
+    node.style.cursor = "grab";
+    node.title = "Drag to move · arrow keys nudge · Shift snaps to grid";
+
+    let dragging = false;
+    const start = (e: PointerEvent): void => {
+      const cs = csForObject(o);
+      if (!cs) return;
+      dragging = true;
+      node.style.cursor = "grabbing";
+      node.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    };
+    const move = (e: PointerEvent): void => {
+      if (!dragging) return;
+      const cs = csForObject(o);
+      if (!cs) return;
+      // The deck may be CSS-scaled to fit the stage; divide the scale out so the
+      // pointer maps into the canvas's own (unscaled) pixel space.
+      const rect = canvas!.getBoundingClientRect();
+      const sx = rect.width / (canvas!.clientWidth || rect.width);
+      const sy = rect.height / (canvas!.clientHeight || rect.height);
+      let [x, y] = cs.fromPixel((e.clientX - rect.left) / sx, (e.clientY - rect.top) / sy);
+      if (e.shiftKey) {
+        x = Math.round(x * 2) / 2;
+        y = Math.round(y * 2) / 2;
+      }
+      o.override = [x, y];
+      requestDraw();
+    };
+    const end = (e: PointerEvent): void => {
+      if (!dragging) return;
+      dragging = false;
+      node.style.cursor = "grab";
+      try {
+        node.releasePointerCapture(e.pointerId);
+      } catch {
+        /* pointer already released */
+      }
+      const [x, y] = o.override ?? coordsOf(o, graph.scope());
+      postEdit(o.spec.span, x, y); // commit as a single text edit
+    };
+    node.addEventListener("pointerdown", start);
+    node.addEventListener("pointermove", move);
+    node.addEventListener("pointerup", end);
+    node.addEventListener("keydown", (e) => {
+      const step = e.shiftKey ? 0.5 : 0.1;
+      const delta: Record<string, [number, number]> = {
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0],
+        ArrowUp: [0, step],
+        ArrowDown: [0, -step],
+      };
+      const d = delta[e.key];
+      if (!d) return;
+      e.preventDefault();
+      const [cx, cy] = o.override ?? coordsOf(o, graph.scope());
+      o.override = [cx + d[0], cy + d[1]];
+      requestDraw();
+      postEdit(o.spec.span, o.override[0], o.override[1]); // same text edit as a drag
+    });
+  }
+
+  function positionInteractives(scope: Record<string, number>, area: ReturnType<typeof areaRect>): void {
+    for (const it of interactives) {
+      const cs = coordFor(it.o.spec.on, area);
+      // Mirror the canvas gating: an object hidden by its creation verb (or with
+      // no coordinate system) shows no handle either. Detach (not just hide) so
+      // DOM presence tracks visibility.
+      if (!cs || it.o.appear <= 0.001) {
+        it.node.remove();
+        continue;
+      }
+      const [x, y] = coordsOf(it.o, scope);
+      const [px, py] = cs.toPixel(x, y);
+      if (!it.node.isConnected) overlay!.appendChild(it.node);
+      it.node.style.left = `${px}px`;
+      it.node.style.top = `${py}px`;
+    }
+  }
+
+  if (overlay) {
+    for (const o of objects) {
+      if (o.spec.kind !== "label" && o.spec.kind !== "point") continue;
+      if (o.spec.args.x === undefined || o.spec.args.y === undefined) continue;
+      const free = isDraggablePosition(o.spec.args.x, o.spec.args.y);
+      const node = document.createElement("div");
+      node.className =
+        o.spec.kind === "label" ? "chalk-scene__label chalk-scene__handle" : "chalk-scene__handle";
+      if (o.spec.kind === "label") node.textContent = o.spec.args.text ?? o.spec.name;
+      else node.setAttribute("data-chalk-point", "true");
+      // Only attach a node + behavior when there is something to do: free
+      // objects are draggable; derived objects show the "drag the slider" hint;
+      // a free *label* still needs its node to render text even when standalone.
+      if (embedded || o.spec.kind === "label") {
+        overlay.appendChild(node);
+        const it: Interactive = { o, free, vars: boundVars(o.spec.args.x, o.spec.args.y), node };
+        interactives.push(it);
+        interactiveByObj.set(o, it);
+        if (embedded) setupHandle(it);
+      }
+    }
+  }
 
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
@@ -267,8 +418,10 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
           drawPoint(ctx, cs, o, scope, colors);
           break;
         case "label": {
-          const x = o.xExpr ? o.xExpr.eval(scope) : 0;
-          const y = o.yExpr ? o.yExpr.eval(scope) : 0;
+          // Interactive labels (with a handle node) render via the overlay so
+          // they can be dragged; otherwise fall back to the pooled label.
+          if (interactiveByObj.has(o)) break;
+          const [x, y] = coordsOf(o, scope);
           const [px, py] = cs.toPixel(x, y);
           labels.push({ left: px, top: py, text: o.spec.args.text ?? o.spec.name });
           break;
@@ -279,6 +432,8 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     }
 
     if (overlay) positionLabels(overlay, labels);
+    lastArea = area;
+    positionInteractives(scope, area);
   }
 
   // --- Advance flow --------------------------------------------------------
@@ -556,8 +711,7 @@ function drawPoint(
   colors: Colors,
 ): void {
   if (!o.xExpr || !o.yExpr) return;
-  const x = o.xExpr.eval(scope);
-  const y = o.yExpr.eval(scope);
+  const [x, y] = o.override ?? [o.xExpr.eval(scope), o.yExpr.eval(scope)];
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const [px, py] = cs.toPixel(x, y);
   const r = (o.style === "grow" ? 5 * o.appear : 5) + o.flash * 4;
@@ -577,8 +731,11 @@ function positionLabels(
   overlay: HTMLElement,
   labels: Array<{ left: number; top: number; text: string }>,
 ): void {
-  // Reconcile a small pool of label nodes (avoid per-frame churn).
-  const nodes = overlay.querySelectorAll<HTMLElement>(".chalk-scene__label");
+  // Reconcile a small pool of label nodes (avoid per-frame churn). Interactive
+  // handle labels are managed separately, so exclude them from the pool.
+  const nodes = overlay.querySelectorAll<HTMLElement>(
+    ".chalk-scene__label:not(.chalk-scene__handle)",
+  );
   for (let i = 0; i < Math.max(nodes.length, labels.length); i++) {
     let node = nodes[i];
     if (i >= labels.length) {

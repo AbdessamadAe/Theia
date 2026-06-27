@@ -16,6 +16,8 @@ export {
 
 export { compileExpr, type CompiledExpr } from "./expr.js";
 
+export { isFreeLiteral, isDraggablePosition, boundVars } from "./drag.js";
+
 export { ReactiveGraph, type Dependent } from "./graph.js";
 
 export {

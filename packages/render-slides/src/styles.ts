@@ -230,6 +230,23 @@ body {
   white-space: nowrap;
 }
 
+/* Direct-manipulation handles (editor only). Point handles are a small
+   transparent hit area centred on the dot; labels reuse their own box. */
+.chalk-scene__handle { position: absolute; transform: translate(-50%, -50%); }
+.chalk-scene__handle[data-chalk-point] {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+.chalk-scene__handle[data-chalk-free] { outline: none; }
+.chalk-scene__handle[data-chalk-free]:hover,
+.chalk-scene__handle[data-chalk-free]:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+.chalk-scene__handle[data-chalk-derived]:hover {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--muted) 45%, transparent);
+}
+
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
 .chalk-reactive { border-radius: 4px; }
 span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
