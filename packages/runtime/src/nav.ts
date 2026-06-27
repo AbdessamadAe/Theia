@@ -99,10 +99,11 @@ export function initNav(): void {
     const pad = 32;
     const availW = stage.clientWidth - pad;
     const availH = stage.clientHeight - pad;
-    const scale = Math.min(
-      availW / deck!.offsetWidth,
-      availH / deck!.offsetHeight,
-    );
+    const w = deck!.offsetWidth;
+    const h = deck!.offsetHeight;
+    // Guard against a not-yet-laid-out stage/deck (0 size → Infinity scale).
+    if (availW <= 0 || availH <= 0 || w <= 0 || h <= 0) return;
+    const scale = Math.min(availW / w, availH / h);
     deck!.style.transform = `scale(${scale})`;
   }
 
@@ -171,6 +172,12 @@ export function initNav(): void {
   });
 
   window.addEventListener("resize", fit);
+  // Re-fit whenever the stage itself resizes — covers being embedded in an
+  // iframe (the playground), responsive panes, and panel drags, where the
+  // window 'resize' event never fires.
+  if (typeof ResizeObserver === "function" && deck.parentElement) {
+    new ResizeObserver(() => fit()).observe(deck.parentElement);
+  }
   window.addEventListener("hashchange", () => {
     const n = parseInt(location.hash.slice(1), 10);
     if (!isNaN(n) && n - 1 !== current) show(n - 1);

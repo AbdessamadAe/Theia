@@ -36,23 +36,37 @@ await deck.locator(".slide.is-active").first().waitFor();
 ok("loads instantly with a preloaded example (editor + compiled deck)", (await slideCount()) > 0, `${await slideCount()} slides`);
 await page.screenshot({ path: `${SHOTS}/01-initial.png` });
 
-// Typing recompiles live: prepend a new content slide.
-const before = await slideCount();
+// The deck fits the preview pane (no overflow): scaled deck width ≤ iframe width.
+await sleep(300);
+const iframeBox = await page.locator("#preview").boundingBox();
+const deckBox = await deck.locator(".deck").boundingBox();
+ok(
+  "deck is scaled to fit the preview pane (no overflow)",
+  !!deckBox && !!iframeBox && deckBox.width <= iframeBox.width + 2 && deckBox.height <= iframeBox.height + 2,
+  `deck ${Math.round(deckBox?.width)}×${Math.round(deckBox?.height)} ⊂ pane ${Math.round(iframeBox?.width)}×${Math.round(iframeBox?.height)}`,
+);
+
+// Typing recompiles live AND keeps the current slide.
+await page.evaluate(() => {
+  const f = document.querySelector("#preview");
+  f.contentWindow.location.hash = "#2";
+  f.contentWindow.dispatchEvent(new Event("hashchange"));
+});
+await sleep(200);
+// Count slides from the compiled srcdoc (set synchronously, no reload race).
+const srcdocSlides = () =>
+  page.evaluate(() => (document.querySelector("#preview").srcdoc.match(/<section class="slide/g) || []).length);
+const before = await srcdocSlides();
 await page.locator(".cm-content").click();
-await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home");
-await page.keyboard.type("## Typed live slide\n\nHello.\n\n");
-await sleep(600); // debounce + recompile + iframe reload
-await page.waitForFunction(
-  (n) => {
-    const f = document.querySelector("#preview");
-    const c = (f.srcdoc.match(/<section class="slide/g) || []).length;
-    return c > n;
-  },
-  before,
-  { timeout: 4000 },
-).catch(() => {});
-const after = await slideCount();
-ok("typing recompiles the deck live", after > before, `${before} → ${after} slides`);
+await page.keyboard.press(process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End");
+await page.keyboard.type("\n\n## Appended live\n\nNew content.\n");
+await page.waitForFunction((n) => (document.querySelector("#preview").srcdoc.match(/<section class="slide/g) || []).length > n, before, { timeout: 4000 }).catch(() => {});
+const after = await srcdocSlides();
+ok("typing auto-recompiles the deck live", after > before, `${before} → ${after} slides`);
+// Wait for the reloaded deck to boot, then confirm the slide was preserved.
+await deck.locator(".slide.is-active").first().waitFor({ timeout: 4000 }).catch(() => {});
+const activeIdx = await deck.locator(".slide.is-active").first().getAttribute("data-index");
+ok("live recompile keeps you on the current slide", activeIdx === "1", `active slide index = ${activeIdx}`);
 
 // Inline error (not a blank pane): malformed KaTeX renders red in place.
 await page.locator(".cm-content").click();

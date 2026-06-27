@@ -35,7 +35,7 @@ for (const ex of EXAMPLES) {
 // --- Compile + preview ------------------------------------------------------
 let lastGoodHtml = "";
 
-function compileAndShow(source: string): void {
+function compileAndShow(source: string, keepSlide = false): void {
   const { html, error, slides } = compileChalk(source, { assets: ASSETS });
   if (error || !html) {
     errorEl.hidden = false;
@@ -45,6 +45,34 @@ function compileAndShow(source: string): void {
   }
   errorEl.hidden = true;
   lastGoodHtml = html;
+
+  // Keep the viewer on the same slide across a live recompile (editing
+  // shouldn't bounce you back to slide 1). The deck restores from its #hash.
+  let hash = "";
+  if (keepSlide) {
+    try {
+      hash = previewEl.contentWindow?.location.hash ?? "";
+    } catch {
+      hash = "";
+    }
+    if (hash) {
+      previewEl.addEventListener(
+        "load",
+        () => {
+          try {
+            const w = previewEl.contentWindow;
+            if (w && w.location.hash !== hash) {
+              w.location.hash = hash;
+              w.dispatchEvent(new Event("hashchange"));
+            }
+          } catch {
+            /* cross-origin guard */
+          }
+        },
+        { once: true },
+      );
+    }
+  }
   previewEl.srcdoc = html;
   statusEl.textContent = `${slides} slide${slides === 1 ? "" : "s"}`;
 }
@@ -54,7 +82,7 @@ function compileAndShow(source: string): void {
 let timer: number | undefined;
 function scheduleCompile(source: string): void {
   if (timer) clearTimeout(timer);
-  timer = window.setTimeout(() => compileAndShow(source), 250);
+  timer = window.setTimeout(() => compileAndShow(source, true), 250);
 }
 
 // --- Editor -----------------------------------------------------------------
