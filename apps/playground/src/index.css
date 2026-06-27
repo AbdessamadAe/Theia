@@ -191,3 +191,16 @@
 .chalkboard .cm-editor {
   background: hsl(var(--card));
 }
+/* Brand moment: the handwriting display face + chalk flourish (chalkboard only). */
+.chalkboard .chalk-wordmark {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.7rem;
+  letter-spacing: 0;
+}
+.chalkboard .chalk-flourish {
+  display: block;
+}
+.chalkboard .chalk-display {
+  font-family: var(--font-display);
+}

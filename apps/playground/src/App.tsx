@@ -1,6 +1,7 @@
 import { compileChalk } from "@chalk/render-slides/core";
 import type { EditorView } from "@codemirror/view";
 import * as React from "react";
+import { BoardIcon, WordmarkFlourish } from "@/components/chalk-art";
 import { Editor } from "@/components/Editor";
 import {
   DownloadIcon,
@@ -25,7 +26,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Hint, TooltipProvider } from "@/components/ui/tooltip";
 import { ASSETS } from "@/generated/assets";
 import { EXAMPLES } from "@/generated/examples";
@@ -42,12 +42,13 @@ function compile(source: string): { html: string; slides: number; error?: string
 const initialShared = readShareFromHash(location.hash);
 const initialSource = initialShared ?? EXAMPLES[0]!.source;
 const initialId = initialShared ? "shared" : EXAMPLES[0]!.id;
+const initialCompiled = compile(initialSource);
 
 export function App(): React.ReactElement {
   const [source, setSource] = React.useState(initialSource);
   const [currentId, setCurrentId] = React.useState(initialId);
-  const [html, setHtml] = React.useState(() => compile(initialSource).html);
-  const [slides, setSlides] = React.useState(0);
+  const [html, setHtml] = React.useState(initialCompiled.html);
+  const [slides, setSlides] = React.useState(initialCompiled.slides);
   const [error, setError] = React.useState<string | null>(null);
   const [toast, setToast] = React.useState<string | null>(null);
 
@@ -56,9 +57,10 @@ export function App(): React.ReactElement {
   const [showOutline, setShowOutline] = React.useState(true);
   const [currentSlide, setCurrentSlide] = React.useState(0);
   const [editorView, setEditorView] = React.useState<EditorView | null>(null);
-  const [theme, setTheme] = React.useState<"light" | "dark">(() =>
-    document.documentElement.classList.contains("dark") ? "dark" : "light",
-  );
+  const [theme, setTheme] = React.useState<"light" | "dark" | "chalkboard">(() => {
+    const c = document.documentElement.classList;
+    return c.contains("chalkboard") ? "chalkboard" : c.contains("dark") ? "dark" : "light";
+  });
   const [mobileView, setMobileView] = React.useState<"editor" | "preview">("preview");
   const compact = useMediaQuery("(max-width: 1023px)");
 
@@ -71,14 +73,20 @@ export function App(): React.ReactElement {
   // Apply the theme to the chrome and sync the live deck via the engine's
   // existing data-theme attribute + the shared localStorage key it reads.
   React.useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
+    const root = document.documentElement;
+    root.classList.toggle("dark", theme === "dark");
+    root.classList.toggle("chalkboard", theme === "chalkboard");
+    // The deck inside the iframe stays a clean light/dark card; chalkboard maps
+    // to the light deck so slides/math/plots stay crisp and readable.
+    const deckTheme = theme === "dark" ? "dark" : "light";
     try {
-      localStorage.setItem("chalk-theme", theme);
+      localStorage.setItem("chalk-pg-theme", theme);
+      localStorage.setItem("chalk-theme", deckTheme);
     } catch {
       /* storage unavailable */
     }
     try {
-      iframeRef.current?.contentDocument?.documentElement.setAttribute("data-theme", theme);
+      iframeRef.current?.contentDocument?.documentElement.setAttribute("data-theme", deckTheme);
     } catch {
       /* opaque-origin guard */
     }
@@ -290,6 +298,7 @@ export function App(): React.ReactElement {
   return (
     <TooltipProvider delayDuration={350} skipDelayDuration={200}>
       <div
+        data-app-root
         className="bg-background flex h-full flex-col"
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
@@ -309,7 +318,10 @@ export function App(): React.ReactElement {
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <header className="bg-card/60 flex items-center gap-2 border-b px-3 py-2 backdrop-blur sm:gap-3 sm:px-4">
           <div className="flex items-center gap-2">
-            <span className="font-serif text-xl font-semibold tracking-tight">Chalk</span>
+            <span className="chalk-wordmark relative font-serif text-xl font-semibold tracking-tight">
+              Chalk
+              <WordmarkFlourish className="chalk-flourish text-live absolute -bottom-1.5 left-0 hidden h-2 w-full" />
+            </span>
             <span className="text-muted-foreground hidden text-sm sm:inline">playground</span>
           </div>
 
@@ -406,17 +418,22 @@ export function App(): React.ReactElement {
 
           <div className="bg-border mx-0.5 h-5 w-px" />
 
-          <Hint label={theme === "dark" ? "Switch to light" : "Switch to dark"}>
-            <label className="flex cursor-pointer items-center gap-2">
-              <SunIcon className={`size-4 ${theme === "dark" ? "text-muted-foreground" : "text-foreground"}`} />
-              <Switch
-                checked={theme === "dark"}
-                onCheckedChange={(c) => setTheme(c ? "dark" : "light")}
-                aria-label="Toggle dark mode"
-              />
-              <MoonIcon className={`size-4 ${theme === "dark" ? "text-foreground" : "text-muted-foreground"}`} />
-            </label>
-          </Hint>
+          <Segmented
+            aria-label="Theme"
+            value={theme}
+            onChange={setTheme}
+            className="p-0.5"
+            options={[
+              { value: "light", label: <SunIcon className="size-4" />, ariaLabel: "Light theme", title: "Light" },
+              { value: "dark", label: <MoonIcon className="size-4" />, ariaLabel: "Dark theme", title: "Dark" },
+              {
+                value: "chalkboard",
+                label: <BoardIcon className="size-4" />,
+                ariaLabel: "Chalkboard theme",
+                title: "Chalkboard",
+              },
+            ]}
+          />
         </header>
 
         {/* ── Body ───────────────────────────────────────────────────────── */}

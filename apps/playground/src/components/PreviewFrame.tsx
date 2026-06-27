@@ -1,4 +1,5 @@
 import * as React from "react";
+import { EmptyBoardSketch } from "@/components/chalk-art";
 import { Preview } from "@/components/Preview";
 import { Hint } from "@/components/ui/tooltip";
 
@@ -37,11 +38,17 @@ export function PreviewFrame({
   return (
     <div className="bg-muted/40 group/preview relative flex h-full flex-col items-stretch p-3 sm:p-4">
       <div className="bg-background ring-border relative flex-1 overflow-hidden rounded-xl shadow-2 ring-1">
-        {html ? (
+        {html && slides > 0 ? (
           <Preview html={html} freshKey={freshKey} currentSlide={currentSlide} iframeRef={iframeRef} />
         ) : (
-          <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-            Nothing to preview yet.
+          <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-4 p-8 text-center">
+            <EmptyBoardSketch className="text-foreground/70 h-40 w-auto max-w-[70%]" />
+            <div className="space-y-1">
+              <p className="chalk-display text-foreground text-lg font-medium">
+                Nothing on the board yet
+              </p>
+              <p className="text-sm">Start typing, pick an example, or drop in an image.</p>
+            </div>
           </div>
         )}
       </div>

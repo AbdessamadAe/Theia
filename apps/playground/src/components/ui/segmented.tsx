@@ -4,6 +4,10 @@ import { cn } from "@/lib/utils";
 export interface SegmentOption<T extends string> {
   value: T;
   label: React.ReactNode;
+  /** Accessible name when the label is icon-only. */
+  ariaLabel?: string;
+  /** Native tooltip text. */
+  title?: string;
 }
 
 /** A small accessible segmented control (radiogroup). Used for the mobile
@@ -49,6 +53,8 @@ export function Segmented<T extends string>({
             type="button"
             role="radio"
             aria-checked={selected}
+            aria-label={o.ariaLabel}
+            title={o.title}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(o.value)}
             className={cn(
