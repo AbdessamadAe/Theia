@@ -181,6 +181,39 @@ body {
   border-radius: 10px;
 }
 .chalk-scene__overlay { position: absolute; inset: 0; pointer-events: none; }
+.chalk-scene--3d .chalk-scene__canvas { height: 440px; cursor: grab; touch-action: none; }
+.chalk-scene--3d .chalk-scene__canvas:active { cursor: grabbing; }
+.chalk-scene__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.9em;
+}
+.chalk-scene__loading::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: chalk-spin 0.8s linear infinite;
+}
+.chalk-scene__hint {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  font-size: 0.7em;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
+  padding: 2px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+}
 .chalk-scene__label {
   position: absolute;
   transform: translate(-50%, -50%);
@@ -437,5 +470,6 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   body, .chalk-bar__progress { transition: none; }
   .chalk-step { transition: none; transform: none; }
   .chalk-cell__loading::before { animation: none; }
+  .chalk-scene__loading::before { animation: none; }
 }
 `;

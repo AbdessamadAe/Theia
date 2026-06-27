@@ -166,10 +166,20 @@ function renderScene(block: SceneBlock, ctx: SlideCtx): string {
     })),
   };
   const json = JSON.stringify(model).replace(/</g, "\\u003c");
+  const is3d = block.dimension === "3d";
+  const dimClass = is3d ? " chalk-scene--3d" : "";
+  const dimAttr = is3d ? ` data-3d="true"` : "";
+  // 3D scenes load three.js lazily; show a calm loading state until ready.
+  const loading = is3d
+    ? `\n  <div class="chalk-scene__loading">Preparing 3D…</div>`
+    : "";
+  const hint = is3d
+    ? `\n  <div class="chalk-scene__hint">drag to orbit · scroll to zoom · double-click to reset</div>`
+    : "";
 
-  return `<div class="chalk-block chalk-scene" data-advance-base="${base}" data-transitions="${transitions}">
+  return `<div class="chalk-block chalk-scene${dimClass}"${dimAttr} data-advance-base="${base}" data-transitions="${transitions}">
   <canvas class="chalk-scene__canvas"></canvas>
-  <div class="chalk-scene__overlay"></div>
+  <div class="chalk-scene__overlay"></div>${loading}${hint}
   <script type="application/json" class="chalk-scene__data">${json}</script>
 </div>`;
 }

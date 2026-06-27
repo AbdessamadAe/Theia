@@ -1,0 +1,44 @@
+# Surfaces in 3D
+
+Chalk's 3D layer renders with WebGL (three.js) and — unlike a pre-rendered Manim
+clip — the view is **live**: you can orbit the scene with the mouse while you
+present.
+
+## A reactive paraboloid
+
+The surface $z = a\,(x^2 + y^2)$ is computed on the GPU and **re-shapes live** as
+you drag $a$. A point $P$ rides the surface and a label stays glued to it as you
+orbit. Click-drag to rotate, scroll to zoom, double-click (or press **R**) to
+reset to the declared view.
+
+@slider a [0.1, 1.5] = 0.5
+
+:::scene3d
+@axes3d ax x:[-3, 3] y:[-3, 3] z:[0, 9]
+@surface f on ax : a*(x^2 + y^2) colorscale:height
+@dot3d P on ax at (1.5, 1.5, a*(1.5^2 + 1.5^2)) color:"#e11d48"
+@label L on ax at (1.5, 1.5, a*(1.5^2 + 1.5^2)) "P"
+@camera cam phi:62 theta:-35 distance:9 autorotate
++animate create ax
++animate grow f
++animate grow P
+:::
+
+## A gallery of solids
+
+The same scene model holds solids and polyhedra — each a named object you can
+animate and orbit.
+
+:::scene3d
+@axes3d ax x:[-2, 2] y:[-2, 2] z:[-2, 2]
+@sphere s on ax at (-1.2, 0, 0.6) r:0.55 color:"#2563eb"
+@torus t on ax at (1.2, 0, 0.6) r:0.5 color:"#7c3aed"
+@icosahedron ico on ax at (0, 1.2, 0.6) r:0.6 color:"#059669"
+@cube c on ax at (0, -1.2, 0.6) r:0.5 color:"#d97706"
+@camera cam phi:65 theta:30 distance:8
++animate grow s
++animate grow t
++animate grow ico
++animate grow c
++animate rotate-camera cam
+:::
