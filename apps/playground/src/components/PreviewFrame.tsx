@@ -38,7 +38,7 @@ export function PreviewFrame({
     <div className="bg-muted/40 group/preview relative flex h-full flex-col items-stretch p-3 sm:p-4">
       <div className="bg-background ring-border relative flex-1 overflow-hidden rounded-xl shadow-2 ring-1">
         {html ? (
-          <Preview html={html} freshKey={freshKey} iframeRef={iframeRef} />
+          <Preview html={html} freshKey={freshKey} currentSlide={currentSlide} iframeRef={iframeRef} />
         ) : (
           <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
             Nothing to preview yet.
