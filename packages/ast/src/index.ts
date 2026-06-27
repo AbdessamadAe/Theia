@@ -75,7 +75,8 @@ export type Block =
   | GeoBlock
   | ListBlock
   | DeriveBlock
-  | SceneBlock;
+  | SceneBlock
+  | MediaBlock;
 
 /** A run of prose. Its children are inline nodes (text, inline math, …). */
 export interface Paragraph extends NodeBase {
@@ -261,11 +262,38 @@ export interface SceneAnim extends NodeBase {
   index: number;
 }
 
+/**
+ * A standalone (block-level) media figure: `@image`/`@video` on its own line in
+ * prose, or a markdown image that stands alone. Inside a `:::scene`, media is a
+ * {@link SceneObject} instead (positioned/reactive); this is the simple figure.
+ * `src` is the raw reference from the source (https / relative path / data URI);
+ * the CLI/playground may rewrite it when embedding local assets.
+ */
+export interface MediaBlock extends NodeBase {
+  type: "media";
+  mediaKind: "image" | "video";
+  /** Optional object name (for parity with scene media; unused for layout). */
+  name?: string;
+  src: string;
+  alt?: string;
+  /** Width hint: a bare number → CSS px is avoided; "60%" / "20rem" pass through. */
+  width?: string;
+  poster?: string;
+  caption?: string;
+  /** Captions/subtitles track (WebVTT) reference. */
+  track?: string;
+  loop?: boolean;
+  autoplay?: boolean;
+  /** Whether to show native controls (video; default true). */
+  controls?: boolean;
+  muted?: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Inline-level nodes
 // ---------------------------------------------------------------------------
 
-export type Inline = Text | InlineMath | Strong | Emphasis | InlineCode;
+export type Inline = Text | InlineMath | Strong | Emphasis | InlineCode | ImageInline;
 
 export interface Text extends NodeBase {
   type: "text";
@@ -291,6 +319,13 @@ export interface Emphasis extends NodeBase {
 export interface InlineCode extends NodeBase {
   type: "inlineCode";
   value: string;
+}
+
+/** A markdown inline image `![alt](url)`, mapped to the same image rendering. */
+export interface ImageInline extends NodeBase {
+  type: "image";
+  alt: string;
+  url: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -319,6 +354,7 @@ const BLOCK_TYPES = new Set<string>([
   "list",
   "derive",
   "scene",
+  "media",
 ]);
 
 const INLINE_TYPES = new Set<string>([
@@ -327,6 +363,7 @@ const INLINE_TYPES = new Set<string>([
   "strong",
   "emphasis",
   "inlineCode",
+  "image",
 ]);
 
 export function isBlock(node: AnyNode): node is Block {

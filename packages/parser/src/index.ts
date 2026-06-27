@@ -8,6 +8,7 @@ import type {
   DocumentNode,
   EmphasisSpec,
   GeoBlock,
+  MediaBlock,
   Paragraph,
   Plot,
   PlotFollower,
@@ -39,6 +40,8 @@ function isBlockStart(trimmed: string): boolean {
     trimmed.startsWith("@plot") ||
     trimmed.startsWith("@point") ||
     trimmed.startsWith("@follow") ||
+    trimmed.startsWith("@image") ||
+    trimmed.startsWith("@video") ||
     /^#{1,2}[ \t]+/.test(trimmed)
   );
 }
@@ -148,6 +151,10 @@ function parseSceneObjectArgs(
 
   // Host coordinate system.
   on = grab(/\bon\s+([A-Za-z_]\w*)/);
+
+  // Media source: `of "url-or-path"` (quoted) or `of bare-token`.
+  const ofSrc = grab(/\bof\s+("[^"]*"|\S+)/);
+  if (ofSrc !== undefined) args.src = unquote(ofSrc);
 
   // `label "…"` and a bare trailing `"…"` both become text-ish args.
   const labelText = grab(/\blabel\s+"([^"]*)"/);
@@ -478,6 +485,35 @@ export function parse(source: string): DocumentNode {
           k++;
           continue;
         }
+      }
+
+      // --- @image / @video name of "src" … (standalone block-level media) --
+      if (t.startsWith("@image") || t.startsWith("@video")) {
+        const m = /^@(image|video)\s+([A-Za-z_]\w*)\s+(.*)$/.exec(t);
+        if (m && /\bof\b/.test(m[3]!)) {
+          const { args } = parseSceneObjectArgs(m[1]!, m[3]!);
+          const node: MediaBlock = {
+            type: "media",
+            mediaKind: m[1] as "image" | "video",
+            name: m[2]!,
+            src: args.src ?? "",
+            loc: src.loc(line.start, line.end),
+          };
+          if (args.alt !== undefined) node.alt = args.alt;
+          else if (args.text !== undefined) node.alt = args.text;
+          if (args.width !== undefined) node.width = args.width;
+          if (args.poster !== undefined) node.poster = args.poster;
+          if (args.caption !== undefined) node.caption = args.caption;
+          if (args.track !== undefined) node.track = args.track;
+          if (args.loop === "true") node.loop = true;
+          if (args.autoplay === "true") node.autoplay = true;
+          if (args.muted === "true") node.muted = true;
+          if (args.controls === "false") node.controls = false;
+          blocks.push(node);
+          k++;
+          continue;
+        }
+        // Malformed → fall through to paragraph (preserve as text).
       }
 
       // --- Paragraph: accumulate consecutive prose lines -------------------

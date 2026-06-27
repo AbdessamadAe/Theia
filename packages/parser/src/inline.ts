@@ -60,6 +60,26 @@ export function parseInline(
       continue;
     }
 
+    // Markdown image: ![alt](url) — mapped to the same image rendering.
+    if (c === "!" && text[i + 1] === "[") {
+      const closeBracket = text.indexOf("]", i + 2);
+      if (closeBracket !== -1 && text[closeBracket + 1] === "(") {
+        const closeParen = text.indexOf(")", closeBracket + 2);
+        if (closeParen !== -1) {
+          flush(i);
+          nodes.push({
+            type: "image",
+            alt: text.slice(i + 2, closeBracket),
+            url: text.slice(closeBracket + 2, closeParen).trim(),
+            loc: src.loc(g(i), g(closeParen + 1)),
+          });
+          i = closeParen + 1;
+          bufStart = i;
+          continue;
+        }
+      }
+    }
+
     // Inline math: $…$ (verbatim body).
     if (c === "$") {
       const close = findUnescaped(text, i + 1, "$");
@@ -151,6 +171,9 @@ export function inlineText(nodes: Inline[]): string {
       case "strong":
       case "emphasis":
         out += inlineText(n.children);
+        break;
+      case "image":
+        out += n.alt;
         break;
     }
   }
