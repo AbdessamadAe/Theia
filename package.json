@@ -18,9 +18,11 @@
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
+    "test:e2e": "node scripts/browser-test.mjs",
     "clean": "rm -rf packages/*/dist"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^20.14.0",
     "jsdom": "^29.1.1",
