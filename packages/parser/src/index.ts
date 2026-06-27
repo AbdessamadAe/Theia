@@ -11,6 +11,9 @@ import type {
   Paragraph,
   Plot,
   PlotFollower,
+  SceneAnim,
+  SceneBlock,
+  SceneObject,
   Slide,
   Slider,
   Step,
@@ -81,6 +84,106 @@ function parseEmphasis(rest: string): EmphasisSpec {
       : { effect: m[1] as EmphasisSpec["effect"] };
   }
   return trimmed ? { effect: "pulse", target: trimmed } : { effect: "pulse" };
+}
+
+/**
+ * Parse the tail of a scene object declaration (`@kind name <rest>`) into a
+ * host name (`on …`) and a raw argument bag. Values stay as strings; the
+ * runtime compiles ranges/expressions. Kept permissive so unknown kinds (from
+ * later sub-phases) still capture `on` + key:value/flag args generically.
+ */
+function parseSceneObjectArgs(
+  kind: string,
+  rest: string,
+): { on?: string; args: Record<string, string> } {
+  const args: Record<string, string> = {};
+  let on: string | undefined;
+  let body = rest.trim();
+
+  const onMatch = /\bon\s+([A-Za-z_]\w*)/.exec(body);
+  if (onMatch) {
+    on = onMatch[1]!;
+    body = (body.slice(0, onMatch.index) + body.slice(onMatch.index + onMatch[0].length)).trim();
+  }
+
+  const grab = (re: RegExp): string | undefined => {
+    const m = re.exec(body);
+    if (!m) return undefined;
+    body = (body.slice(0, m.index) + body.slice(m.index + m[0].length)).trim();
+    return m[1];
+  };
+
+  // Common pieces shared across kinds.
+  const label = grab(/\blabel\s+"([^"]*)"/);
+  if (label !== undefined) args.label = label;
+
+  switch (kind) {
+    case "axes": {
+      const x = grab(/\bx:\s*(\[[^\]]*\])/);
+      const y = grab(/\by:\s*(\[[^\]]*\])/);
+      const xl = grab(/\bxlabel:\s*"([^"]*)"/);
+      const yl = grab(/\bylabel:\s*"([^"]*)"/);
+      if (x) args.x = x;
+      if (y) args.y = y;
+      if (xl !== undefined) args.xlabel = xl;
+      if (yl !== undefined) args.ylabel = yl;
+      if (/\bgrid\b/.test(body)) args.grid = "true";
+      break;
+    }
+    case "numberline": {
+      const r = grab(/(\[[^\]]*\])/);
+      if (r) args.range = r;
+      break;
+    }
+    case "plot": {
+      const c = body.indexOf(":");
+      if (c >= 0) {
+        args.expr = body.slice(c + 1).trim();
+        body = body.slice(0, c).trim();
+      }
+      break;
+    }
+    case "point": {
+      const m = /at\s*\(\s*([^,]+?)\s*,\s*(.+?)\s*\)/.exec(body);
+      if (m) {
+        args.x = m[1]!.trim();
+        args.y = m[2]!.trim();
+      }
+      break;
+    }
+    case "tangent": {
+      const to = grab(/\bto\s+([A-Za-z_]\w*)/);
+      const at = grab(/\bat\s+([A-Za-z_]\w*)/);
+      if (to) args.to = to;
+      if (at) args.at = at;
+      break;
+    }
+    case "area": {
+      const under = grab(/\bunder\s+([A-Za-z_]\w*)/);
+      // bounds may be simple expressions (a number or a slider like `t`).
+      const from = grab(/\bfrom\s+(\S+)/);
+      const to = grab(/\bto\s+(\S+)/);
+      const rects = grab(/\brects\s+(\d+)/);
+      if (under) args.under = under;
+      if (from) args.from = from;
+      if (to) args.to = to;
+      if (rects) args.rects = rects;
+      break;
+    }
+    case "label": {
+      const m = /at\s*\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)/.exec(body);
+      if (m) {
+        args.x = m[1]!.trim();
+        args.y = m[2]!.trim();
+      }
+      const text = grab(/"([^"]*)"/);
+      if (text !== undefined) args.text = text;
+      break;
+    }
+    default:
+      break;
+  }
+  return on === undefined ? { args } : { on, args };
 }
 
 /** Identifiers in `expr` that name a declared slider, in first-seen order. */
@@ -182,6 +285,20 @@ export function parse(source: string): DocumentNode {
             source: geoSource,
             loc: src.loc(line.start, blockEnd),
           } satisfies GeoBlock);
+          k = close + 1;
+          continue;
+        }
+
+        if (keyword === "scene") {
+          blocks.push(
+            parseScene(
+              bodyStart,
+              bodyEnd,
+              line.start,
+              blockEnd,
+              titleText || undefined,
+            ),
+          );
           k = close + 1;
           continue;
         }
@@ -513,6 +630,66 @@ export function parse(source: string): DocumentNode {
       loc: src.loc(blockStart, blockEnd),
     };
     if (bind !== undefined) node.bind = bind;
+    return node;
+  }
+
+  /** Parse a `:::scene` body into named objects and ordered +animate verbs. */
+  function parseScene(
+    bodyStart: number,
+    bodyEnd: number,
+    blockStart: number,
+    blockEnd: number,
+    name: string | undefined,
+  ): SceneBlock {
+    const objects: SceneObject[] = [];
+    const steps: SceneAnim[] = [];
+    let animIndex = 0;
+
+    for (let s = bodyStart; s < bodyEnd; s++) {
+      const raw = lines[s]!.text;
+      const t = raw.trim();
+      if (t === "") continue;
+
+      const anim = /^\+animate\s+([A-Za-z][\w-]*)\s+([A-Za-z_]\w*)\s*(.*)$/.exec(t);
+      if (anim) {
+        const extra = anim[3]!.trim();
+        steps.push({
+          type: "sceneAnim",
+          verb: anim[1]!,
+          target: anim[2]!,
+          args: extra ? extra.split(/\s+/) : [],
+          index: animIndex++,
+          loc: src.loc(lines[s]!.start, lines[s]!.end),
+        });
+        continue;
+      }
+
+      const obj = /^@([A-Za-z]\w*)\s+([A-Za-z_]\w*)\s*(.*)$/.exec(t);
+      if (obj) {
+        const kind = obj[1]!;
+        const objName = obj[2]!;
+        const { on, args } = parseSceneObjectArgs(kind, obj[3]!);
+        const node: SceneObject = {
+          type: "sceneObject",
+          kind,
+          name: objName,
+          args,
+          loc: src.loc(lines[s]!.start, lines[s]!.end),
+        };
+        if (on !== undefined) node.on = on;
+        objects.push(node);
+        continue;
+      }
+      // Unrecognized lines are ignored rather than mangled.
+    }
+
+    const node: SceneBlock = {
+      type: "scene",
+      objects,
+      steps,
+      loc: src.loc(blockStart, blockEnd),
+    };
+    if (name !== undefined) node.name = name;
     return node;
   }
 

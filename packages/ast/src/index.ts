@@ -74,7 +74,8 @@ export type Block =
   | Plot
   | GeoBlock
   | ListBlock
-  | DeriveBlock;
+  | DeriveBlock
+  | SceneBlock;
 
 /** A run of prose. Its children are inline nodes (text, inline math, …). */
 export interface Paragraph extends NodeBase {
@@ -218,6 +219,47 @@ export interface DeriveState extends NodeBase {
 }
 
 // ---------------------------------------------------------------------------
+// Scene (2D object & animation library — Phase 8)
+// ---------------------------------------------------------------------------
+
+/**
+ * A `:::scene` block: named 2D objects plus advance-driven `+animate` verbs.
+ *
+ * Objects use a generic property-bag shape so the object library can grow
+ * (geometry, text, graphs, fields) without new AST node types per kind — the
+ * runtime interprets `kind` + `args`. Animation verbs join the one advance flow
+ * the way `+step`/`+to` already do.
+ */
+export interface SceneBlock extends NodeBase {
+  type: "scene";
+  name?: string;
+  objects: SceneObject[];
+  steps: SceneAnim[];
+}
+
+/** One declared scene object, e.g. `@axes ax x:[-3,3] y:[-1,9]`. */
+export interface SceneObject extends NodeBase {
+  type: "sceneObject";
+  /** "axes" | "numberline" | "plot" | "point" | "tangent" | "area" | "label" … */
+  kind: string;
+  name: string;
+  /** Host coordinate-system name, from `on <name>` (objects placed on axes). */
+  on?: string;
+  /** Raw argument strings keyed by name; the runtime parses ranges/exprs. */
+  args: Record<string, string>;
+}
+
+/** One `+animate <verb> <target> [args…]` directive (an advance stop). */
+export interface SceneAnim extends NodeBase {
+  type: "sceneAnim";
+  verb: string;
+  target: string;
+  args: string[];
+  /** 0-based position among the scene's animation advances. */
+  index: number;
+}
+
+// ---------------------------------------------------------------------------
 // Inline-level nodes
 // ---------------------------------------------------------------------------
 
@@ -254,7 +296,15 @@ export interface InlineCode extends NodeBase {
 // ---------------------------------------------------------------------------
 
 /** Any node in the tree. */
-export type AnyNode = DocumentNode | Slide | Step | Block | DeriveState | Inline;
+export type AnyNode =
+  | DocumentNode
+  | Slide
+  | Step
+  | Block
+  | DeriveState
+  | SceneObject
+  | SceneAnim
+  | Inline;
 
 const BLOCK_TYPES = new Set<string>([
   "paragraph",
@@ -266,6 +316,7 @@ const BLOCK_TYPES = new Set<string>([
   "geo",
   "list",
   "derive",
+  "scene",
 ]);
 
 const INLINE_TYPES = new Set<string>([
@@ -314,6 +365,8 @@ export function childrenOf(node: AnyNode): AnyNode[] {
       return node.items.flat();
     case "derive":
       return node.states;
+    case "scene":
+      return [...node.objects, ...node.steps];
     default:
       return [];
   }

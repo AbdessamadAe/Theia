@@ -10,6 +10,7 @@ import type {
   InlineMath,
   Paragraph,
   Plot,
+  SceneBlock,
   Slide,
   Slider,
   TheoremBlock,
@@ -46,11 +47,11 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(doc.title).toBe("Limits and Continuity");
   });
 
-  it("splits into the expected slides (one title, ten content)", () => {
+  it("splits into the expected slides (one title, eleven content)", () => {
     const titleSlides = doc.children.filter((s) => s.kind === "title");
     const contentSlides = doc.children.filter((s) => s.kind === "content");
     expect(titleSlides).toHaveLength(1);
-    expect(contentSlides).toHaveLength(10);
+    expect(contentSlides).toHaveLength(11);
     expect(headingText(titleSlides[0]!)).toBe("Limits and Continuity");
     expect(contentSlides.map(headingText)).toEqual([
       "The intuition behind a limit",
@@ -60,6 +61,7 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
       "The squeeze theorem",
       "Lines: two live parameters",
       "Following a point along the curve",
+      "A graphing scene",
       "Continuity, geometrically",
       "Seeing the tangent in Python",
       "Checking continuity numerically",
@@ -149,6 +151,38 @@ describe("parse(limits.chalk) — the north-star lecture", () => {
     expect(square.states[1]!.emphasis).toEqual([{ effect: "circumscribe" }]);
     // The hinted derive keeps its \htmlClass match hints verbatim in the tex.
     expect(derives[1]!.states[0]!.tex).toContain("\\htmlClass{ck-sin}");
+  });
+
+  it("parses a :::scene into named objects + ordered animation verbs (Phase 8A)", () => {
+    const slide = slideByHeading("A graphing scene");
+    const scene = slide.children.find((b): b is SceneBlock => b.type === "scene")!;
+    expect(scene.objects.map((o) => `${o.kind}:${o.name}`)).toEqual([
+      "axes:ax",
+      "area:ar",
+      "plot:f",
+      "tangent:tan",
+      "point:P",
+      "label:lab",
+    ]);
+    const axes = scene.objects[0]!;
+    expect(axes.args.x).toBe("[-3, 3]");
+    expect(axes.args.grid).toBe("true");
+    const plot = scene.objects.find((o) => o.kind === "plot")!;
+    expect(plot.on).toBe("ax");
+    expect(plot.args.expr).toBe("k*x^2");
+    const point = scene.objects.find((o) => o.kind === "point")!;
+    expect(point.args.x).toBe("s");
+    expect(point.args.y).toBe("k*s^2");
+    // Animation verbs are ordered advance stops.
+    expect(scene.steps.map((s) => `${s.verb} ${s.target}`)).toEqual([
+      "create ax",
+      "write f",
+      "fade-in ar",
+      "grow P",
+      "fade-in tan",
+      "indicate P",
+    ]);
+    expect(scene.steps.map((s) => s.index)).toEqual([0, 1, 2, 3, 4, 5]);
   });
 
   it("parses @point and @follow followers onto the preceding @plot (Part B)", () => {
