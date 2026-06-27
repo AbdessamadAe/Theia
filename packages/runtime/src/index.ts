@@ -41,3 +41,11 @@ export {
   type EmphasisEffect,
   type EmphasisSpec,
 } from "./emphasis.js";
+
+export {
+  makeCoordSystem,
+  parseRange,
+  niceStep,
+  type CoordSystem,
+  type PixelRect,
+} from "./coord.js";

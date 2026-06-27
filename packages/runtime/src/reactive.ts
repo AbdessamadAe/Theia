@@ -22,6 +22,7 @@ import { ReactiveGraph } from "./graph.js";
 import { MorphController } from "./morph.js";
 import { drawPlot, type PlotColors, type PlotMap } from "./plot.js";
 import { type AnimHandle, RetargetController } from "./retarget.js";
+import { initScenes } from "./scene.js";
 import { formatValue, substituteLatex } from "./substitution.js";
 
 interface KatexLike {
@@ -241,6 +242,11 @@ export function initReactive(): void {
       geoSpecs.push({ container: target, commands: src.split("\n") });
     });
   initGeo(geoSpecs);
+
+  // --- Scenes (Phase 8 graphing) -------------------------------------------
+  // Scenes join this same graph: object expressions re-evaluate on slider
+  // change and their +animate verbs ride the shared advance flow.
+  initScenes(graph);
 
   // --- JS / Python code cells (compute layer) ------------------------------
   initCells(graph);
