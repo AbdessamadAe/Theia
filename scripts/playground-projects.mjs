@@ -14,7 +14,7 @@ const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 
 const goDashboard = async () => {
-  await page.goto(BASE); // fresh device → dashboard (no last project)
+  await page.goto(`${BASE}projects`); // the dashboard route
   await page.waitForSelector("#new-project");
   await sleep(300);
 };
