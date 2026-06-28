@@ -76,8 +76,8 @@ const Install: React.FC = () => (
 
     <H2>The engine (command line)</H2>
     <P>Chalk also ships a CLI that compiles a <Code>.chalk</Code> file to a self-contained HTML deck. It needs <strong>Node.js 20+</strong>.</P>
-    <Callout tone="planned">A published npm package isn't available yet — the command below is how it will install. For now, build from the repository (see <Link to={docsPath("contributing")}>Contributing</Link>). This note will go once it's on npm.</Callout>
-    <DocCode lang="bash" code={`# planned: install the CLI globally\nnpm install -g chalk\n\n# compile a lecture to a self-contained lecture.html\nchalk build lecture.chalk\n\n# live-reload dev server while you write\nchalk watch lecture.chalk\n\n# build, then open the deck\nchalk present lecture.chalk`} />
+    <Callout tone="planned">A published npm package isn't available yet — the command below is how it will install (the name <Code>chalk</Code> is taken on npm, so it ships as <Code>chalkdeck</Code> and provides both <Code>chalk</Code> and <Code>chalkdeck</Code> commands). For now, build from the repository (see <Link to={docsPath("contributing")}>Contributing</Link>). This note will go once it's on npm.</Callout>
+    <DocCode lang="bash" code={`# planned: install the CLI globally (installs the \`chalk\` command)\nnpm install -g chalkdeck\n\n# compile a lecture to a self-contained lecture.html\nchalk build lecture.chalk\n\n# live-reload dev server while you write\nchalk watch lecture.chalk\n\n# build, then open the deck\nchalk present lecture.chalk`} />
     <P>See the <Link to={docsPath("cli")}>CLI reference</Link> for every command and flag.</P>
   </>
 );
