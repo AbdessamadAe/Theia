@@ -1,6 +1,6 @@
 # Images & video
 
-In Chalk, media is a first-class object: **named, positioned, reactive, and
+In Theia, media is a first-class object: **named, positioned, reactive, and
 choreographed by advance** — just like a plot or a point.
 
 ## A figure inside a scene

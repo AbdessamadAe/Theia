@@ -6,10 +6,10 @@ describe("discoverPython — static dependency extraction", () => {
   it("finds slider reads, imports, and exposes", () => {
     const d = discoverPython(
       [
-        'a = chalk.slider("a")',
-        'k = chalk.imported("slope")',
-        'chalk.expose("deriv", "2*a*x")',
-        'chalk.tex("f' + "'" + '(x)")',
+        'a = theia.slider("a")',
+        'k = theia.imported("slope")',
+        'theia.expose("deriv", "2*a*x")',
+        'theia.tex("f' + "'" + '(x)")',
       ].join("\n"),
     );
     expect(d.sliders).toEqual(["a"]);
@@ -39,14 +39,14 @@ describe("discoverPython — static dependency extraction", () => {
   });
 
   it("returns no packages for a pure-Python cell", () => {
-    expect(discoverPython('chalk.text("hi")').packages).toEqual([]);
+    expect(discoverPython('theia.text("hi")').packages).toEqual([]);
   });
 });
 
 describe("cross-language dependency ordering", () => {
   it("orders a py producer before a js consumer (and vice versa)", () => {
     // py cell exposes "deriv"; js cell imports it → py must run first.
-    const py = discoverPython('chalk.expose("deriv", "2*a*x")');
+    const py = discoverPython('theia.expose("deriv", "2*a*x")');
     const plan = planCells([
       { id: "js-consumer", imports: ["deriv"], exposes: [] },
       { id: "py-producer", imports: py.imports, exposes: py.exposes },

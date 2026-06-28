@@ -61,13 +61,13 @@ function errors(doc: Document): string[] {
 
 describe("initCells — execution & reactivity", () => {
   it("runs a cell on load and emits its output", () => {
-    const doc = mount([`chalk.text("hello " + (2 + 2));`]);
+    const doc = mount([`theia.text("hello " + (2 + 2));`]);
     initCells(new StubGraph());
     expect(outputs(doc)[0]).toBe("hello 4");
   });
 
   it("reads a slider and re-runs when the slider moves", async () => {
-    const doc = mount([`chalk.tex("slope = " + (2 * chalk.slider("a")));`]);
+    const doc = mount([`theia.tex("slope = " + (2 * theia.slider("a")));`]);
     const g = new StubGraph();
     g.set("a", 1);
     initCells(g);
@@ -81,7 +81,7 @@ describe("initCells — execution & reactivity", () => {
   it("isolates a throwing cell: it shows an inline error, others still run", () => {
     const doc = mount([
       `throw new Error("boom");`,
-      `chalk.text("still works");`,
+      `theia.text("still works");`,
     ]);
     initCells(new StubGraph());
     expect(errors(doc)[0]).toContain("boom");
@@ -97,8 +97,8 @@ describe("initCells — execution & reactivity", () => {
   it("evaluates in dependency order, not document order", () => {
     // The consumer is written first but must run after the producer.
     const doc = mount([
-      `chalk.text("got " + chalk.imports.k);`,
-      `chalk.expose("k", 42);`,
+      `theia.text("got " + theia.imports.k);`,
+      `theia.expose("k", 42);`,
     ]);
     initCells(new StubGraph());
     expect(outputs(doc)[0]).toBe("got 42");
@@ -106,8 +106,8 @@ describe("initCells — execution & reactivity", () => {
 
   it("reports mutually-dependent cells as a circular dependency", () => {
     const doc = mount([
-      `chalk.imports.y; chalk.expose("x", 1);`,
-      `chalk.imports.x; chalk.expose("y", 1);`,
+      `theia.imports.y; theia.expose("x", 1);`,
+      `theia.imports.x; theia.expose("y", 1);`,
     ]);
     initCells(new StubGraph());
     const errs = errors(doc);

@@ -1,5 +1,5 @@
 {
-  "name": "@chalk/compute",
+  "name": "@theia/compute",
   "version": "0.1.0",
   "private": true,
   "description": "Theia's compute layer: runs JavaScript code cells inside the reactive runtime, in dependency order, with error isolation. (Python via Pyodide is a later phase.)",

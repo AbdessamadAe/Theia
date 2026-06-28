@@ -1,4 +1,4 @@
-import type { ImageInline, MediaBlock, Paragraph, SceneBlock } from "@chalk/ast";
+import type { ImageInline, MediaBlock, Paragraph, SceneBlock } from "@theia/ast";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index.js";
 

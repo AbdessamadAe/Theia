@@ -1,4 +1,4 @@
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 import { describe, expect, it } from "vitest";
 import { buildShareUrl, MEDIA_INLINE_BUDGET, readShareFromHash, SHARE_LIMIT } from "../src/share.js";
 
@@ -22,7 +22,7 @@ describe("share-URL round-trip with embedded media", () => {
     expect(readShareFromHash(new URL(url).hash)).toBe(SMALL_DECK);
   });
 
-  it("the embedded image is canonical — it lives in the .chalk text", () => {
+  it("the embedded image is canonical — it lives in the .theia text", () => {
     const restored = readShareFromHash(new URL(buildShareUrl("https://app/", SMALL_DECK).url).hash)!;
     const block = parse(restored).children[0]!.children.find((b) => b.type === "media");
     expect(block && block.type === "media" && block.src).toBe(TINY_PNG);

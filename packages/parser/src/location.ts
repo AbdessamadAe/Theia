@@ -1,4 +1,4 @@
-import type { Position, SourceLocation } from "@chalk/ast";
+import type { Position, SourceLocation } from "@theia/ast";
 
 /** One physical line of the source, with its byte/char offsets. `end` is the
  * offset just past the last character (before the newline, if any). */

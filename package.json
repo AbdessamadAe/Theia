@@ -1,5 +1,5 @@
 {
-  "name": "chalk-monorepo",
+  "name": "theia-monorepo",
   "version": "0.1.0",
   "private": true,
   "description": "Theia — compile a math-teaching markup language into interactive slide decks.",
@@ -18,8 +18,8 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "build:app": "npm run build -w chalk",
-    "build:cli": "npm run build -w chalkdeck",
+    "build:app": "npm run build -w theia",
+    "build:cli": "npm run build -w theialang",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:e2e": "node scripts/browser-test.mjs",

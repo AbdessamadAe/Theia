@@ -1,4 +1,4 @@
-import type { Inline } from "@chalk/ast";
+import type { Inline } from "@theia/ast";
 import type { SourceText } from "./location.js";
 
 /** Find the next unescaped occurrence of `ch` at or after `from`. */

@@ -52,8 +52,8 @@ scales area. A negative value means the orientation flips. This cell reads all
 four sliders and reports it as you drag:
 
 ```js
-const a = chalk.slider("a"), b = chalk.slider("b");
-const c = chalk.slider("c"), d = chalk.slider("d");
+const a = theia.slider("a"), b = theia.slider("b");
+const c = theia.slider("c"), d = theia.slider("d");
 const det = a * d - b * c;
-chalk.tex("\\det M = ad - bc = " + det.toFixed(2));
+theia.tex("\\det M = ad - bc = " + det.toFixed(2));
 ```

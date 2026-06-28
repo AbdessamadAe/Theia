@@ -4,8 +4,8 @@
  * maps to a source character span `[start, end)` taken straight from the node's
  * `loc`; for fenced blocks that span already covers the whole `:::…:::` block.
  */
-import type { Block, Inline, Slide } from "@chalk/ast";
-import { parse } from "@chalk/parser";
+import type { Block, Inline, Slide } from "@theia/ast";
+import { parse } from "@theia/parser";
 
 export interface OutlineBlock {
   kind: string;

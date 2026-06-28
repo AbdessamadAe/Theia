@@ -1,4 +1,4 @@
-import { compileChalk } from "@chalk/render-slides/core";
+import { compileChalk } from "@theia/render-slides/core";
 import type { EditorView as CMView } from "@codemirror/view";
 import * as React from "react";
 import logoUrl from "../../assets/logo.png";

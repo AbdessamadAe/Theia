@@ -1,7 +1,7 @@
 // Phase 12 drag-on-preview — real-browser checks (Playwright).
 // Run a preview server first: npm run preview -w chalk
 import { chromium } from "@playwright/test";
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 import lzString from "lz-string";
 const { compressToEncodedURIComponent } = lzString;
 

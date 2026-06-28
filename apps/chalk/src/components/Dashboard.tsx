@@ -132,7 +132,7 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
     await saveToDisk(`${safeFileName(p.name)}${PROJECT_EXT}`, bundleToJson(bundle), "application/json");
   };
   const onExportChalk = async (p: Project): Promise<void> => {
-    await saveToDisk(`${safeFileName(p.name)}.chalk`, sourceOf(p), "text/plain");
+    await saveToDisk(`${safeFileName(p.name)}.theia`, sourceOf(p), "text/plain");
   };
 
   const importFiles = async (fileList: FileList | File[]): Promise<void> => {
@@ -171,7 +171,7 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
       <input
         ref={fileInput}
         type="file"
-        accept=".chalk,.json"
+        accept=".theia,.json"
         multiple
         className="hidden"
         onChange={(e) => {
@@ -190,7 +190,7 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
           </span>
         </div>
         <div className="flex-1" />
-        <Hint label="Import a .chalk or project file">
+        <Hint label="Import a .theia or project file">
           <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
             <UploadIcon /> <span className="hidden sm:inline">Import</span>
           </Button>
@@ -248,7 +248,7 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
               <p className="chalk-display text-foreground text-xl font-medium">
                 {query ? "No projects match" : "No projects yet"}
               </p>
-              <p className="text-muted-foreground text-sm">Create one, or drop a .chalk file here to import.</p>
+              <p className="text-muted-foreground text-sm">Create one, or drop a .theia file here to import.</p>
             </div>
             {!query && (
               <Button variant="live" onClick={() => setNewOpen(true)}>
@@ -359,7 +359,7 @@ function ProjectMenu(props: {
           <button role="menuitem" className={item} onClick={() => { setOpen(false); props.onRename(); }}>Rename</button>
           <button role="menuitem" className={item} onClick={() => { setOpen(false); props.onDuplicate(); }}>Duplicate</button>
           <button role="menuitem" className={item} onClick={() => { setOpen(false); props.onExportProject(); }}>Export project (.chalkproj.json)</button>
-          <button role="menuitem" className={item} onClick={() => { setOpen(false); props.onExportChalk(); }}>Export .chalk</button>
+          <button role="menuitem" className={item} onClick={() => { setOpen(false); props.onExportChalk(); }}>Export .theia</button>
           <div className="bg-border my-1 h-px" />
           <button role="menuitem" className={`${item} text-destructive`} onClick={() => { setOpen(false); props.onDelete(); }}>Delete…</button>
         </div>

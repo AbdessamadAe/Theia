@@ -1,6 +1,6 @@
-import { type AnyNode, walk } from "@chalk/ast";
-import { parse } from "@chalk/parser";
-import { compileChalk } from "@chalk/render-slides";
+import { type AnyNode, walk } from "@theia/ast";
+import { parse } from "@theia/parser";
+import { compileChalk } from "@theia/render-slides";
 import { describe, expect, it } from "vitest";
 import { DOC_EXAMPLES } from "../src/docs/examples.js";
 
@@ -18,7 +18,7 @@ function shapes(source: string): { types: Set<string>; kinds: Set<string>; codeL
 }
 
 /**
- * Every .chalk snippet shown in the docs must compile with the real engine, so
+ * Every .theia snippet shown in the docs must compile with the real engine, so
  * documentation can't drift from what ships. (Uses the Node compile path, which
  * loads the real KaTeX + runtime assets.)
  */

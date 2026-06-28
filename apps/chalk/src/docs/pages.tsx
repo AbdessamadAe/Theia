@@ -24,7 +24,7 @@ const Link = ({ to, children }: { to: string; children: React.ReactNode }): Reac
 const Intro: React.FC = () => (
   <>
     <h1 className="text-3xl font-semibold tracking-tight">What is Theia?</h1>
-    <Lead>Theia is a small language and engine for live, interactive mathematics slides. You write a plain-text <Code>.chalk</Code> file; Theia compiles it to a reactive deck that runs entirely in the browser.</Lead>
+    <Lead>Theia is a small language and engine for live, interactive mathematics slides. You write a plain-text <Code>.theia</Code> file; Theia compiles it to a reactive deck that runs entirely in the browser.</Lead>
     <H2>The problem it solves</H2>
     <P>Presentation tools mangle equations or reduce them to images. Beamer typesets beautifully but is static and slow to iterate. Neither lets a class <em>see</em> what happens as a parameter changes — which is often the whole point. Theia is math-native like Beamer, live like a notebook, and authored in plain text you own.</P>
     <H2>Who it's for</H2>
@@ -75,9 +75,9 @@ const Install: React.FC = () => (
     <P>The fastest path: open the <Link to={DASHBOARD_PATH}>playground</Link> in any modern browser. It runs the full engine client-side — edit, preview, present, and share with no install and no account.</P>
 
     <H2>The engine (command line)</H2>
-    <P>Theia also ships a CLI that compiles a <Code>.chalk</Code> file to a self-contained HTML deck. It needs <strong>Node.js 20+</strong>.</P>
-    <Callout tone="planned">A published npm package isn't available yet — the command below is how it will install (the name <Code>chalk</Code> is taken on npm, so it ships as <Code>chalkdeck</Code> and provides both <Code>chalk</Code> and <Code>chalkdeck</Code> commands). For now, build from the repository (see <Link to={docsPath("contributing")}>Contributing</Link>). This note will go once it's on npm.</Callout>
-    <DocCode lang="bash" code={`# planned: install the CLI globally (installs the \`chalk\` command)\nnpm install -g chalkdeck\n\n# compile a lecture to a self-contained lecture.html\nchalk build lecture.chalk\n\n# live-reload dev server while you write\nchalk watch lecture.chalk\n\n# build, then open the deck\nchalk present lecture.chalk`} />
+    <P>Theia also ships a CLI that compiles a <Code>.theia</Code> file to a self-contained HTML deck. It needs <strong>Node.js 20+</strong>.</P>
+    <Callout tone="planned">A published npm package isn't available yet — the command below is how it will install (the name <Code>theia</Code> is taken on npm by the Eclipse Theia IDE, so it ships as <Code>theialang</Code> and provides the <Code>theia</Code> command). For now, build from the repository (see <Link to={docsPath("contributing")}>Contributing</Link>). This note will go once it's on npm.</Callout>
+    <DocCode lang="bash" code={`# planned: install the CLI globally (installs the \`theia\` command)\nnpm install -g theialang\n\n# compile a lecture to a self-contained lecture.html\ntheia build lecture.theia\n\n# live-reload dev server while you write\ntheia watch lecture.theia\n\n# build, then open the deck\ntheia present lecture.theia`} />
     <P>See the <Link to={docsPath("cli")}>CLI reference</Link> for every command and flag.</P>
   </>
 );
@@ -86,7 +86,7 @@ const Install: React.FC = () => (
 const Structure: React.FC = () => (
   <>
     <h1 className="text-3xl font-semibold tracking-tight">Structure &amp; math</h1>
-    <Lead>A <Code>.chalk</Code> file is markdown-like text. Headings split it into slides; everything else is content.</Lead>
+    <Lead>A <Code>.theia</Code> file is markdown-like text. Headings split it into slides; everything else is content.</Lead>
 
     <H2>Slides</H2>
     <P><Code># Title</Code> begins a <strong>title slide</strong> (used once, up top). <Code>## Heading</Code> begins a <strong>content slide</strong>. A slide runs until the next heading.</P>
@@ -138,7 +138,7 @@ const Reactivity: React.FC = () => (
     <Ul>
       <li>Display/inline math whose LaTeX references the slider value.</li>
       <li>Scene expressions — a <Code>@plot</Code>, <Code>@point</Code>, <Code>@area</Code>, etc. whose formula uses the variable.</li>
-      <li>Code cells that read it via <Code>chalk.slider("name")</Code>.</li>
+      <li>Code cells that read it via <Code>theia.slider("name")</Code>.</li>
     </Ul>
     <Example id="guide-slider" />
   </>
@@ -242,16 +242,16 @@ const CodeCells: React.FC = () => (
     <h1 className="text-3xl font-semibold tracking-tight">Code cells</h1>
     <Lead>Fenced <Code>```js</Code> and <Code>```py</Code> cells run live in the browser and can read sliders and emit math or text. Python runs via Pyodide (loaded lazily, only if a deck has a py cell).</Lead>
 
-    <H2>The <Code>chalk</Code> API</H2>
-    <P>Each cell receives a <Code>chalk</Code> object:</P>
+    <H2>The <Code>theia</Code> API</H2>
+    <P>Each cell receives a <Code>theia</Code> object:</P>
     <Ul>
-      <li><Code>chalk.slider(name)</Code> → the current value of a slider (number).</li>
-      <li><Code>chalk.sliders</Code> → all slider values; <Code>chalk.imports</Code> → values exposed by other cells.</li>
-      <li><Code>chalk.expose(name, value)</Code> → publish a value for other cells to import.</li>
-      <li><Code>chalk.imported(name)</Code> → read another cell's exposed value (also <Code>chalk.imports.name</Code>).</li>
-      <li><Code>chalk.tex(latex)</Code> → render a LaTeX string as the cell's output.</li>
-      <li><Code>chalk.text(value)</Code> → render plain text output.</li>
-      <li><Code>chalk.canvas(w, h)</Code> → a drawing canvas (JS cells).</li>
+      <li><Code>theia.slider(name)</Code> → the current value of a slider (number).</li>
+      <li><Code>theia.sliders</Code> → all slider values; <Code>theia.imports</Code> → values exposed by other cells.</li>
+      <li><Code>theia.expose(name, value)</Code> → publish a value for other cells to import.</li>
+      <li><Code>theia.imported(name)</Code> → read another cell's exposed value (also <Code>theia.imports.name</Code>).</li>
+      <li><Code>theia.tex(latex)</Code> → render a LaTeX string as the cell's output.</li>
+      <li><Code>theia.text(value)</Code> → render plain text output.</li>
+      <li><Code>theia.canvas(w, h)</Code> → a drawing canvas (JS cells).</li>
     </Ul>
 
     <H2>JavaScript</H2>
@@ -324,14 +324,14 @@ const Guides: React.FC = () => (
 const Cli: React.FC = () => (
   <>
     <h1 className="text-3xl font-semibold tracking-tight">CLI reference</h1>
-    <Lead>The <Code>chalk</Code> command compiles a <Code>.chalk</Code> file into a self-contained HTML deck. Requires Node.js 20+.</Lead>
+    <Lead>The <Code>theia</Code> command compiles a <Code>.theia</Code> file into a self-contained HTML deck. Requires Node.js 20+.</Lead>
 
     <H2>Commands</H2>
-    <DocCode lang="bash" code={`chalk build   <file.chalk> [--out <file.html>]   # compile to a slide bundle\nchalk watch   <file.chalk> [--port <n>]          # serve with live reload\nchalk present <file.chalk> [--out <file.html>]   # build, then open the deck`} />
+    <DocCode lang="bash" code={`theia build   <file.theia> [--out <file.html>]   # compile to a slide bundle\ntheia watch   <file.theia> [--port <n>]          # serve with live reload\ntheia present <file.theia> [--out <file.html>]   # build, then open the deck`} />
 
     <H3>Options</H3>
     <Ul>
-      <li><Code>--out &lt;path&gt;</Code> — output HTML path (default: alongside the source, <Code>lecture.chalk → lecture.html</Code>).</li>
+      <li><Code>--out &lt;path&gt;</Code> — output HTML path (default: alongside the source, <Code>lecture.theia → lecture.html</Code>).</li>
       <li><Code>--port &lt;n&gt;</Code> — dev-server port for <Code>watch</Code> (default: 4321).</li>
       <li><Code>-h</Code>, <Code>--help</Code> — show usage.</li>
       <li><Code>-v</Code>, <Code>--version</Code> — show the version.</li>
@@ -339,7 +339,7 @@ const Cli: React.FC = () => (
 
     <H2>Build output</H2>
     <P><Code>build</Code> writes one self-contained <Code>.html</Code> — KaTeX, the runtime, and fonts are all inlined, so it opens offline with no dependencies. Local media is embedded (small files inline; larger ones copied into <Code>&lt;out&gt;.assets/</Code> and referenced relatively). Missing <Code>alt</Code> text and unresolved local media are reported as warnings.</P>
-    <DocCode lang="bash" code={`$ chalk build lecture.chalk\n✓ lecture.chalk → lecture.html  (8 slides, 712.0 KB)`} />
+    <DocCode lang="bash" code={`$ theia build lecture.theia\n✓ lecture.theia → lecture.html  (8 slides, 712.0 KB)`} />
   </>
 );
 
@@ -376,19 +376,19 @@ const Contributing: React.FC = () => (
     <P>An npm-workspaces monorepo:</P>
     <Ul>
       <li><Code>packages/ast</Code> — the node types.</li>
-      <li><Code>packages/parser</Code> — <Code>.chalk</Code> text → AST (pure, lenient).</li>
+      <li><Code>packages/parser</Code> — <Code>.theia</Code> text → AST (pure, lenient).</li>
       <li><Code>packages/compute</Code> — the js/py code-cell engine.</li>
       <li><Code>packages/runtime</Code> — the client runtime (reactivity, scenes, 3D, morphing).</li>
       <li><Code>packages/render-slides</Code> — AST → a self-contained HTML deck.</li>
-      <li><Code>packages/cli</Code> — the <Code>chalk</Code> command.</li>
+      <li><Code>packages/cli</Code> — the <Code>theia</Code> command.</li>
       <li><Code>apps/chalk</Code> — this web app (landing, playground, gallery, docs).</li>
     </Ul>
 
     <H2>Run it locally</H2>
-    <DocCode lang="bash" code={`npm install            # install workspace deps\nnpm run dev -w chalk   # start the web app (playground + docs)\nnpm test               # run the unit suites`} />
+    <DocCode lang="bash" code={`npm install            # install workspace deps\nnpm run dev -w theia   # start the web app (playground + docs)\nnpm test               # run the unit suites`} />
 
     <H2>Filing issues</H2>
-    <P>Report bugs and request features on <a className="text-live font-medium hover:underline" href={`${GITHUB_URL}/issues`} target="_blank" rel="noreferrer">GitHub Issues</a>. A minimal <Code>.chalk</Code> snippet that reproduces the problem helps a lot.</P>
+    <P>Report bugs and request features on <a className="text-live font-medium hover:underline" href={`${GITHUB_URL}/issues`} target="_blank" rel="noreferrer">GitHub Issues</a>. A minimal <Code>.theia</Code> snippet that reproduces the problem helps a lot.</P>
     <Callout tone="planned">The repository URL is a placeholder until the project is published — see the link in the footer.</Callout>
   </>
 );
@@ -410,7 +410,7 @@ export const DOC_GROUPS: DocGroup[] = [
       { id: "reactivity", title: "Reactivity & sliders", keywords: "slider reactive variable bind", Body: Reactivity },
       { id: "scenes", title: "2D scenes", keywords: "scene axes plot point area tangent label numberline animate", Body: Scenes },
       { id: "scene3d", title: "3D scenes", keywords: "3d surface solid sphere cube vector camera orbit three", Body: ThreeD },
-      { id: "code", title: "Code cells", keywords: "javascript python pyodide sympy matplotlib cell chalk api", Body: CodeCells },
+      { id: "code", title: "Code cells", keywords: "javascript python pyodide sympy matplotlib cell theia api", Body: CodeCells },
       { id: "media", title: "Media & geometry", keywords: "image video geogebra geo media markdown", Body: Media },
     ],
   },

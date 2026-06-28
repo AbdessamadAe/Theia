@@ -13,8 +13,8 @@ import type {
   Slider,
   TheoremBlock,
   TheoremKind,
-} from "@chalk/ast";
-import { formatValue, referencedVars, substituteLatex } from "@chalk/runtime";
+} from "@theia/ast";
+import { formatValue, referencedVars, substituteLatex } from "@theia/runtime";
 import { escapeHtml } from "./escape.js";
 import { MARK_MACRO, renderMath } from "./katex-render.js";
 

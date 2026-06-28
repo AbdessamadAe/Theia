@@ -8,12 +8,12 @@ import { startDevServer } from "./serve.js";
 
 const VERSION = "0.1.0";
 
-const USAGE = `chalk ${VERSION} — compile a Theia lecture into an interactive slide deck
+const USAGE = `theia ${VERSION} — compile a Theia lecture into an interactive slide deck
 
 Usage:
-  chalk build   <file.chalk> [--out <file.html>]   compile to a slide bundle
-  chalk watch   <file.chalk> [--port <n>]          serve with live reload
-  chalk present <file.chalk> [--out <file.html>]   build, then open the deck
+  theia build   <file.theia> [--out <file.html>]   compile to a slide bundle
+  theia watch   <file.theia> [--port <n>]          serve with live reload
+  theia present <file.theia> [--out <file.html>]   build, then open the deck
 
 Options:
   --out <path>   output HTML path (default: alongside the source)
@@ -61,7 +61,7 @@ function humanBytes(n: number): string {
 }
 
 function fail(message: string): never {
-  process.stderr.write(`chalk: ${message}\n`);
+  process.stderr.write(`theia: ${message}\n`);
   process.exit(1);
 }
 
@@ -154,9 +154,9 @@ function main(): void {
 
   const { command, file, out } = args;
   if (!["build", "watch", "present"].includes(command)) {
-    fail(`unknown command "${command}". Run \`chalk --help\`.`);
+    fail(`unknown command "${command}". Run \`theia --help\`.`);
   }
-  if (!file) fail(`no input file. Usage: chalk ${command} <file.chalk>`);
+  if (!file) fail(`no input file. Usage: theia ${command} <file.theia>`);
   if (!existsSync(resolve(file))) fail(`file not found: ${file}`);
 
   switch (command) {

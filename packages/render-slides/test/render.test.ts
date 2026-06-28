@@ -1,17 +1,17 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 import { describe, expect, it } from "vitest";
 import { renderDeck } from "../src/index.js";
 
 const source = readFileSync(
-  fileURLToPath(new URL("../../../examples/limits.chalk", import.meta.url)),
+  fileURLToPath(new URL("../../../examples/limits.theia", import.meta.url)),
   "utf8",
 );
 
 const html = renderDeck(parse(source));
 
-describe("renderDeck(limits.chalk)", () => {
+describe("renderDeck(limits.theia)", () => {
   it("emits a complete, self-contained HTML document", () => {
     expect(html.startsWith("<!doctype html>")).toBe(true);
     expect(html).toContain("<title>Limits and Continuity</title>");
@@ -115,7 +115,7 @@ describe("renderDeck(limits.chalk)", () => {
     // Source is preserved (escaped) so the runtime can compile it.
     expect(html).toContain("const f = (x) =&gt; 3 * x + 1;");
     // Cell source is HTML-escaped in the <pre>; the runtime decodes it.
-    expect(html).toContain("chalk.slider(&quot;a&quot;)");
+    expect(html).toContain("theia.slider(&quot;a&quot;)");
   });
 
   it("renders py code cells as live compute cells (Pyodide)", () => {

@@ -1,8 +1,8 @@
 {
-  "name": "chalk",
+  "name": "theia",
   "version": "0.1.0",
   "private": true,
-  "description": "The Theia web app: landing page, zero-install playground, gallery, and docs — edit .chalk and see the live deck, all compiled client-side with the engine packages.",
+  "description": "The Theia web app: landing page, zero-install playground, gallery, and docs — edit .theia and see the live deck, all compiled client-side with the engine packages.",
   "type": "module",
   "scripts": {
     "prebuild": "node scripts/prebuild.mjs",
@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@chalk/parser": "0.1.0",
-    "@chalk/render-slides": "0.1.0",
+    "@theia/parser": "0.1.0",
+    "@theia/render-slides": "0.1.0",
     "@codemirror/language": "^6.10.0",
     "@codemirror/state": "^6.4.0",
     "@codemirror/view": "^6.34.0",

@@ -5,9 +5,9 @@
  * before Pyodide has loaded (and we want to plan the dependency order, and
  * decide which packages to download, *before* paying that cost). So for py
  * cells we read the dependencies straight out of the source text:
- *   - sliders read:   chalk.slider("a")
- *   - cell imports:   chalk.imported("slope")
- *   - cell exposes:   chalk.expose("deriv", …)
+ *   - sliders read:   theia.slider("a")
+ *   - cell imports:   theia.imported("slope")
+ *   - cell exposes:   theia.expose("deriv", …)
  *   - packages:       import numpy / from sympy import …  → Pyodide packages
  *
  * This is deliberately syntactic (a teaching tool's cells are short and plain).
@@ -49,13 +49,13 @@ export interface PythonDiscovery {
 /** Discover a single py cell's dependencies and required packages. */
 export function discoverPython(source: string): PythonDiscovery {
   const sliders = new Set(
-    matchAll(/chalk\.slider\(\s*["']([^"']+)["']/g, source),
+    matchAll(/theia\.slider\(\s*["']([^"']+)["']/g, source),
   );
   const imports = new Set(
-    matchAll(/chalk\.imported\(\s*["']([^"']+)["']/g, source),
+    matchAll(/theia\.imported\(\s*["']([^"']+)["']/g, source),
   );
   const exposes = new Set(
-    matchAll(/chalk\.expose\(\s*["']([^"']+)["']/g, source),
+    matchAll(/theia\.expose\(\s*["']([^"']+)["']/g, source),
   );
 
   const packages = new Set<string>();

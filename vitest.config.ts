@@ -7,12 +7,12 @@ export default defineConfig({
   resolve: {
     alias: {
       // Run tests against TypeScript source directly, no pre-build needed.
-      "@chalk/ast": r("./packages/ast/src/index.ts"),
-      "@chalk/parser": r("./packages/parser/src/index.ts"),
-      "@chalk/runtime": r("./packages/runtime/src/index.ts"),
-      "@chalk/compute": r("./packages/compute/src/index.ts"),
-      "@chalk/render-slides/core": r("./packages/render-slides/src/render-core.ts"),
-      "@chalk/render-slides": r("./packages/render-slides/src/index.ts"),
+      "@theia/ast": r("./packages/ast/src/index.ts"),
+      "@theia/parser": r("./packages/parser/src/index.ts"),
+      "@theia/runtime": r("./packages/runtime/src/index.ts"),
+      "@theia/compute": r("./packages/compute/src/index.ts"),
+      "@theia/render-slides/core": r("./packages/render-slides/src/render-core.ts"),
+      "@theia/render-slides": r("./packages/render-slides/src/index.ts"),
     },
   },
   test: {

@@ -1,13 +1,13 @@
 /**
  * The pure, isomorphic compile core (no Node/fs imports), shared by the CLI and
  * the browser playground. The three heavy inlined assets — KaTeX CSS (with
- * embedded fonts), the KaTeX browser bundle, and the @chalk/runtime IIFE — are
+ * embedded fonts), the KaTeX browser bundle, and the @theia/runtime IIFE — are
  * *injected* as strings rather than read from disk, so this runs unchanged in
  * Node (CLI supplies them via fs/esbuild) and in the browser (playground
  * supplies the same strings, baked at its build time).
  */
-import type { DocumentNode } from "@chalk/ast";
-import { parse } from "@chalk/parser";
+import type { DocumentNode } from "@theia/ast";
+import { parse } from "@theia/parser";
 import { escapeHtml } from "./escape.js";
 import { renderSlide } from "./render-nodes.js";
 import { DECK_CSS } from "./styles.js";
@@ -81,7 +81,7 @@ export interface CompileResult {
 }
 
 /**
- * The one shared compile path: `.chalk` source → self-contained HTML deck.
+ * The one shared compile path: `.theia` source → self-contained HTML deck.
  * Used by both the CLI (Node assets) and the playground (bundled assets). The
  * parser is lenient by design, so most malformed input still renders (bad math
  * shows as KaTeX errors in place); a thrown error is reported rather than

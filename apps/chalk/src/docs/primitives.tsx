@@ -1,4 +1,4 @@
-import { compileChalk } from "@chalk/render-slides/core";
+import { compileChalk } from "@theia/render-slides/core";
 import * as React from "react";
 import { ArrowRightIcon, CheckIcon, CopyIcon } from "@/components/icons";
 import { ASSETS } from "@/generated/assets";
@@ -53,7 +53,7 @@ export function Callout({ tone = "note", children }: { tone?: "note" | "warn" | 
   );
 }
 
-// --- .chalk code highlighting ---------------------------------------------
+// --- .theia code highlighting ---------------------------------------------
 /** Lightweight, line-based highlighter mirroring the editor's token colours.
  * Display only — the parser is the source of truth. */
 function highlightChalk(code: string): React.ReactNode {

@@ -1,5 +1,5 @@
 /**
- * @chalk/ast — the shared AST node types.
+ * @theia/ast — the shared AST node types.
  *
  * This package is the *contract* between the parser and every renderer. It has
  * no runtime dependencies and no logic beyond the type definitions and a few
@@ -44,7 +44,7 @@ export interface NodeBase {
 // Document & slides
 // ---------------------------------------------------------------------------
 
-/** Root of the tree. One `.chalk` file parses to exactly one Document. */
+/** Root of the tree. One `.theia` file parses to exactly one Document. */
 export interface DocumentNode extends NodeBase {
   type: "document";
   /** Plain-text title taken from a leading `# Title`, if the file has one. */

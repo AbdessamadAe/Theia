@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 import { JSDOM } from "jsdom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { renderDeck } from "../src/index.js";
 
 const source = readFileSync(
-  fileURLToPath(new URL("../../../examples/limits.chalk", import.meta.url)),
+  fileURLToPath(new URL("../../../examples/limits.theia", import.meta.url)),
   "utf8",
 );
 const html = renderDeck(parse(source));

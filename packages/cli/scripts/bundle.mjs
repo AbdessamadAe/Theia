@@ -1,11 +1,11 @@
-// Build the publishable `chalkdeck` artifact: one self-contained `dist/cli.js`
+// Build the publishable `theialang` artifact: one self-contained `dist/cli.js`
 // plus the three baked deck assets. Run after the engine workspace packages are
 // built (their dist is the input here). Produces a standalone CLI with zero
-// runtime dependencies — `npm i -g chalkdeck` needs nothing else on disk.
+// runtime dependencies — `npm i -g theialang` needs nothing else on disk.
 //
 //   1. Bake assets: compute the KaTeX CSS/JS + runtime IIFE with the SAME
 //      loadNodeAssets() the in-repo CLI uses, and write them beside dist/. The
-//      bytes are identical to a normal `chalk build`; we just compute them now
+//      bytes are identical to a normal `theia build`; we just compute them now
 //      (publish time) instead of at install time, so esbuild/katex/runtime-src
 //      are not needed by the installed package.
 //   2. Bundle the CLI's pure import graph (cli → build/serve → render-core +
@@ -14,7 +14,7 @@ import { build } from "esbuild";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadNodeAssets } from "@chalk/render-slides";
+import { loadNodeAssets } from "@theia/render-slides";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const pkgRoot = join(here, "..");
@@ -30,7 +30,7 @@ writeFileSync(join(dist, "assets", "katex.js"), assets.katexJs);
 writeFileSync(join(dist, "assets", "runtime.js"), assets.runtimeJs);
 
 // Swap the live asset source (`assets.ts`, which pulls in esbuild + katex via
-// @chalk/render-slides) for the prebaked reader (`assets.baked.ts`). This is the
+// @theia/render-slides) for the prebaked reader (`assets.baked.ts`). This is the
 // one reason the published bundle carries zero runtime dependencies.
 const swapAssets = {
   name: "swap-baked-assets",
@@ -59,7 +59,7 @@ const fmt = (n) => `${(n / 1024).toFixed(1)} KB`;
 const total =
   assets.katexCss.length + assets.katexJs.length + assets.runtimeJs.length;
 console.log(
-  `chalkdeck bundled → dist/cli.js  (+ baked assets: katex.css ${fmt(
+  `theialang bundled → dist/cli.js  (+ baked assets: katex.css ${fmt(
     assets.katexCss.length,
   )}, katex.js ${fmt(assets.katexJs.length)}, runtime.js ${fmt(
     assets.runtimeJs.length,

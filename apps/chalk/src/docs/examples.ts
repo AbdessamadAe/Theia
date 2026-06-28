@@ -1,5 +1,5 @@
 /**
- * The single manifest of every `.chalk` snippet shown in the docs. Pages cite
+ * The single manifest of every `.theia` snippet shown in the docs. Pages cite
  * snippets by id (so prose can't drift from code), and a test compiles all of
  * them with the real engine (test/docs-examples.test.ts) — docs can't silently
  * rot. Every source here has been verified to compile.
@@ -59,8 +59,8 @@ export const DOC_EXAMPLES = {
   "scene3d-vector": `## A 3D vector\n\n:::scene3d\n@axes3d ax x:[-3,3] y:[-3,3] z:[0,4]\n@vector3d v on ax from (0,0,0) to (2, 1, 3)\n@camera cam phi:60 theta:-40 distance:9\n:::\n`,
 
   // ── Code cells ──────────────────────────────────────────────────────────
-  "code-js": "## A JavaScript cell\n\n@slider a [0, 4] = 2\n\n```js\nconst a = chalk.slider(\"a\");\nchalk.tex(\"f'(1) = 2a = \" + (2 * a).toFixed(2));\n```\n",
-  "code-py": "## A Python cell\n\n```py\nimport sympy as sp\nx = sp.Symbol(\"x\")\nchalk.tex(sp.latex(sp.diff(x**3, x)))\n```\n",
+  "code-js": "## A JavaScript cell\n\n@slider a [0, 4] = 2\n\n```js\nconst a = theia.slider(\"a\");\ntheia.tex(\"f'(1) = 2a = \" + (2 * a).toFixed(2));\n```\n",
+  "code-py": "## A Python cell\n\n```py\nimport sympy as sp\nx = sp.Symbol(\"x\")\ntheia.tex(sp.latex(sp.diff(x**3, x)))\n```\n",
 
   // ── Media & geometry ────────────────────────────────────────────────────
   "media-image": `## A figure\n\n@image fig of "https://upload.wikimedia.org/diagram.png" at (0, 0) width:5 alt:"A labelled diagram"\n`,

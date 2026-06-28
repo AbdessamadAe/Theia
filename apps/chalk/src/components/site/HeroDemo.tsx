@@ -1,4 +1,4 @@
-import { compileChalk } from "@chalk/render-slides/core";
+import { compileChalk } from "@theia/render-slides/core";
 import * as React from "react";
 import { ASSETS } from "@/generated/assets";
 

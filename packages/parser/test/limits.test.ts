@@ -14,13 +14,13 @@ import type {
   Slide,
   Slider,
   TheoremBlock,
-} from "@chalk/ast";
-import { walk } from "@chalk/ast";
+} from "@theia/ast";
+import { walk } from "@theia/ast";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index.js";
 
 const source = readFileSync(
-  fileURLToPath(new URL("../../../examples/limits.chalk", import.meta.url)),
+  fileURLToPath(new URL("../../../examples/limits.theia", import.meta.url)),
   "utf8",
 );
 
@@ -41,7 +41,7 @@ function headingText(slide: Slide): string {
     .join("");
 }
 
-describe("parse(limits.chalk) — the north-star lecture", () => {
+describe("parse(limits.theia) — the north-star lecture", () => {
   it("produces a document with the right title", () => {
     expect(doc.type).toBe("document");
     expect(doc.title).toBe("Limits and Continuity");

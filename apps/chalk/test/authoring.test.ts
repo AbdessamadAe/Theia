@@ -1,5 +1,5 @@
-import type { SceneBlock } from "@chalk/ast";
-import { parse } from "@chalk/parser";
+import type { SceneBlock } from "@theia/ast";
+import { parse } from "@theia/parser";
 import { describe, expect, it } from "vitest";
 import { buildOutline, enclosingContainer, moveBlock } from "../src/lib/outline.js";
 import { CATEGORY_LABELS, expandTemplate, SNIPPETS } from "../src/lib/snippets.js";

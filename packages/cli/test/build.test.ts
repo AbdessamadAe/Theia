@@ -54,10 +54,10 @@ describe("buildFile media embedding", () => {
     const dir = tmp();
     writeFileSync(join(dir, "dot.png"), Buffer.from([9, 9, 9]));
     writeFileSync(
-      join(dir, "deck.chalk"),
+      join(dir, "deck.theia"),
       ['## Local media', '', '@image dot of "dot.png" width:8'].join("\n"),
     );
-    const res = buildFile(join(dir, "deck.chalk"), join(dir, "out.html"));
+    const res = buildFile(join(dir, "deck.theia"), join(dir, "out.html"));
     const html = readFileSync(res.output, "utf8");
     expect(html).toContain("data:image/png;base64,");
     expect(res.warnings.some((w) => /no alt text/.test(w))).toBe(true); // dot has no alt

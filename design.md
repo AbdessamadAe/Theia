@@ -6,7 +6,7 @@
 
 ## 1. What Theia is
 
-Theia is a tool for presenting mathematics. A professor writes a single source file in the Theia language (`.chalk`), runs the Theia engine, and gets an **interactive slide deck** to present in class — live and reactive, not a static PDF. Because the deck compiles to a self-contained web bundle, it is also shareable as a URL: students can open the same interactive slides on their own devices, drag the same sliders, and step through the same derivations.
+Theia is a tool for presenting mathematics. A professor writes a single source file in the Theia language (`.theia`), runs the Theia engine, and gets an **interactive slide deck** to present in class — live and reactive, not a static PDF. Because the deck compiles to a self-contained web bundle, it is also shareable as a URL: students can open the same interactive slides on their own devices, drag the same sliders, and step through the same derivations.
 
 Theia sits in the lineage of LaTeX and Manim. LaTeX compiles markup into documents; Manim compiles Python into mathematical animation videos. Theia compiles a math-teaching language into interactive slides. Like both, it is installed and run from the command line. Unlike both, its output is a *live, reactive* document that runs in a browser — a slider the professor drags during the lecture re-computes and re-renders on the projector in real time.
 
@@ -44,7 +44,7 @@ These resolve design decisions when the right answer is unclear.
 ## 3. The compile pipeline
 
 ```
-.chalk source
+.theia source
         │
         ▼
    ┌──────────┐
@@ -138,9 +138,9 @@ The engine is built in TypeScript and distributed through npm.
 ```
 npm install -g chalk
 
-chalk build    lecture.chalk    # → interactive slide bundle
-chalk watch    lecture.chalk    # live preview while authoring
-chalk present  lecture.chalk    # open the slide deck
+theia build    lecture.theia    # → interactive slide bundle
+theia watch    lecture.theia    # live preview while authoring
+theia present  lecture.theia    # open the slide deck
 ```
 
 ### Why TypeScript
@@ -159,7 +159,7 @@ The compute engine executes embedded code cells and weaves their results into th
 
 **Python cells via Pyodide.** Pyodide is CPython compiled to WebAssembly, so `numpy`, `sympy`, and `matplotlib` run *inside the browser*. This is the decisive capability: a Python-powered interactive slider needs **no server at all**. Existing tools force a bad trade on interactivity — none in PowerPoint and Beamer; a running R/Python server in Quarto's Shiny model; JavaScript fluency in Observable. Running Python client-side via WebAssembly removes that trade. The educator audience gets the Python they already know, and the deck remains a plain web bundle that can be hosted anywhere or opened offline.
 
-Pyodide loads lazily — only when a `.chalk` file actually contains a Python cell — so JavaScript-only decks stay light.
+Pyodide loads lazily — only when a `.theia` file actually contains a Python cell — so JavaScript-only decks stay light.
 
 ---
 
@@ -193,7 +193,7 @@ Because the bundle is self-contained, sharing is just a link, and there is no ac
 chalk/
 ├── packages/
 │   ├── ast/            # shared AST node types — the contract
-│   ├── parser/         # .chalk text → AST  (pure, no I/O, fully tested)
+│   ├── parser/         # .theia text → AST  (pure, no I/O, fully tested)
 │   ├── compute/        # orchestrates JS + Pyodide code cells
 │   ├── runtime/        # reactive runtime shipped in the slide bundle
 │   ├── render-slides/  # AST → interactive slide bundle
@@ -208,13 +208,13 @@ Boundary rules: the parser and AST packages never import the renderer or runtime
 ## 10. Roadmap
 
 ### Phase 0 — Syntax spec
-Write a complete, realistic `.chalk` calculus lecture (limits and continuity) that exercises every language construct, plus a one-page syntax reference covering how a code cell is written and how it binds to a slider. Freeze it before building. This is the cheapest way to surface design problems, and every later phase implements it.
+Write a complete, realistic `.theia` calculus lecture (limits and continuity) that exercises every language construct, plus a one-page syntax reference covering how a code cell is written and how it binds to a slider. Freeze it before building. This is the cheapest way to surface design problems, and every later phase implements it.
 
 ### Phase 1 — Parser + AST
 `packages/ast` and `packages/parser`. Pure string → tree, designed to carry a full lecture. Unit-tested against the Phase 0 file.
 
 ### Phase 2 — Slide renderer (static)
-`render-slides` and a minimal `chalk build` that emits a presentable slide bundle: fixed-canvas slides, keyboard navigation, step-reveal on advance, KaTeX math, styled theorem blocks. Sliders, plots, and geometry render as static placeholders for now. This proves the AST contract and already gives a usable deck.
+`render-slides` and a minimal `theia build` that emits a presentable slide bundle: fixed-canvas slides, keyboard navigation, step-reveal on advance, KaTeX math, styled theorem blocks. Sliders, plots, and geometry render as static placeholders for now. This proves the AST contract and already gives a usable deck.
 
 ### Phase 3 — Reactive runtime
 `runtime`. Sliders become reactive variables; plots and equations that depend on them update live. Geometry blocks become real GeoGebra embeds.
@@ -226,7 +226,7 @@ Write a complete, realistic `.chalk` calculus lecture (limits and continuity) th
 Client-side `numpy` / `sympy` / `matplotlib`. The headline capability: server-free, Python-driven interactivity inside a slide.
 
 ### Phase 6 — First real user test
-Put `chalk watch` in front of one real professor. Watch silently. Confirm or revise the syntax before it hardens.
+Put `theia watch` in front of one real professor. Watch silently. Confirm or revise the syntax before it hardens.
 
 ### Phase 7 — Sharing + hosted playground
 Shareable hosting of the slide bundle, and a hosted browser playground so a professor can try Theia before installing the engine.
@@ -254,7 +254,7 @@ LaTeX/Beamer importer, an example gallery across topics (calculus, linear algebr
 
 In order of increasing ambition. None is a revenue or user-count target — the measure is whether Theia genuinely helps someone teach or learn math better.
 
-1. One `.chalk` file compiles to an interactive slide deck with live math, a working reactive slider, a stepped proof, and a geometry embed.
+1. One `.theia` file compiles to an interactive slide deck with live math, a working reactive slider, a stepped proof, and a geometry embed.
 2. A real professor writes a real lecture in Theia and presents from it without help.
 3. A professor shares the deck with a class and students open it.
 4. Someone you have never met writes a lecture in Theia and says it was better than what they used before.
@@ -264,4 +264,4 @@ In order of increasing ambition. None is a revenue or user-count target — the 
 
 ## 13. Immediate next action
 
-Start Phase 0: draft the complete sample `.chalk` calculus lecture and the one-page syntax reference, including code-cell and slider-binding syntax. It is a few hours of work, it is the cheapest way to surface design problems, and every later phase implements it. Build nothing else until that file reads naturally to write and to present from.
+Start Phase 0: draft the complete sample `.theia` calculus lecture and the one-page syntax reference, including code-cell and slider-binding syntax. It is a few hours of work, it is the cheapest way to surface design problems, and every later phase implements it. Build nothing else until that file reads naturally to write and to present from.

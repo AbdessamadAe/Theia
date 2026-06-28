@@ -1,4 +1,4 @@
-# chalkdeck
+# theialang
 
 Compile **Theia** — a math-teaching markup language — into a single
 self-contained, interactive HTML slide deck. Drag a slider and the curve moves;
@@ -10,25 +10,26 @@ the KaTeX engine, and the Theia reactive runtime are all baked in, so a built
 deck is one offline-capable `.html` file and the CLI itself has **zero runtime
 dependencies**.
 
+> The npm name `theia` is taken (the Eclipse Theia IDE), so this package is
+> published as **`theialang`**. It installs the `theia` command.
+
 ## Install
 
 ```bash
-npm install -g chalkdeck
+npm install -g theialang
 ```
-
-This installs the `chalk` command (and a `chalkdeck` alias).
 
 ## Usage
 
 ```bash
-chalk build   lecture.chalk [--out lecture.html]   # compile to a slide bundle
-chalk watch   lecture.chalk [--port 4321]          # serve with live reload
-chalk present lecture.chalk [--out lecture.html]   # build, then open the deck
+theia build   lecture.theia [--out lecture.html]   # compile to a slide bundle
+theia watch   lecture.theia [--port 4321]          # serve with live reload
+theia present lecture.theia [--out lecture.html]   # build, then open the deck
 ```
 
 A minimal lecture:
 
-```chalk
+```theia
 # Continuity
 
 @slider a [0.2, 3] = 1.4
@@ -42,7 +43,7 @@ Drag **a** — the curve responds.
 ```
 
 ```bash
-chalk build lecture.chalk   # → lecture.html (open it in any browser)
+theia build lecture.theia   # → lecture.html (open it in any browser)
 ```
 
 ## License

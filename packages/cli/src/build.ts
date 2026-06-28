@@ -6,20 +6,22 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, extname, join, resolve } from "node:path";
-import { walk } from "@chalk/ast";
-import { parse } from "@chalk/parser";
+import { walk } from "@theia/ast";
+import { parse } from "@theia/parser";
 // Feed the deck assets through the shared, isomorphic compile core (the same
 // `compileChalk` the playground uses), with the asset source behind `getAssets`:
 // in-repo it computes them live (esbuild + fs); the published bundle swaps in
 // `assets.baked.ts` (prebaked files, zero deps). Either way the same bytes flow
 // through the same core — the compile path itself is unchanged.
-import { compileChalk } from "@chalk/render-slides/core";
+import { compileChalk } from "@theia/render-slides/core";
 import { getAssets } from "./assets.js";
 
-/** Derive the output `.html` path for a given `.chalk` source path. */
+/** Derive the output `.html` path for a given `.theia` source path. */
 export function outputPathFor(input: string): string {
   const abs = resolve(input);
-  const base = abs.endsWith(".chalk") ? abs.slice(0, -".chalk".length) : abs;
+  // Strip a known source extension. `.theia` is the current extension; `.chalk`
+  // is still accepted so decks authored before the rename keep building.
+  const base = /\.(theia|chalk)$/i.test(abs) ? abs.replace(/\.[^.]+$/, "") : abs;
   return `${base}.html`;
 }
 
@@ -119,7 +121,7 @@ export interface BuildResult {
 }
 
 /**
- * Compile one `.chalk` file to a self-contained slide-deck HTML file. Local
+ * Compile one `.theia` file to a self-contained slide-deck HTML file. Local
  * media is embedded (data URI ≤ threshold, else copied alongside) so the deck
  * stays offline-capable. Pure pipeline glue: read → resolve media → render →
  * write. Returns where it wrote, a few stats, and any non-fatal warnings.

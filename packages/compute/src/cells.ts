@@ -2,7 +2,7 @@
  * The code-cell engine (browser side) for both `js` and `py` cells.
  *
  * Execution model:
- *  - JS cells are compiled once with `new Function("chalk", source)` (never
+ *  - JS cells are compiled once with `new Function("theia", source)` (never
  *    `eval`), run synchronously, and discover their dependencies by running.
  *  - PY cells run in a single shared Pyodide interpreter (lazily loaded only if
  *    the deck has a py cell). Their dependencies are discovered *statically*
@@ -39,9 +39,9 @@ export interface ComputeOptions {
   pyodide?: PyodideFactory;
 }
 
-/** The API surface available inside a cell as the `chalk` object (JS), and
+/** The API surface available inside a cell as the `theia` object (JS), and
  * mirrored for Python via a bridge of the same shape. */
-export interface ChalkApi {
+export interface TheiaApi {
   slider(name: string): number;
   readonly sliders: Record<string, number>;
   readonly imports: Record<string, unknown>;
@@ -65,7 +65,7 @@ interface Cell {
   id: string;
   lang: "js" | "py";
   source: string;
-  fn: ((chalk: ChalkApi) => unknown) | null; // js only
+  fn: ((theia: TheiaApi) => unknown) | null; // js only
   compileError: string | null;
   packages: string[]; // py only
   outputEl: HTMLElement;
@@ -107,23 +107,23 @@ function ensureChild(parent: HTMLElement, className: string): HTMLElement {
   return el;
 }
 
-/** The Python preamble: defines a `chalk` object mirroring the JS cell API,
- * bridged to JS via the injected `_chalk_bridge`. Run once after load. */
+/** The Python preamble: defines a `theia` object mirroring the JS cell API,
+ * bridged to JS via the injected `_theia_bridge`. Run once after load. */
 const PY_PREAMBLE = `
 import os as _os
 _os.environ.setdefault("MPLBACKEND", "AGG")
 
-class _Chalk:
+class _Theia:
     def slider(self, name):
-        return _chalk_bridge.slider(name)
+        return _theia_bridge.slider(name)
     def imported(self, name):
-        return _chalk_bridge.imported(name)
+        return _theia_bridge.imported(name)
     def expose(self, name, value):
-        _chalk_bridge.expose(name, value)
+        _theia_bridge.expose(name, value)
     def tex(self, s):
-        _chalk_bridge.tex(str(s))
+        _theia_bridge.tex(str(s))
     def text(self, s):
-        _chalk_bridge.text(str(s))
+        _theia_bridge.text(str(s))
     def figure(self, fig=None):
         import io, base64
         import matplotlib.pyplot as plt
@@ -132,9 +132,9 @@ class _Chalk:
         f.savefig(buf, format="png", dpi=120, bbox_inches="tight")
         plt.close(f)
         data = base64.b64encode(buf.getvalue()).decode("ascii")
-        _chalk_bridge.image("data:image/png;base64," + data)
+        _theia_bridge.image("data:image/png;base64," + data)
 
-chalk = _Chalk()
+theia = _Theia()
 `;
 
 /**
@@ -158,7 +158,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
     const outputEl = ensureChild(el, "chalk-cell__output");
     const errorEl = ensureChild(el, "chalk-cell__error");
 
-    let fn: ((chalk: ChalkApi) => unknown) | null = null;
+    let fn: ((theia: TheiaApi) => unknown) | null = null;
     let compileError: string | null = null;
     const readsSliders = new Set<string>();
     const imports = new Set<string>();
@@ -168,7 +168,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
     if (lang === "js") {
       try {
         // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        fn = new Function("chalk", source) as (chalk: ChalkApi) => unknown;
+        fn = new Function("theia", source) as (theia: TheiaApi) => unknown;
       } catch (e) {
         compileError = errMsg(e);
       }
@@ -284,7 +284,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
 
   // --- JS cell API + evaluation -------------------------------------------
 
-  function makeApi(cell: Cell): ChalkApi {
+  function makeApi(cell: Cell): TheiaApi {
     return {
       slider(name: string): number {
         cell.readsSliders.add(name);
@@ -435,7 +435,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
           pyStatus(`Loading ${pkgs.join(", ")}…`);
           await py.loadPackage(pkgs);
         }
-        py.globals.set("_chalk_bridge", bridge);
+        py.globals.set("_theia_bridge", bridge);
         await py.runPythonAsync(PY_PREAMBLE);
         return py;
       } catch (e) {

@@ -11,9 +11,9 @@
 
 export interface CellSpec {
   id: string;
-  /** Names this cell reads from other cells (via `chalk.imports.<name>`). */
+  /** Names this cell reads from other cells (via `theia.imports.<name>`). */
   imports: string[];
-  /** Names this cell publishes (via `chalk.expose(name, …)`). */
+  /** Names this cell publishes (via `theia.expose(name, …)`). */
   exposes: string[];
 }
 

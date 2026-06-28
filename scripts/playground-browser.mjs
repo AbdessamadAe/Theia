@@ -32,12 +32,12 @@ const deck = page.frameLocator("#preview");
 const slideCount = async () => deck.locator(".slide").count();
 
 // Examples are no longer an in-editor picker; load one by opening its source as
-// a share-link deck (reads the example .chalk from disk).
+// a share-link deck (reads the example .theia from disk).
 const EXAMPLE_FILES = {
-  surfaces: "surfaces.chalk",
-  limits: "limits.chalk",
-  morphing: "morphing.chalk",
-  graphing: "graphing.chalk",
+  surfaces: "surfaces.theia",
+  limits: "limits.theia",
+  morphing: "morphing.theia",
+  graphing: "graphing.theia",
 };
 async function selectExample(nameRe) {
   const key = Object.keys(EXAMPLE_FILES).find((k) => nameRe.test(k));

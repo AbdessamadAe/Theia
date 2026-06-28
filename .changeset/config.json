@@ -9,10 +9,10 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "chalk",
-    "@chalk/ast",
-    "@chalk/parser",
-    "@chalk/compute",
-    "@chalk/runtime",
-    "@chalk/render-slides"
+    "@theia/ast",
+    "@theia/parser",
+    "@theia/compute",
+    "@theia/runtime",
+    "@theia/render-slides"
   ]
 }

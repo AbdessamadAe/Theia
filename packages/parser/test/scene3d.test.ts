@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import type { SceneBlock, Slide } from "@chalk/ast";
+import type { SceneBlock, Slide } from "@theia/ast";
 import { describe, expect, it } from "vitest";
 import { parse } from "../src/index.js";
 
 const doc = parse(
   readFileSync(
-    fileURLToPath(new URL("../../../examples/surfaces.chalk", import.meta.url)),
+    fileURLToPath(new URL("../../../examples/surfaces.theia", import.meta.url)),
     "utf8",
   ),
 );
@@ -20,7 +20,7 @@ function scene(headingPrefix: string): SceneBlock {
   return slide.children.find((b): b is SceneBlock => b.type === "scene")!;
 }
 
-describe("parse(surfaces.chalk) — :::scene3d", () => {
+describe("parse(surfaces.theia) — :::scene3d", () => {
   it("marks the scene as 3-dimensional", () => {
     expect(scene("A reactive paraboloid").dimension).toBe("3d");
   });

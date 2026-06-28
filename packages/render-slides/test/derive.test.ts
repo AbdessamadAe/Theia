@@ -1,4 +1,4 @@
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 import { JSDOM } from "jsdom";
 import { describe, expect, it } from "vitest";
 import { renderDeck } from "../src/index.js";

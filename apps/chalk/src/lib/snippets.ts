@@ -32,8 +32,8 @@ export interface SnippetDef {
 
 const js = [
   "```js",
-  'const a = chalk.slider("${1:a}");',
-  'chalk.tex("f\'(1) = 2a = " + (2 * a).toFixed(2));',
+  'const a = theia.slider("${1:a}");',
+  'theia.tex("f\'(1) = 2a = " + (2 * a).toFixed(2));',
   "```",
 ].join("\n");
 
@@ -41,8 +41,8 @@ const py = [
   "```py",
   "import sympy as sp",
   'x = sp.Symbol("x")',
-  'a = chalk.slider("${1:a}")',
-  'chalk.tex("f\'(x) = " + sp.latex(sp.diff(a * x**2, x)))',
+  'a = theia.slider("${1:a}")',
+  'theia.tex("f\'(x) = " + sp.latex(sp.diff(a * x**2, x)))',
   "```",
 ].join("\n");
 

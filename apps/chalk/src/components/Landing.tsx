@@ -26,7 +26,7 @@ const FEATURES = [
   { icon: Shapes, title: "Plots & geometry", body: "Axes, functions, areas, tangents, labels — a 2D scene library that animates." },
   { icon: Box, title: "3D surfaces", body: "Orbitable z = f(x, y) surfaces with height colour, loaded only when a deck needs them." },
   { icon: Code2, title: "Python in the browser", body: "Run sympy / matplotlib in a py cell via Pyodide — no server, all client-side." },
-  { icon: Share2, title: "One source → present & share", body: "The same plain-text .chalk presents fullscreen, shares by link, and exports offline." },
+  { icon: Share2, title: "One source → present & share", body: "The same plain-text .theia presents fullscreen, shares by link, and exports offline." },
   { icon: GitFork, title: "Plain text, version-controllable", body: "Your lecture is a file you own — diff it, commit it, reuse it." },
 ];
 
@@ -117,10 +117,10 @@ export function Landing({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
           <Section className="py-14">
             <h2 className="text-xl font-semibold sm:text-2xl">Write text on the left. Watch it come alive.</h2>
             <p className="text-muted-foreground mt-2 max-w-2xl text-sm sm:text-base">
-              A few lines of <code className="font-mono text-[13px]">.chalk</code> become a reactive slide. The same source presents and shares.
+              A few lines of <code className="font-mono text-[13px]">.theia</code> become a reactive slide. The same source presents and shares.
             </p>
             <div className="mt-6 grid items-stretch gap-4 lg:grid-cols-2">
-              <CodeBlock label="lecture.chalk" code={SHOW_SOURCE} />
+              <CodeBlock label="lecture.theia" code={SHOW_SOURCE} />
               <div className="bg-card flex flex-col justify-center gap-3 rounded-xl border p-6 shadow-1">
                 <ProjectThumb source={SHOW_SOURCE} />
                 <Button variant="live" size="sm" className="self-start" onClick={go(DASHBOARD_PATH)}>
@@ -166,7 +166,7 @@ export function Landing({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
               <div className="bg-card rounded-xl border p-6 shadow-1">
                 <h3 className="font-semibold">Install the engine</h3>
                 <p className="text-muted-foreground mt-1 mb-3 text-sm">Build decks from the command line.</p>
-                <CodeBlock code={"# install the CLI (coming soon to npm)\nnpm install -g chalk\n\n# compile a lecture to a self-contained .html\nchalk build lecture.chalk\n\n# live-reload while you write\nchalk watch lecture.chalk"} />
+                <CodeBlock code={"# install the CLI (coming soon to npm)\nnpm install -g chalk\n\n# compile a lecture to a self-contained .html\nchalk build lecture.theia\n\n# live-reload while you write\nchalk watch lecture.theia"} />
                 <a className="text-live mt-3 inline-block text-sm font-medium" href={DOCS_PATH} onClick={(e) => { if (!e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(DOCS_PATH); } }}>
                   Read the docs →
                 </a>

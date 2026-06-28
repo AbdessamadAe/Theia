@@ -1,5 +1,5 @@
 {
-  "name": "@chalk/render-slides",
+  "name": "@theia/render-slides",
   "version": "0.1.0",
   "private": true,
   "description": "Render a Theia AST into a self-contained interactive slide-deck bundle.",
@@ -23,9 +23,9 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@chalk/ast": "0.1.0",
-    "@chalk/parser": "0.1.0",
-    "@chalk/runtime": "0.1.0",
+    "@theia/ast": "0.1.0",
+    "@theia/parser": "0.1.0",
+    "@theia/runtime": "0.1.0",
     "esbuild": "^0.21.5",
     "katex": "^0.16.11"
   },

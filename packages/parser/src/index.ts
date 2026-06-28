@@ -20,8 +20,8 @@ import type {
   Step,
   TheoremBlock,
   TheoremKind,
-} from "@chalk/ast";
-import { THEOREM_KINDS } from "@chalk/ast";
+} from "@theia/ast";
+import { THEOREM_KINDS } from "@theia/ast";
 import { inlineText, parseInline } from "./inline.js";
 import { SourceText } from "./location.js";
 
@@ -242,7 +242,7 @@ function extractVars(expr: string, sliderNames: Set<string>): string[] {
 }
 
 /**
- * Parse a `.chalk` source string into a Document AST.
+ * Parse a `.theia` source string into a Document AST.
  *
  * This is a pure function: no I/O, no DOM. It is the only public entry point of
  * the package. The strategy is a two-level hand-written scanner — a block pass

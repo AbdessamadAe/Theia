@@ -1,8 +1,8 @@
 {
-  "name": "@chalk/parser",
+  "name": "@theia/parser",
   "version": "0.1.0",
   "private": true,
-  "description": "Pure .chalk string → AST parser for Theia. No I/O, no DOM.",
+  "description": "Pure .theia string → AST parser for Theia. No I/O, no DOM.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,6 +19,6 @@
     "build": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@chalk/ast": "0.1.0"
+    "@theia/ast": "0.1.0"
   }
 }

@@ -1,11 +1,10 @@
 {
-  "name": "chalkdeck",
+  "name": "theialang",
   "version": "0.1.0",
-  "description": "Compile a math-teaching markup language (.chalk) into self-contained, interactive HTML slide decks — live sliders, reactive KaTeX, 2D/3D scenes.",
+  "description": "Compile a math-teaching markup language (.theia) into self-contained, interactive HTML slide decks — live sliders, reactive KaTeX, 2D/3D scenes.",
   "type": "module",
   "bin": {
-    "chalk": "./dist/cli.js",
-    "chalkdeck": "./dist/cli.js"
+    "theia": "./dist/cli.js"
   },
   "files": [
     "dist",
@@ -27,7 +26,7 @@
     "url": "https://github.com/AbdessamadAe/Theia/issues"
   },
   "keywords": [
-    "chalk",
+    "theia",
     "slides",
     "presentation",
     "math",
@@ -49,9 +48,9 @@
     "prepack": "node scripts/bundle.mjs"
   },
   "devDependencies": {
-    "@chalk/ast": "0.1.0",
-    "@chalk/parser": "0.1.0",
-    "@chalk/render-slides": "0.1.0",
+    "@theia/ast": "0.1.0",
+    "@theia/parser": "0.1.0",
+    "@theia/render-slides": "0.1.0",
     "esbuild": "^0.21.5"
   }
 }

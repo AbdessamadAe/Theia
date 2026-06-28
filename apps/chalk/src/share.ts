@@ -1,5 +1,5 @@
 /**
- * Share-by-URL: the `.chalk` source is compressed into the URL *fragment*
+ * Share-by-URL: the `.theia` source is compressed into the URL *fragment*
  * (`#c=…`), so it is never sent to any server — opening the link reproduces the
  * deck. lz-string's URI-component codec keeps it compact and URL-safe.
  *
@@ -16,7 +16,7 @@ export const SHARE_LIMIT = 14000;
 
 /**
  * Largest raw image size we inline (as a `data:` URI) when ingesting media in
- * the playground. Below this, the image lives in the .chalk source and so
+ * the playground. Below this, the image lives in the .theia source and so
  * round-trips through the share-URL; above it (and for ALL video) we refuse to
  * inline and steer the user to a remote URL or Download, so a shared link never
  * silently fails to load its media.

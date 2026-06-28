@@ -2,7 +2,7 @@
  * Local-first project storage in IndexedDB. NO backend, NO accounts — projects
  * live on this device; portability is via export/import (see lib/transfer.ts).
  *
- * Schema (v1): `projects` (metadata) and `files` (the canonical .chalk source).
+ * Schema (v1): `projects` (metadata) and `files` (the canonical .theia source).
  * The data model is project → files[] (multi-file ready) though the UI ships one
  * file per project. The file's `source` text is the single source of truth —
  * ingested media lives inlined as data URIs in that text, not in a side store.
@@ -30,8 +30,23 @@ export interface ProjectBundle {
   files: Array<{ name: string; source: string }>;
 }
 
+// Kept as "chalk-projects" deliberately: it's an internal storage key, not a
+// brand surface, and renaming it would orphan every saved project. The Chalk →
+// Theia rename is handled by an in-place v2 data migration instead (below).
 const DB_NAME = "chalk-projects";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
+
+/**
+ * Rewrite a stored cell source for the Chalk → Theia rename: the code-cell API
+ * object `chalk` became `theia`. Only the documented member-access surface is
+ * touched, so prose and unrelated identifiers are never rewritten.
+ */
+export function migrateChalkSource(source: string): string {
+  return source.replace(
+    /\bchalk\.(slider|sliders|tex|text|canvas|expose|imported|imports|figure)\b/g,
+    "theia.$1",
+  );
+}
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
@@ -39,7 +54,7 @@ function openDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = (): void => {
+    req.onupgradeneeded = (event: IDBVersionChangeEvent): void => {
       const db = req.result;
       if (!db.objectStoreNames.contains("projects")) {
         db.createObjectStore("projects", { keyPath: "id" });
@@ -47,6 +62,29 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains("files")) {
         const files = db.createObjectStore("files", { keyPath: "id" });
         files.createIndex("byProject", "projectId", { unique: false });
+      }
+      // v1 → v2: the rename. Rewrite stored cell-API calls (chalk.* → theia.*)
+      // and source file names (*.chalk → *.theia) so pre-rename projects keep
+      // working. Runs inside the upgrade transaction, only on a real upgrade.
+      const tx = req.transaction;
+      if (event.oldVersion >= 1 && event.oldVersion < 2 && tx && db.objectStoreNames.contains("files")) {
+        const cur = tx.objectStore("files").openCursor();
+        cur.onsuccess = (): void => {
+          const c = cur.result;
+          if (!c) return;
+          const rec = c.value as { name?: string; source?: string };
+          let changed = false;
+          if (typeof rec.source === "string") {
+            const ns = migrateChalkSource(rec.source);
+            if (ns !== rec.source) ((rec.source = ns), (changed = true));
+          }
+          if (typeof rec.name === "string" && /\.chalk$/i.test(rec.name)) {
+            rec.name = rec.name.replace(/\.chalk$/i, ".theia");
+            changed = true;
+          }
+          if (changed) c.update(rec);
+          c.continue();
+        };
       }
     };
     req.onsuccess = (): void => resolve(req.result);
@@ -128,7 +166,7 @@ export function subscribeSaves(cb: (e: SaveEvent) => void): () => void {
 export async function createProject(
   name: string,
   source: string,
-  fileName = "main.chalk",
+  fileName = "main.theia",
 ): Promise<{ project: Project; file: ChalkFile }> {
   const now = Date.now();
   const project: Project = { id: uid(), name, createdAt: now, updatedAt: now };
@@ -254,7 +292,7 @@ export async function importBundle(bundle: ProjectBundle): Promise<Project> {
   await withTx(["projects", "files"], "readwrite", (tx) => {
     tx.objectStore("projects").put(project);
     const store = tx.objectStore("files");
-    const files = bundle.files.length ? bundle.files : [{ name: "main.chalk", source: "" }];
+    const files = bundle.files.length ? bundle.files : [{ name: "main.theia", source: "" }];
     for (const f of files) {
       store.put({
         id: uid(),

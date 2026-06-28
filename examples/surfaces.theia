@@ -1,6 +1,6 @@
 # Surfaces in 3D
 
-Chalk's 3D layer renders with WebGL (three.js) and — unlike a pre-rendered Manim
+Theia's 3D layer renders with WebGL (three.js) and — unlike a pre-rendered Manim
 clip — the view is **live**: you can orbit the scene with the mouse while you
 present.
 

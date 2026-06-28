@@ -1,5 +1,5 @@
-import type { SceneBlock, SceneObject } from "@chalk/ast";
-import { parse } from "@chalk/parser";
+import type { SceneBlock, SceneObject } from "@theia/ast";
+import { parse } from "@theia/parser";
 import { describe, expect, it } from "vitest";
 import { coordEdits, fmt } from "../src/lib/drag.js";
 

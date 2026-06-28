@@ -15,7 +15,7 @@
  *
  * This module never imports the parser; it reads only what the renderer wrote.
  */
-import { initCells } from "@chalk/compute/browser";
+import { initCells } from "@theia/compute/browser";
 import { compileExpr } from "./expr.js";
 import { initGeo, type GeoSpec } from "./geo.js";
 import { ReactiveGraph } from "./graph.js";

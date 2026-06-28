@@ -26,7 +26,7 @@ class FakePyodide implements PyodideLike {
   bridge: unknown = null;
   globals = {
     set: (name: string, value: unknown): void => {
-      if (name === "_chalk_bridge") this.bridge = value;
+      if (name === "_theia_bridge") this.bridge = value;
     },
   };
   async loadPackage(names: string[]): Promise<unknown> {
@@ -44,7 +44,7 @@ class FakePyodide implements PyodideLike {
   }
   /** Cell sources actually executed, excluding the one-time preamble. */
   cellRuns(): string[] {
-    return this.runCalls.filter((c) => !c.includes("_Chalk"));
+    return this.runCalls.filter((c) => !c.includes("_Theia"));
   }
 }
 
@@ -81,7 +81,7 @@ function errorText(doc: Document, i: number): string {
 
 describe("lazy-load gating", () => {
   it("never loads Pyodide for a JS-only deck", async () => {
-    mount([{ lang: "js", source: 'chalk.text("hi");' }]);
+    mount([{ lang: "js", source: 'theia.text("hi");' }]);
     let called = false;
     initCells(new StubGraph(), {
       pyodide: () => {
@@ -95,8 +95,8 @@ describe("lazy-load gating", () => {
 
   it("loads Pyodide (once) only when a py cell is present", async () => {
     mount([
-      { lang: "js", source: 'chalk.text("hi");' },
-      { lang: "py", source: "import sympy\nchalk.text('hello')" },
+      { lang: "js", source: 'theia.text("hi");' },
+      { lang: "py", source: "import sympy\ntheia.text('hello')" },
     ]);
     let calls = 0;
     const fake = new FakePyodide();
@@ -110,7 +110,7 @@ describe("lazy-load gating", () => {
     expect(calls).toBe(1);
     // It loaded the package the cell imports, and ran the preamble first.
     expect(fake.loaded).toContain("sympy");
-    expect(fake.runCalls[0]).toContain("_Chalk"); // preamble before any cell
+    expect(fake.runCalls[0]).toContain("_Theia"); // preamble before any cell
   });
 });
 
@@ -118,8 +118,8 @@ describe("python execution path (fake interpreter)", () => {
   it("runs py cells in dependency order across languages", async () => {
     // Producer (py) exposes 'deriv'; consumer (py) imports it. Producer first.
     mount([
-      { lang: "py", source: 'chalk.imported("deriv")  # consumer' },
-      { lang: "py", source: 'chalk.expose("deriv", "2*a*x")  # producer' },
+      { lang: "py", source: 'theia.imported("deriv")  # consumer' },
+      { lang: "py", source: 'theia.expose("deriv", "2*a*x")  # producer' },
     ]);
     const fake = new FakePyodide();
     initCells(new StubGraph(), { pyodide: () => Promise.resolve(fake) });
@@ -132,7 +132,7 @@ describe("python execution path (fake interpreter)", () => {
   it("isolates a throwing py cell: traceback inline, others still run", async () => {
     mount([
       { lang: "py", source: "raise ValueError  # BOOM" },
-      { lang: "py", source: 'chalk.text("ok")  # healthy' },
+      { lang: "py", source: 'theia.text("ok")  # healthy' },
     ]);
     const fake = new FakePyodide();
     initCells(new StubGraph(), { pyodide: () => Promise.resolve(fake) });
@@ -145,7 +145,7 @@ describe("python execution path (fake interpreter)", () => {
   });
 
   it("shows a calm loading state before the interpreter resolves", async () => {
-    mount([{ lang: "py", source: 'chalk.text("x")' }]);
+    mount([{ lang: "py", source: 'theia.text("x")' }]);
     let resolveFn: (p: PyodideLike) => void = () => {};
     const pending = new Promise<PyodideLike>((res) => {
       resolveFn = res;

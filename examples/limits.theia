@@ -35,11 +35,11 @@ The derivative $f'(x) = 2ax$ measures that steepness. This `js` cell reads the
 slider live and reports the slope at $x = 1$ — drag $a$ and watch it move:
 
 ```js
-// `chalk` is the cell API: chalk.slider(name) reads a live @slider value,
-// chalk.tex(...) renders a LaTeX result into the slide.
-const a = chalk.slider("a");
+// `theia` is the cell API: theia.slider(name) reads a live @slider value,
+// theia.tex(...) renders a LaTeX result into the slide.
+const a = theia.slider("a");
 const slope = 2 * a; // f'(x) = 2a x, evaluated at x = 1
-chalk.tex(`f'(1) = 2a = ${slope.toFixed(2)}`);
+theia.tex(`f'(1) = 2a = ${slope.toFixed(2)}`);
 ```
 
 Python can do the same thing *symbolically*. This cell runs SymPy in your
@@ -50,10 +50,10 @@ renders the exact derivative. Drag the slider and the symbolic result follows:
 import sympy as sp
 
 x = sp.Symbol("x")
-a = chalk.slider("a")            # the live slider value
+a = theia.slider("a")            # the live slider value
 f = a * x**2
 fprime = sp.diff(f, x)           # exact symbolic derivative
-chalk.tex("f'(x) = " + sp.latex(fprime))
+theia.tex("f'(x) = " + sp.latex(fprime))
 ```
 
 ## A first epsilon–delta proof
@@ -93,7 +93,7 @@ $$ \htmlClass{ck-sin}{\sin x} + \htmlClass{ck-cos}{\cos x} $$
 +to $$ \htmlClass{ck-cos}{\cos x} + \htmlClass{ck-sin}{\sin x} $$
 :::
 
-When two forms share almost nothing, Chalk cross-fades instead of forcing a
+When two forms share almost nothing, Theia cross-fades instead of forcing a
 misleading morph:
 
 :::derive
@@ -136,28 +136,28 @@ $$y = m x + c$$
 @plot g(x) = m*x + c
 
 One `js` cell **exposes** where the line crosses the axis; a second cell
-**imports** that value. Chalk runs them in dependency order, not source order.
+**imports** that value. Theia runs them in dependency order, not source order.
 
 ```js
 // Producer: publish the line's root for any other cell to read.
-const m = chalk.slider("m");
-const c = chalk.slider("c");
-chalk.expose("root", m === 0 ? NaN : -c / m);
-chalk.text(`slope m = ${m},  intercept c = ${c}`);
+const m = theia.slider("m");
+const c = theia.slider("c");
+theia.expose("root", m === 0 ? NaN : -c / m);
+theia.text(`slope m = ${m},  intercept c = ${c}`);
 ```
 
 ```js
 // Consumer: imports the value the cell above exposed.
-const root = chalk.imports.root;
-chalk.tex("x_0 = " + (Number.isFinite(root) ? root.toFixed(2) : "\\text{undefined}"));
+const root = theia.imports.root;
+theia.tex("x_0 = " + (Number.isFinite(root) ? root.toFixed(2) : "\\text{undefined}"));
 ```
 
 A `js` cell can also draw. This one renders the line on a `canvas`, live:
 
 ```js
-const m = chalk.slider("m");
-const c = chalk.slider("c");
-const { canvas, ctx } = chalk.canvas(560, 220);
+const m = theia.slider("m");
+const c = theia.slider("c");
+const { canvas, ctx } = theia.canvas(560, 220);
 if (ctx) {
   const W = canvas.width, H = canvas.height;
   const sx = (x) => ((x + 6) / 12) * W;   // x, y both shown over [-6, 6]
@@ -249,7 +249,7 @@ client-side each time you pause.
 import numpy as np
 import matplotlib.pyplot as plt
 
-p = chalk.slider("p")
+p = theia.slider("p")
 xs = np.linspace(-2, 2, 200)
 
 plt.figure(figsize=(5, 3))
@@ -258,7 +258,7 @@ plt.plot(xs, 2 * p * xs - p**2, "--", label="tangent at x = p")
 plt.scatter([p], [p**2], color="black", zorder=5)
 plt.legend(loc="upper center")
 plt.grid(True, alpha=0.3)
-chalk.figure()
+theia.figure()
 ```
 
 ## Checking continuity numerically
@@ -273,7 +273,7 @@ const left = f(2 - 1e-6);
 const right = f(2 + 1e-6);
 const value = f(2);
 const continuous = Math.abs(left - right) < 1e-3 && Math.abs(left - value) < 1e-3;
-chalk.text(
+theia.text(
   `left → ${left.toFixed(6)},  right → ${right.toFixed(6)},  f(2) = ${value};  ` +
     `continuous here: ${continuous}`,
 );

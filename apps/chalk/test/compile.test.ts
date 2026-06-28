@@ -1,14 +1,14 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { parse } from "@chalk/parser";
+import { parse } from "@theia/parser";
 // The pure core the playground uses (assets injected):
-import { compileChalk as compileCore } from "@chalk/render-slides/core";
+import { compileChalk as compileCore } from "@theia/render-slides/core";
 // The Node entry the CLI uses (assets loaded from disk):
-import { compileChalk as compileNode, loadNodeAssets, renderDeck } from "@chalk/render-slides";
+import { compileChalk as compileNode, loadNodeAssets, renderDeck } from "@theia/render-slides";
 import { describe, expect, it } from "vitest";
 
 const src = readFileSync(
-  fileURLToPath(new URL("../../../examples/morphing.chalk", import.meta.url)),
+  fileURLToPath(new URL("../../../examples/morphing.theia", import.meta.url)),
   "utf8",
 );
 const assets = loadNodeAssets();

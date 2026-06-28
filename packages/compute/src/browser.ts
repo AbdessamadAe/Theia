@@ -7,7 +7,7 @@
 export {
   initCells,
   type ReactiveLike,
-  type ChalkApi,
+  type TheiaApi,
   type ComputeOptions,
 } from "./cells.js";
 export {

@@ -1,13 +1,13 @@
 /**
- * @chalk/render-slides — AST → self-contained interactive slide bundle.
+ * @theia/render-slides — AST → self-contained interactive slide bundle.
  *
  * This Node entry loads the heavy inlined assets from disk (KaTeX CSS + fonts,
  * KaTeX JS) and bundles the runtime (esbuild), then delegates to the pure,
  * isomorphic core in `render-core.ts`. The browser playground imports the core
- * directly (via `@chalk/render-slides/core`) and supplies the same assets baked
+ * directly (via `@theia/render-slides/core`) and supplies the same assets baked
  * at its own build time — so there is one compile path, not two.
  */
-import type { DocumentNode } from "@chalk/ast";
+import type { DocumentNode } from "@theia/ast";
 import { inlinedKatexCss, inlinedKatexJs } from "./katex-assets.js";
 import {
   compileChalk as compileChalkCore,
@@ -45,7 +45,7 @@ export function renderDeck(doc: DocumentNode, options: RenderDeckOptions = {}): 
   return renderDeckHTML(doc, { ...options, assets: loadNodeAssets() });
 }
 
-/** Compile `.chalk` source → HTML deck using the shared core with Node assets. */
+/** Compile `.theia` source → HTML deck using the shared core with Node assets. */
 export function compileChalk(
   source: string,
   options: RenderDeckOptions = {},

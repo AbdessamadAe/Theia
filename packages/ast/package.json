@@ -1,5 +1,5 @@
 {
-  "name": "@chalk/ast",
+  "name": "@theia/ast",
   "version": "0.1.0",
   "private": true,
   "description": "Shared AST node types for Theia — the contract between parser and renderers.",

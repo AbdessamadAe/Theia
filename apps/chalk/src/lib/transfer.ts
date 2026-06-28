@@ -1,9 +1,9 @@
 /**
  * Import / export — how local-first projects stay portable (no backend).
  *
- *  - A single file exports as a raw `.chalk` (the exact source bytes; media is
+ *  - A single file exports as a raw `.theia` (the exact source bytes; media is
  *    already inlined as data URIs, so it's self-contained).
- *  - A project exports as a `.chalkproj.json` bundle { version, name, files[] }.
+ *  - A project exports as a `.theiaproj.json` bundle { version, name, files[] }.
  *    JSON (not zip) is deliberate: there are no separate binary assets to pack —
  *    media lives inline in the text — so JSON round-trips byte-perfectly with no
  *    extra dependency. (Zip would only matter if external assets arrive later.)
@@ -13,7 +13,9 @@
  */
 import type { ProjectBundle } from "./db";
 
-export const PROJECT_EXT = ".chalkproj.json";
+export const PROJECT_EXT = ".theiaproj.json";
+/** Pre-rename project bundles still import (they also end in `.json`). */
+const LEGACY_PROJECT_EXT = ".chalkproj.json";
 
 /** Serialize a bundle for disk (stable, pretty-printed). */
 export function bundleToJson(bundle: ProjectBundle): string {
@@ -41,16 +43,16 @@ export function parseBundle(text: string): ProjectBundle {
   return { version: 1, name: b.name, files: b.files.map((f) => ({ name: f.name, source: f.source })) };
 }
 
-/** A single `.chalk` source as a one-file bundle named after the file. */
+/** A single `.theia` source as a one-file bundle named after the file. */
 export function sourceToBundle(fileName: string, source: string): ProjectBundle {
-  const name = fileName.replace(/\.chalk$/i, "").trim() || "Untitled";
-  return { version: 1, name, files: [{ name: "main.chalk", source }] };
+  const name = fileName.replace(/\.(theia|chalk)$/i, "").trim() || "Untitled";
+  return { version: 1, name, files: [{ name: "main.theia", source }] };
 }
 
-/** Turn a dropped/picked file into a bundle: a project bundle or a raw .chalk. */
+/** Turn a dropped/picked file into a bundle: a project bundle or a raw source. */
 export async function fileToBundle(file: File): Promise<ProjectBundle> {
   const text = await file.text();
-  if (file.name.endsWith(PROJECT_EXT) || file.name.endsWith(".json")) {
+  if (file.name.endsWith(PROJECT_EXT) || file.name.endsWith(LEGACY_PROJECT_EXT) || file.name.endsWith(".json")) {
     return parseBundle(text);
   }
   return sourceToBundle(file.name, text);
