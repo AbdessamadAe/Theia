@@ -9,7 +9,7 @@
 function isInteractiveTarget(el: EventTarget | null): boolean {
   if (!(el instanceof Element)) return false;
   return !!el.closest(
-    ".chalk-bar, .chalk-interactive, input, button, a, canvas, .chalk-geo",
+    ".theia-bar, .theia-interactive, input, button, a, canvas, .theia-geo",
   );
 }
 
@@ -18,10 +18,10 @@ export function initNav(): void {
   const slides = Array.from(
     document.querySelectorAll<HTMLElement>(".slide"),
   );
-  const counterEl = document.getElementById("chalk-counter");
-  const titleEl = document.getElementById("chalk-bar-title");
-  const progressEl = document.getElementById("chalk-progress");
-  const themeBtn = document.getElementById("chalk-theme");
+  const counterEl = document.getElementById("theia-counter");
+  const titleEl = document.getElementById("theia-bar-title");
+  const progressEl = document.getElementById("theia-progress");
+  const themeBtn = document.getElementById("theia-theme");
   if (!deck || slides.length === 0) return;
 
   let current = 0;
@@ -33,17 +33,17 @@ export function initNav(): void {
   /**
    * Apply the current reveal count to slide `i`. `+step` items toggle visible;
    * other advance-driven widgets (e.g. `:::derive` morphs) listen for the
-   * `chalk:advance` event and update themselves. `animate` is false on jumps
+   * `theia:advance` event and update themselves. `animate` is false on jumps
    * (slide change, Home/End, hash) so those snap instantly.
    */
   function applySteps(i: number, animate: boolean): void {
-    const steps = slides[i]!.querySelectorAll<HTMLElement>(".chalk-step");
+    const steps = slides[i]!.querySelectorAll<HTMLElement>(".theia-step");
     steps.forEach((el) => {
       const idx = parseInt(el.getAttribute("data-step") || "0", 10);
       el.classList.toggle("is-revealed", idx < revealed[i]!);
     });
     document.dispatchEvent(
-      new CustomEvent("chalk:advance", {
+      new CustomEvent("theia:advance", {
         detail: { slide: slides[i], revealed: revealed[i], animate },
       }),
     );
@@ -58,7 +58,7 @@ export function initNav(): void {
       progressEl.style.width = `${((current + 1) / slides.length) * 100}%`;
     }
     if (titleEl) {
-      const h = slides[current]!.querySelector(".chalk-heading, .chalk-title");
+      const h = slides[current]!.querySelector(".theia-heading, .theia-title");
       titleEl.textContent = h ? h.textContent : "";
     }
     if (`#${current + 1}` !== location.hash) {
@@ -114,17 +114,17 @@ export function initNav(): void {
   function setTheme(theme: string): void {
     document.documentElement.setAttribute("data-theme", theme);
     try {
-      localStorage.setItem("chalk-theme", theme);
+      localStorage.setItem("theia-theme", theme);
     } catch {
       /* ignore */
     }
     if (themeBtn) themeBtn.textContent = theme === "dark" ? "Light" : "Dark";
-    document.dispatchEvent(new CustomEvent("chalk:themechange"));
+    document.dispatchEvent(new CustomEvent("theia:themechange"));
   }
   (function initTheme(): void {
     let stored: string | null = null;
     try {
-      stored = localStorage.getItem("chalk-theme");
+      stored = localStorage.getItem("theia-theme");
     } catch {
       /* ignore */
     }

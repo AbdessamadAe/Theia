@@ -34,10 +34,10 @@ const sceneData = (objects: unknown[], anims: unknown[] = []): string =>
 describe("3D lazy-load gating", () => {
   it("never loads three.js for a 2D-only deck", () => {
     mount(
-      `<div class="chalk-scene" data-advance-base="0" data-transitions="0">
-        <canvas class="chalk-scene__canvas"></canvas>
-        <div class="chalk-scene__overlay"></div>
-        <script type="application/json" class="chalk-scene__data">${sceneData([
+      `<div class="theia-scene" data-advance-base="0" data-transitions="0">
+        <canvas class="theia-scene__canvas"></canvas>
+        <div class="theia-scene__overlay"></div>
+        <script type="application/json" class="theia-scene__data">${sceneData([
           { kind: "axes", name: "ax", args: { x: "[-2,2]", y: "[-2,2]" } },
         ])}</script>
       </div>`,
@@ -54,11 +54,11 @@ describe("3D lazy-load gating", () => {
 
   it("loads three.js (once) only when a 3D scene is present", () => {
     mount(
-      `<div class="chalk-scene chalk-scene--3d" data-3d="true" data-advance-base="0" data-transitions="0">
-        <canvas class="chalk-scene__canvas"></canvas>
-        <div class="chalk-scene__overlay"></div>
-        <div class="chalk-scene__loading"></div>
-        <script type="application/json" class="chalk-scene__data">${sceneData([
+      `<div class="theia-scene theia-scene--3d" data-3d="true" data-advance-base="0" data-transitions="0">
+        <canvas class="theia-scene__canvas"></canvas>
+        <div class="theia-scene__overlay"></div>
+        <div class="theia-scene__loading"></div>
+        <script type="application/json" class="theia-scene__data">${sceneData([
           { kind: "axes3d", name: "ax", args: { x: "[-3,3]", y: "[-3,3]", z: "[0,9]" } },
         ])}</script>
       </div>`,

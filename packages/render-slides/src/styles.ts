@@ -33,7 +33,7 @@ export const DECK_CSS = `
   --fg: #e6e9ef;
   --muted: #9aa4b2;
   --border: #283041;
-  --accent: #22d3ee; /* chalk cyan, brighter to glow on the board */
+  --accent: #22d3ee; /* theia cyan, brighter to glow on the board */
   --accent-soft: rgba(34, 211, 238, 0.16);
   --code-bg: #0f141c;
   --code-fg: #d7dde7;
@@ -104,7 +104,7 @@ body {
 .slide--title { justify-content: center; align-items: flex-start; }
 .slide__inner { max-width: 90%; }
 
-.chalk-title {
+.theia-title {
   font-size: 64px;
   line-height: 1.1;
   margin: 0 0 24px;
@@ -113,10 +113,10 @@ body {
 }
 
 .slide__lead { font-size: 26px; color: var(--muted); line-height: 1.5; }
-.slide__lead .chalk-p { margin: 0; }
+.slide__lead .theia-p { margin: 0; }
 
 .slide__header { margin-bottom: 18px; border-bottom: 2px solid var(--border); padding-bottom: 14px; }
-.chalk-heading { font-size: 40px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
+.theia-heading { font-size: 40px; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
 
 .slide__body {
   flex: 1 1 auto;
@@ -126,13 +126,13 @@ body {
   padding-right: 8px;
 }
 
-.chalk-p { margin: 0 0 16px; }
+.theia-p { margin: 0 0 16px; }
 .slide__body > :last-child { margin-bottom: 0; }
 
-.chalk-math-display { margin: 18px 0; overflow-x: auto; }
+.theia-math-display { margin: 18px 0; overflow-x: auto; }
 
 /* ---- Derivation morphs (:::derive) ---- */
-.chalk-derive {
+.theia-derive {
   position: relative;
   margin: 22px 0;
   padding: 12px 16px;
@@ -141,21 +141,21 @@ body {
   border-radius: 8px;
   overflow: hidden;
 }
-.chalk-derive__stage { position: relative; min-height: 1.6em; }
-.chalk-derive__state { display: block; }
+.theia-derive__stage { position: relative; min-height: 1.6em; }
+.theia-derive__state { display: block; }
 
 /* Reactive display math morphs in place too; its state child is the stage. */
-.chalk-morph { position: relative; }
-.chalk-morph__state { display: inline-block; }
+.theia-morph { position: relative; }
+.theia-morph__state { display: inline-block; }
 
 /* Emphasis effects (Part C). */
-.chalk-emph-highlight {
+.theia-emph-highlight {
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 16%, transparent);
   border-radius: 4px;
   padding: 0 2px;
 }
-.chalk-emph-ring {
+.theia-emph-ring {
   pointer-events: none;
   border: 2.5px solid var(--accent);
   border-radius: 8px;
@@ -163,7 +163,7 @@ body {
 }
 
 /* Follower value label, positioned over the plot canvas by the runtime. */
-.chalk-plot__label {
+.theia-plot__label {
   position: absolute;
   font-size: 0.72em;
   font-variant-numeric: tabular-nums;
@@ -178,8 +178,8 @@ body {
 }
 
 /* ---- Scenes (Phase 8 graphing) ---- */
-.chalk-scene { position: relative; margin: 18px 0; }
-.chalk-scene__canvas {
+.theia-scene { position: relative; margin: 18px 0; }
+.theia-scene__canvas {
   display: block;
   width: 100%;
   height: 420px;
@@ -187,10 +187,10 @@ body {
   border: 1px solid var(--border);
   border-radius: 10px;
 }
-.chalk-scene__overlay { position: absolute; inset: 0; pointer-events: none; }
-.chalk-scene--3d .chalk-scene__canvas { height: 440px; cursor: grab; touch-action: none; }
-.chalk-scene--3d .chalk-scene__canvas:active { cursor: grabbing; }
-.chalk-scene__loading {
+.theia-scene__overlay { position: absolute; inset: 0; pointer-events: none; }
+.theia-scene--3d .theia-scene__canvas { height: 440px; cursor: grab; touch-action: none; }
+.theia-scene--3d .theia-scene__canvas:active { cursor: grabbing; }
+.theia-scene__loading {
   position: absolute;
   inset: 0;
   display: flex;
@@ -201,16 +201,16 @@ body {
   font-style: italic;
   font-size: 0.9em;
 }
-.chalk-scene__loading::before {
+.theia-scene__loading::before {
   content: "";
   width: 14px;
   height: 14px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: chalk-spin 0.8s linear infinite;
+  animation: theia-spin 0.8s linear infinite;
 }
-.chalk-scene__hint {
+.theia-scene__hint {
   position: absolute;
   left: 10px;
   bottom: 8px;
@@ -221,7 +221,7 @@ body {
   border-radius: 6px;
   pointer-events: none;
 }
-.chalk-scene__label {
+.theia-scene__label {
   position: absolute;
   transform: translate(-50%, -50%);
   font-size: 0.8em;
@@ -234,41 +234,41 @@ body {
 
 /* Direct-manipulation handles (editor only). Point handles are a small
    transparent hit area centred on the dot; labels reuse their own box. */
-.chalk-scene__handle { position: absolute; transform: translate(-50%, -50%); }
-.chalk-scene__handle[data-chalk-point] {
+.theia-scene__handle { position: absolute; transform: translate(-50%, -50%); }
+.theia-scene__handle[data-theia-point] {
   width: 18px;
   height: 18px;
   border-radius: 50%;
 }
-.chalk-scene__handle[data-chalk-free] { outline: none; }
-.chalk-scene__handle[data-chalk-free]:hover,
-.chalk-scene__handle[data-chalk-free]:focus-visible {
+.theia-scene__handle[data-theia-free] { outline: none; }
+.theia-scene__handle[data-theia-free]:hover,
+.theia-scene__handle[data-theia-free]:focus-visible {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent);
 }
-.chalk-scene__handle[data-chalk-derived]:hover {
+.theia-scene__handle[data-theia-derived]:hover {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
 /* Data objects: matrix & table (positioned overlay; crisp text/KaTeX). */
-.chalk-scene__matrix, .chalk-scene__table {
+.theia-scene__matrix, .theia-scene__table {
   position: absolute;
   transform: translate(-50%, -50%);
   color: var(--fg);
 }
-.chalk-scene__matrix { font-size: 1.15em; }
-.chalk-scene__table table { border-collapse: collapse; font-size: 0.9em; background: var(--surface); }
-.chalk-scene__table th, .chalk-scene__table td {
+.theia-scene__matrix { font-size: 1.15em; }
+.theia-scene__table table { border-collapse: collapse; font-size: 0.9em; background: var(--surface); }
+.theia-scene__table th, .theia-scene__table td {
   border: 1px solid var(--border);
   padding: 4px 12px;
   text-align: center;
 }
-.chalk-scene__table th { font-weight: 700; background: var(--tag-bg); color: var(--tag-fg); }
+.theia-scene__table th { font-weight: 700; background: var(--tag-bg); color: var(--tag-fg); }
 
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
-.chalk-reactive { border-radius: 4px; }
-span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
-.chalk-math-display.chalk-reactive { background: color-mix(in srgb, var(--accent) 7%, transparent); padding: 6px 10px; }
-.chalk-code-inline {
+.theia-reactive { border-radius: 4px; }
+span.theia-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }
+.theia-math-display.theia-reactive { background: color-mix(in srgb, var(--accent) 7%, transparent); padding: 6px 10px; }
+.theia-code-inline {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   background: var(--code-bg);
   padding: 1px 6px;
@@ -277,7 +277,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 }
 
 /* ---- Theorem-family blocks ---- */
-.chalk-theorem {
+.theia-theorem {
   border: 1px solid var(--border);
   border-left: 5px solid var(--accent);
   background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
@@ -285,47 +285,47 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   padding: 16px 22px;
   margin: 18px 0;
 }
-.chalk-theorem--definition { border-left-color: var(--thm-definition); }
-.chalk-theorem--theorem    { border-left-color: var(--thm-theorem); }
-.chalk-theorem--lemma      { border-left-color: var(--thm-lemma); }
-.chalk-theorem--proof      { border-left-color: var(--thm-proof); }
-.chalk-theorem--example    { border-left-color: var(--thm-example); }
-.chalk-theorem--remark     { border-left-color: var(--thm-remark); }
+.theia-theorem--definition { border-left-color: var(--thm-definition); }
+.theia-theorem--theorem    { border-left-color: var(--thm-theorem); }
+.theia-theorem--lemma      { border-left-color: var(--thm-lemma); }
+.theia-theorem--proof      { border-left-color: var(--thm-proof); }
+.theia-theorem--example    { border-left-color: var(--thm-example); }
+.theia-theorem--remark     { border-left-color: var(--thm-remark); }
 
-.chalk-theorem__label { margin-bottom: 8px; font-size: 0.92em; }
-.chalk-theorem__kind {
+.theia-theorem__label { margin-bottom: 8px; font-size: 0.92em; }
+.theia-theorem__kind {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 0.78em;
 }
-.chalk-theorem--definition .chalk-theorem__kind { color: var(--thm-definition); }
-.chalk-theorem--theorem    .chalk-theorem__kind { color: var(--thm-theorem); }
-.chalk-theorem--lemma      .chalk-theorem__kind { color: var(--thm-lemma); }
-.chalk-theorem--proof      .chalk-theorem__kind { color: var(--thm-proof); }
-.chalk-theorem--example    .chalk-theorem__kind { color: var(--thm-example); }
-.chalk-theorem--remark     .chalk-theorem__kind { color: var(--thm-remark); }
-.chalk-theorem__title { color: var(--muted); font-style: italic; }
-.chalk-theorem__body > :last-child { margin-bottom: 0; }
+.theia-theorem--definition .theia-theorem__kind { color: var(--thm-definition); }
+.theia-theorem--theorem    .theia-theorem__kind { color: var(--thm-theorem); }
+.theia-theorem--lemma      .theia-theorem__kind { color: var(--thm-lemma); }
+.theia-theorem--proof      .theia-theorem__kind { color: var(--thm-proof); }
+.theia-theorem--example    .theia-theorem__kind { color: var(--thm-example); }
+.theia-theorem--remark     .theia-theorem__kind { color: var(--thm-remark); }
+.theia-theorem__title { color: var(--muted); font-style: italic; }
+.theia-theorem__body > :last-child { margin-bottom: 0; }
 
 /* ---- Step reveal ---- */
-.chalk-step {
+.theia-step {
   opacity: 0;
   transform: translateY(6px);
   transition: opacity 0.25s ease, transform 0.25s ease;
   margin: 10px 0;
 }
-.chalk-step.is-revealed { opacity: 1; transform: none; }
+.theia-step.is-revealed { opacity: 1; transform: none; }
 
 /* ---- Placeholders (sliders / plots / geo / code) ---- */
-.chalk-placeholder {
+.theia-placeholder {
   border: 1px dashed var(--border);
   border-radius: 10px;
   padding: 16px 18px;
   margin: 18px 0;
   background: var(--code-bg);
 }
-.chalk-tag {
+.theia-tag {
   display: inline-block;
   font-size: 0.62em;
   font-weight: 700;
@@ -339,7 +339,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 }
 
 /* ---- Live interactive blocks (slider / plot / geo) ---- */
-.chalk-slider, .chalk-plot, .chalk-geo {
+.theia-slider, .theia-plot, .theia-geo {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px 18px;
@@ -349,60 +349,60 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 
 /* The slider is the hero of the reactive story: a left accent rail, a live
  * name pill, an accent-tracked range, and a prominent value readout. */
-.chalk-slider {
+.theia-slider {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   border-left: 3px solid var(--accent);
   background: linear-gradient(to right, var(--accent-soft), transparent 40%), var(--surface);
 }
-.chalk-slider__name {
+.theia-slider__name {
   font-weight: 700; font-style: italic; font-size: 1.05em; color: var(--accent);
   display: inline-flex; align-items: center; gap: 8px;
 }
-.chalk-slider__name::before {
+.theia-slider__name::before {
   content: ""; width: 8px; height: 8px; border-radius: 50%;
   background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);
 }
-.chalk-slider__input {
+.theia-slider__input {
   flex: 1 1 220px; cursor: pointer; height: 22px;
   -webkit-appearance: none; appearance: none; background: transparent;
 }
-.chalk-slider__input::-webkit-slider-runnable-track {
+.theia-slider__input::-webkit-slider-runnable-track {
   height: 6px; border-radius: 999px;
   background: linear-gradient(var(--border), var(--border));
 }
-.chalk-slider__input::-moz-range-track { height: 6px; border-radius: 999px; background: var(--border); }
-.chalk-slider__input::-webkit-slider-thumb {
+.theia-slider__input::-moz-range-track { height: 6px; border-radius: 999px; background: var(--border); }
+.theia-slider__input::-webkit-slider-thumb {
   -webkit-appearance: none; appearance: none;
   width: 18px; height: 18px; margin-top: -6px; border-radius: 50%;
   background: var(--accent); border: 2px solid var(--surface);
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);
   transition: box-shadow 0.15s ease, transform 0.1s ease;
 }
-.chalk-slider__input::-moz-range-thumb {
+.theia-slider__input::-moz-range-thumb {
   width: 18px; height: 18px; border-radius: 50%;
   background: var(--accent); border: 2px solid var(--surface);
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);
 }
-.chalk-slider__input:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
-.chalk-slider__input:active::-webkit-slider-thumb { transform: scale(1.1); }
-.chalk-slider__input:focus-visible { outline: none; }
-.chalk-slider__input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
-.chalk-slider__value {
+.theia-slider__input:hover::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
+.theia-slider__input:active::-webkit-slider-thumb { transform: scale(1.1); }
+.theia-slider__input:focus-visible { outline: none; }
+.theia-slider__input:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 6px var(--accent-soft); }
+.theia-slider__value {
   font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 700;
   min-width: 4ch; font-size: 1.05em;
 }
-.chalk-slider__range { color: var(--muted); font-size: 0.85em; font-variant-numeric: tabular-nums; }
+.theia-slider__range { color: var(--muted); font-size: 0.85em; font-variant-numeric: tabular-nums; }
 
-.chalk-plot__head, .chalk-geo__head, .chalk-code__head {
+.theia-plot__head, .theia-geo__head, .theia-code__head {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px;
 }
-.chalk-plot__expr {
+.theia-plot__expr {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.95em;
 }
-.chalk-plot__deps, .chalk-geo__note, .chalk-code__note { color: var(--muted); font-size: 0.8em; }
-.chalk-plot__deps code { font-family: inherit; }
-.chalk-plot__canvas {
+.theia-plot__deps, .theia-geo__note, .theia-code__note { color: var(--muted); font-size: 0.8em; }
+.theia-plot__deps code { font-family: inherit; }
+.theia-plot__canvas {
   display: block;
   width: 100%;
   height: 280px;
@@ -412,9 +412,9 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 }
 
 /* ---- Media (images & video) ---- */
-.chalk-media { margin: 18px 0; }
-.chalk-media--image, .chalk-media--video { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.chalk-image {
+.theia-media { margin: 18px 0; }
+.theia-media--image, .theia-media--video { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.theia-image {
   max-width: 100%;
   height: auto;
   object-fit: contain;
@@ -423,9 +423,9 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   border: 1px solid var(--border);
   background: var(--surface);
 }
-.chalk-image--inline { display: inline-block; vertical-align: middle; max-height: 1.6em; border: none; border-radius: 4px; margin: 0 2px; }
-.chalk-image[data-chalk-noalt] { outline: 2px dashed color-mix(in srgb, var(--thm-remark) 60%, transparent); outline-offset: 2px; }
-.chalk-video {
+.theia-image--inline { display: inline-block; vertical-align: middle; max-height: 1.6em; border: none; border-radius: 4px; margin: 0 2px; }
+.theia-image[data-theia-noalt] { outline: 2px dashed color-mix(in srgb, var(--thm-remark) 60%, transparent); outline-offset: 2px; }
+.theia-video {
   max-width: 100%;
   height: auto;
   border-radius: 10px;
@@ -433,11 +433,11 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   background: #000;
   outline: none;
 }
-.chalk-video:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
-.chalk-media__caption { color: var(--muted); font-size: 0.85em; font-style: italic; text-align: center; }
+.theia-video:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+.theia-media__caption { color: var(--muted); font-size: 0.85em; font-style: italic; text-align: center; }
 
 /* Scene media: positioned overlay elements (image/video), sized in scene units. */
-.chalk-scene__media {
+.theia-scene__media {
   position: absolute;
   transform: translate(-50%, -50%);
   border-radius: 8px;
@@ -446,10 +446,10 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   object-fit: contain;
   max-width: none;
 }
-.chalk-scene__media--video { background: #000; }
+.theia-scene__media--video { background: #000; }
 
 /* ---- Geometry (GeoGebra) embed ---- */
-.chalk-geo__applet {
+.theia-geo__applet {
   width: 100%;
   height: 380px;
   border: 1px solid var(--border);
@@ -457,7 +457,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   overflow: hidden;
   background: var(--surface);
 }
-.chalk-geo__error {
+.theia-geo__error {
   display: grid;
   place-items: center;
   text-align: center;
@@ -466,7 +466,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   font-size: 0.9em;
 }
 
-.chalk-geo__source, .chalk-code__source {
+.theia-geo__source, .theia-code__source {
   margin: 0;
   overflow: auto;
   background: var(--surface);
@@ -474,7 +474,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   border-radius: 8px;
   padding: 12px 14px;
 }
-.chalk-geo__source code, .chalk-code__source code {
+.theia-geo__source code, .theia-code__source code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.62em;
   line-height: 1.45;
@@ -482,11 +482,11 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   color: var(--code-fg);
 }
 
-.chalk-list { margin: 0 0 16px; padding-left: 1.4em; }
-.chalk-list li { margin: 6px 0; }
+.theia-list { margin: 0 0 16px; padding-left: 1.4em; }
+.theia-list li { margin: 6px 0; }
 
 /* ---- Bottom bar ---- */
-.chalk-bar {
+.theia-bar {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -497,11 +497,11 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   font-size: 14px;
   color: var(--muted);
 }
-.chalk-bar__title { font-weight: 600; color: var(--fg); flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chalk-bar__counter { font-variant-numeric: tabular-nums; }
-.chalk-bar__progress { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 0; transition: width 0.2s ease; }
-.chalk-bar { position: relative; }
-.chalk-bar__btn {
+.theia-bar__title { font-weight: 600; color: var(--fg); flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.theia-bar__counter { font-variant-numeric: tabular-nums; }
+.theia-bar__progress { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 0; transition: width 0.2s ease; }
+.theia-bar { position: relative; }
+.theia-bar__btn {
   appearance: none;
   border: 1px solid var(--border);
   background: transparent;
@@ -512,27 +512,27 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   font: inherit;
   line-height: 1;
 }
-.chalk-bar__btn:hover { border-color: var(--accent); color: var(--accent); }
+.theia-bar__btn:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---- Live JS code cells (compute layer) ---- */
-.chalk-code.chalk-cell {
+.theia-code.theia-cell {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 14px 16px;
   margin: 18px 0;
   background: var(--code-bg);
 }
-.chalk-cell__output { margin-top: 10px; }
-.chalk-cell__output:empty { display: none; }
-.chalk-cell__value {
+.theia-cell__output { margin-top: 10px; }
+.theia-cell__output:empty { display: none; }
+.theia-cell__value {
   font-variant-numeric: tabular-nums;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 12px;
 }
-.chalk-cell__tex { margin: 4px 0; }
-.chalk-cell__canvas {
+.theia-cell__tex { margin: 4px 0; }
+.theia-cell__canvas {
   display: block;
   max-width: 100%;
   border: 1px solid var(--border);
@@ -540,7 +540,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   background: var(--surface);
 }
 /* Captured matplotlib figures (PNG on a white field for legibility in dark). */
-.chalk-cell__image {
+.theia-cell__image {
   display: block;
   max-width: 100%;
   border: 1px solid var(--border);
@@ -548,7 +548,7 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   background: #ffffff;
 }
 /* Calm loading state while Pyodide initializes (first load only). */
-.chalk-cell__loading {
+.theia-cell__loading {
   color: var(--muted);
   font-style: italic;
   font-size: 0.9em;
@@ -556,19 +556,19 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
   align-items: center;
   gap: 8px;
 }
-.chalk-cell__loading::before {
+.theia-cell__loading::before {
   content: "";
   width: 12px;
   height: 12px;
   border: 2px solid var(--border);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: chalk-spin 0.8s linear infinite;
+  animation: theia-spin 0.8s linear infinite;
 }
-@keyframes chalk-spin { to { transform: rotate(360deg); } }
+@keyframes theia-spin { to { transform: rotate(360deg); } }
 /* The error box already wraps; cap its height so a long traceback scrolls. */
-.chalk-cell__error { max-height: 220px; overflow: auto; }
-.chalk-cell__error {
+.theia-cell__error { max-height: 220px; overflow: auto; }
+.theia-cell__error {
   margin-top: 10px;
   border: 1px solid #ef4444;
   border-left: 4px solid #ef4444;
@@ -583,9 +583,9 @@ span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transpare
 
 /* ---- Respect reduced-motion: disable reveal/scale transitions ---- */
 @media (prefers-reduced-motion: reduce) {
-  body, .chalk-bar__progress { transition: none; }
-  .chalk-step { transition: none; transform: none; }
-  .chalk-cell__loading::before { animation: none; }
-  .chalk-scene__loading::before { animation: none; }
+  body, .theia-bar__progress { transition: none; }
+  .theia-step { transition: none; transform: none; }
+  .theia-cell__loading::before { animation: none; }
+  .theia-scene__loading::before { animation: none; }
 }
 `;

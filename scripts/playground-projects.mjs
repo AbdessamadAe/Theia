@@ -1,5 +1,5 @@
 // Phase 17 file & project management — real-browser checks (Playwright).
-// Run a preview server first: npm run preview -w chalk
+// Run a preview server first: npm run preview -w theia
 import { chromium } from "@playwright/test";
 
 const BASE = process.env.PG_URL || "http://localhost:5173/";
@@ -30,7 +30,7 @@ const newProject = async (name, template) => {
   await page.waitForSelector(".cm-editor"); // lands in the editor
   await sleep(500);
 };
-const doc = () => page.evaluate(() => window.__chalkDoc?.() ?? "");
+const doc = () => page.evaluate(() => window.__theiaDoc?.() ?? "");
 
 // ── Fresh device lands on the dashboard ────────────────────────────────────
 await goDashboard();

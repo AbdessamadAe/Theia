@@ -144,7 +144,7 @@ theia = _Theia()
 export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): void {
   const boxes = Array.from(
     document.querySelectorAll<HTMLElement>(
-      '.chalk-cell[data-chalk-cell="js"], .chalk-cell[data-chalk-cell="py"]',
+      '.theia-cell[data-theia-cell="js"], .theia-cell[data-theia-cell="py"]',
     ),
   );
   if (boxes.length === 0) return;
@@ -153,10 +153,10 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
   let currentPyCell: Cell | null = null;
 
   const cells: Cell[] = boxes.map((el, i) => {
-    const lang = el.getAttribute("data-chalk-cell") === "py" ? "py" : "js";
-    const source = el.querySelector(".chalk-code__source")?.textContent ?? "";
-    const outputEl = ensureChild(el, "chalk-cell__output");
-    const errorEl = ensureChild(el, "chalk-cell__error");
+    const lang = el.getAttribute("data-theia-cell") === "py" ? "py" : "js";
+    const source = el.querySelector(".theia-code__source")?.textContent ?? "";
+    const outputEl = ensureChild(el, "theia-cell__output");
+    const errorEl = ensureChild(el, "theia-cell__error");
 
     let fn: ((theia: TheiaApi) => unknown) | null = null;
     let compileError: string | null = null;
@@ -230,14 +230,14 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
     cell.errorEl.hidden = true;
     cell.outputEl.innerHTML = "";
     const div = document.createElement("div");
-    div.className = "chalk-cell__loading";
+    div.className = "theia-cell__loading";
     div.textContent = message;
     cell.outputEl.appendChild(div);
   }
 
   function emitTex(cell: Cell, tex: string): void {
     const span = document.createElement("div");
-    span.className = "chalk-cell__tex";
+    span.className = "theia-cell__tex";
     cell.outputEl.appendChild(span);
     const k = katex();
     if (k) {
@@ -253,7 +253,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
 
   function emitText(cell: Cell, value: unknown): void {
     const div = document.createElement("div");
-    div.className = "chalk-cell__value";
+    div.className = "theia-cell__value";
     div.textContent =
       typeof value === "object" ? safeJson(value) : String(value);
     cell.outputEl.appendChild(div);
@@ -261,7 +261,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
 
   function emitImage(cell: Cell, dataUrl: string): void {
     const img = document.createElement("img");
-    img.className = "chalk-cell__image";
+    img.className = "theia-cell__image";
     img.src = dataUrl;
     cell.outputEl.appendChild(img);
   }
@@ -274,7 +274,7 @@ export function initCells(graph: ReactiveLike, options: ComputeOptions = {}): vo
     let canvas = cell.outputEl.querySelector("canvas");
     if (!canvas) {
       canvas = document.createElement("canvas");
-      canvas.className = "chalk-cell__canvas";
+      canvas.className = "theia-cell__canvas";
       cell.outputEl.appendChild(canvas);
     }
     if (width) canvas.width = width;

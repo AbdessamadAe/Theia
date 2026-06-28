@@ -8,7 +8,7 @@ const BASE = process.env.PG_URL || "http://localhost:5173/";
 // landing for a fresh device; a #c= deck opens the editor straight away).
 const INITIAL = "## One\n\n$$ f(x) = x^2 $$\n\nText one.\n\n## Two\n\nText two.\n";
 const URL = `${BASE}#c=${lzString.compressToEncodedURIComponent(INITIAL)}`;
-const SHOTS = "/tmp/chalk-pg";
+const SHOTS = "/tmp/theia-pg";
 mkdirSync(SHOTS, { recursive: true });
 
 let pass = 0,
@@ -127,18 +127,18 @@ await page.evaluate(() => {
   f.contentWindow.location.hash = "#2";
   f.contentWindow.dispatchEvent(new Event("hashchange"));
 });
-ok("3D example shows a calm loading state", (await deck.locator(".chalk-scene__loading").count()) > 0);
+ok("3D example shows a calm loading state", (await deck.locator(".theia-scene__loading").count()) > 0);
 let threeLoaded = false;
 for (let i = 0; i < 40; i++) {
-  const hidden = await deck.locator(".chalk-scene__loading").first().evaluate((el) => !el || el.style.display === "none" || !el.offsetParent).catch(() => false);
-  const unavailable = (await deck.locator(".chalk-scene__loading").first().textContent().catch(() => "")) || "";
+  const hidden = await deck.locator(".theia-scene__loading").first().evaluate((el) => !el || el.style.display === "none" || !el.offsetParent).catch(() => false);
+  const unavailable = (await deck.locator(".theia-scene__loading").first().textContent().catch(() => "")) || "";
   if (unavailable.includes("unavailable")) { ok("three.js loaded from CDN", false, "network blocked"); break; }
   if (hidden) { threeLoaded = true; break; }
   await sleep(500);
 }
 if (threeLoaded) {
   await sleep(500);
-  const canvasOk = await deck.locator(".chalk-scene--3d .chalk-scene__canvas").first().evaluate((c) => {
+  const canvasOk = await deck.locator(".theia-scene--3d .theia-scene__canvas").first().evaluate((c) => {
     const gl = c.getContext("webgl2") || c.getContext("webgl");
     return !!gl && !gl.isContextLost();
   });

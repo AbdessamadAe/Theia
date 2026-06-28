@@ -64,16 +64,16 @@ describe("deck runtime (executed in jsdom)", () => {
     expect(activeIndex(doc)).toBe(3);
 
     const proof = doc.querySelector('.slide[data-index="3"]')!;
-    const steps = proof.querySelectorAll(".chalk-step");
+    const steps = proof.querySelectorAll(".theia-step");
     expect(steps).toHaveLength(3);
     // None revealed yet.
-    expect(proof.querySelectorAll(".chalk-step.is-revealed")).toHaveLength(0);
+    expect(proof.querySelectorAll(".theia-step.is-revealed")).toHaveLength(0);
 
     press(window, "ArrowRight"); // reveal step 0
-    expect(proof.querySelectorAll(".chalk-step.is-revealed")).toHaveLength(1);
+    expect(proof.querySelectorAll(".theia-step.is-revealed")).toHaveLength(1);
     press(window, "ArrowRight"); // reveal step 1
     press(window, "ArrowRight"); // reveal step 2
-    expect(proof.querySelectorAll(".chalk-step.is-revealed")).toHaveLength(3);
+    expect(proof.querySelectorAll(".theia-step.is-revealed")).toHaveLength(3);
     // Still on the proof slide until all steps are shown.
     expect(activeIndex(doc)).toBe(3);
 
@@ -86,9 +86,9 @@ describe("deck runtime (executed in jsdom)", () => {
     press(window, "ArrowRight"); // reveal step 0
     press(window, "ArrowRight"); // reveal step 1
     const proof = doc.querySelector('.slide[data-index="3"]')!;
-    expect(proof.querySelectorAll(".chalk-step.is-revealed")).toHaveLength(2);
+    expect(proof.querySelectorAll(".theia-step.is-revealed")).toHaveLength(2);
     press(window, "ArrowLeft"); // hide step 1
-    expect(proof.querySelectorAll(".chalk-step.is-revealed")).toHaveLength(1);
+    expect(proof.querySelectorAll(".theia-step.is-revealed")).toHaveLength(1);
   });
 
   it("jumps to the last slide with End and the first with Home", () => {
@@ -100,7 +100,7 @@ describe("deck runtime (executed in jsdom)", () => {
   });
 
   it("toggles the theme via the bottom-bar button", () => {
-    const btn = doc.getElementById("chalk-theme")!;
+    const btn = doc.getElementById("theia-theme")!;
     const before = doc.documentElement.getAttribute("data-theme");
     btn.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     const after = doc.documentElement.getAttribute("data-theme");

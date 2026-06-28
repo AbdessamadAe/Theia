@@ -53,7 +53,7 @@ describe("vector field", () => {
 
     const before = lines.join("|");
     lines.length = 0;
-    const input = w.document.querySelector<HTMLInputElement>('.chalk-slider[data-slider="a"] input')!;
+    const input = w.document.querySelector<HTMLInputElement>('.theia-slider[data-slider="a"] input')!;
     input.value = "4";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
     await new Promise((r) => setTimeout(r, 160));

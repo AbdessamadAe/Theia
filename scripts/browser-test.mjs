@@ -5,7 +5,7 @@ import { mkdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
 
-const SHOTS = "/tmp/chalk-pw";
+const SHOTS = "/tmp/theia-pw";
 mkdirSync(SHOTS, { recursive: true });
 
 let pass = 0;
@@ -46,13 +46,13 @@ async function test2D() {
     window.dispatchEvent(new Event("hashchange"));
   });
   await sleep(150);
-  const reactiveSel = '[data-chalk-math][data-chalk-vars="a"]';
+  const reactiveSel = '[data-theia-math][data-theia-vars="a"]';
   const before = await page.locator(reactiveSel).first().textContent();
-  const plot = page.locator(".chalk-plot canvas").first();
+  const plot = page.locator(".theia-plot canvas").first();
   const plotBefore = await plot.screenshot();
 
   await page.evaluate(() => {
-    const i = document.querySelector('.chalk-slider[data-slider="a"] input');
+    const i = document.querySelector('.theia-slider[data-slider="a"] input');
     i.value = "3";
     i.dispatchEvent(new Event("input", { bubbles: true }));
   });
@@ -68,13 +68,13 @@ async function test2D() {
     window.dispatchEvent(new Event("hashchange"));
   });
   await sleep(150);
-  const deriveBefore = await page.locator(".chalk-derive__stage").first().textContent();
+  const deriveBefore = await page.locator(".theia-derive__stage").first().textContent();
   // advance twice (two example steps) then once more to reach the morph
   for (let i = 0; i < 3; i++) {
     await page.keyboard.press("ArrowRight");
     await sleep(250);
   }
-  const deriveAfter = await page.locator(".chalk-derive__stage").first().textContent();
+  const deriveAfter = await page.locator(".theia-derive__stage").first().textContent();
   ok("derive equation morphs on advance", deriveBefore !== deriveAfter);
 
   await page.screenshot({ path: `${SHOTS}/2d-parabola.png` });
@@ -98,7 +98,7 @@ async function test3D() {
   let loaded = false;
   for (let i = 0; i < 30; i++) {
     const status = await page.evaluate(() => {
-      const l = document.querySelector(".chalk-scene__loading");
+      const l = document.querySelector(".theia-scene__loading");
       const text = l ? l.textContent || "" : "";
       const hidden = !l || l.style.display === "none" || !l.offsetParent;
       return { text, hidden };
@@ -121,11 +121,11 @@ async function test3D() {
   }
   await sleep(400);
 
-  const canvas = page.locator(".chalk-scene__canvas").first();
+  const canvas = page.locator(".theia-scene__canvas").first();
 
   // WebGL context is live (not lost) on the scene canvas.
   const gl = await page.evaluate(() => {
-    const c = document.querySelector(".chalk-scene--3d .chalk-scene__canvas");
+    const c = document.querySelector(".theia-scene--3d .theia-scene__canvas");
     const ctx = c.getContext("webgl2") || c.getContext("webgl");
     return { has: !!ctx, lost: ctx ? ctx.isContextLost() : true };
   });
@@ -138,7 +138,7 @@ async function test3D() {
 
   // Pinned label exists and has a screen position.
   const labelPos1 = await page.evaluate(() => {
-    const el = document.querySelector(".chalk-scene--3d .chalk-scene__label");
+    const el = document.querySelector(".theia-scene--3d .theia-scene__label");
     return el ? { left: el.style.left, top: el.style.top, vis: el.style.display !== "none" } : null;
   });
   ok("MathTex label pinned to a 3D point", !!labelPos1 && labelPos1.vis && !!labelPos1.left);
@@ -146,7 +146,7 @@ async function test3D() {
   // Reactive surface: drag slider a → surface re-shapes (canvas changes).
   const surfBefore = await canvas.screenshot();
   await page.evaluate(() => {
-    const i = document.querySelector('.chalk-slider[data-slider="a"] input');
+    const i = document.querySelector('.theia-slider[data-slider="a"] input');
     i.value = "1.4";
     i.dispatchEvent(new Event("input", { bubbles: true }));
   });
@@ -168,7 +168,7 @@ async function test3D() {
   const orbitAfter = await canvas.screenshot();
   ok("click-drag orbits the scene", !orbitBefore.equals(orbitAfter));
   const labelPos2 = await page.evaluate(() => {
-    const el = document.querySelector(".chalk-scene--3d .chalk-scene__label");
+    const el = document.querySelector(".theia-scene--3d .theia-scene__label");
     return el ? { left: el.style.left, top: el.style.top } : null;
   });
   ok(

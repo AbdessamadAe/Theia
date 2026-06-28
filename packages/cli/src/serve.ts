@@ -7,7 +7,7 @@ import {
 } from "node:http";
 
 /**
- * A tiny zero-dependency dev server for `chalk watch`.
+ * A tiny zero-dependency dev server for `theia watch`.
  *
  * It serves the freshly-built deck (re-read from disk on every request, so a
  * rebuild is picked up immediately) and exposes a Server-Sent Events endpoint
@@ -16,7 +16,7 @@ import {
  * the shipped bundle (the reload snippet is injected only when served here).
  */
 
-const SSE_PATH = "/__chalk_livereload";
+const SSE_PATH = "/__theia_livereload";
 
 /** Injected into served HTML only (never written to the build artifact). */
 const RELOAD_SNIPPET = `<script>

@@ -42,18 +42,18 @@ const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 60));
 describe("Phase 3 reactivity (executed in jsdom)", () => {
   it("wires the slider as a live, enabled control with its default value", async () => {
     const w = await loadDeck();
-    const box = w.document.querySelector('.chalk-slider[data-slider="a"]')!;
+    const box = w.document.querySelector('.theia-slider[data-slider="a"]')!;
     const input = box.querySelector<HTMLInputElement>("input[type=range]")!;
     expect(input.disabled).toBe(false);
     expect(input.value).toBe("1");
-    expect(box.querySelector(".chalk-slider__value")!.textContent).toBe("= 1");
+    expect(box.querySelector(".theia-slider__value")!.textContent).toBe("= 1");
   });
 
   it("re-renders slider-dependent math when the slider is dragged", async () => {
     const w = await loadDeck();
     const doc = w.document;
     const reactive = doc.querySelector<HTMLElement>(
-      '[data-chalk-math][data-chalk-vars="a"]',
+      '[data-theia-math][data-theia-vars="a"]',
     )!;
     expect(reactive).toBeTruthy();
     // KaTeX has run on load with the default a = 1.
@@ -62,7 +62,7 @@ describe("Phase 3 reactivity (executed in jsdom)", () => {
 
     // Drag the slider to 3.
     const input = doc.querySelector<HTMLInputElement>(
-      '.chalk-slider[data-slider="a"] input[type=range]',
+      '.theia-slider[data-slider="a"] input[type=range]',
     )!;
     input.value = "3";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
@@ -72,17 +72,17 @@ describe("Phase 3 reactivity (executed in jsdom)", () => {
     expect(after).not.toBe(before);
     // The slider's own value label tracks too.
     expect(
-      doc.querySelector(".chalk-slider__value")!.textContent,
+      doc.querySelector(".theia-slider__value")!.textContent,
     ).toBe("= 3");
   });
 
   it("keeps the template tex so substitution is repeatable, not destructive", async () => {
     const w = await loadDeck();
     const reactive = w.document.querySelector<HTMLElement>(
-      '[data-chalk-math][data-chalk-vars="a"]',
+      '[data-theia-math][data-theia-vars="a"]',
     )!;
     // The data-attribute template is never overwritten by a render.
-    expect(reactive.getAttribute("data-chalk-math")).toBe("f(x) = a x^2");
+    expect(reactive.getAttribute("data-theia-math")).toBe("f(x) = a x^2");
   });
 
   it("does not throw when a plot canvas cannot be drawn (no 2d ctx in jsdom)", async () => {
@@ -90,11 +90,11 @@ describe("Phase 3 reactivity (executed in jsdom)", () => {
     // the plotter degrades gracefully. (Reaching this assertion means no throw.)
     const w = await loadDeck();
     const input = w.document.querySelector<HTMLInputElement>(
-      '.chalk-slider[data-slider="a"] input[type=range]',
+      '.theia-slider[data-slider="a"] input[type=range]',
     )!;
     input.value = "2";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
-    expect(w.document.querySelector(".chalk-plot canvas")).toBeTruthy();
+    expect(w.document.querySelector(".theia-plot canvas")).toBeTruthy();
   });
 });
 
@@ -102,13 +102,13 @@ describe("Phase 4 compute cells in the real deck (executed in jsdom)", () => {
   it("runs the parabola slope cell on load and updates it when `a` is dragged", async () => {
     const w = await loadDeck();
     const out = w.document.querySelector<HTMLElement>(
-      '.chalk-cell[data-chalk-cell="js"] .chalk-cell__output',
+      '.theia-cell[data-theia-cell="js"] .theia-cell__output',
     )!;
     // f'(1) = 2a, a = 1 → 2.00 (KaTeX-rendered; tex text is in the annotation).
     expect(out.textContent).toContain("2.00");
 
     const input = w.document.querySelector<HTMLInputElement>(
-      '.chalk-slider[data-slider="a"] input[type=range]',
+      '.theia-slider[data-slider="a"] input[type=range]',
     )!;
     input.value = "3";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
@@ -132,9 +132,9 @@ describe("Phase 4 compute cells in the real deck (executed in jsdom)", () => {
       "",
     ].join("\n");
     const w = await bootHtml(renderDeck(parse(src)));
-    const cells = w.document.querySelectorAll('.chalk-cell[data-chalk-cell="js"]');
-    const out0 = cells[0]!.querySelector(".chalk-cell__output")!;
-    const err1 = cells[1]!.querySelector<HTMLElement>(".chalk-cell__error")!;
+    const cells = w.document.querySelectorAll('.theia-cell[data-theia-cell="js"]');
+    const out0 = cells[0]!.querySelector(".theia-cell__output")!;
+    const err1 = cells[1]!.querySelector<HTMLElement>(".theia-cell__error")!;
 
     expect(out0.textContent).toContain("good 1"); // healthy cell ran
     expect(err1.hidden).toBe(false); // broken cell shows its error

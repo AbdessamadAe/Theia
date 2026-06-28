@@ -12,7 +12,7 @@ afterEach(async () => {
 });
 
 function tempDeck(html: string): string {
-  const dir = mkdtempSync(join(tmpdir(), "chalk-serve-"));
+  const dir = mkdtempSync(join(tmpdir(), "theia-serve-"));
   const path = join(dir, "deck.html");
   writeFileSync(path, html, "utf8");
   return path;
@@ -27,7 +27,7 @@ describe("startDevServer", () => {
     const body = await res.text();
     expect(res.headers.get("content-type")).toContain("text/html");
     expect(body).toContain("<h1>Hi</h1>"); // original content preserved
-    expect(body).toContain("/__chalk_livereload"); // reload client injected
+    expect(body).toContain("/__theia_livereload"); // reload client injected
     expect(body).toContain("EventSource");
   });
 
@@ -44,7 +44,7 @@ describe("startDevServer", () => {
     const path = tempDeck("<body>x</body>");
     server = await startDevServer(path, { port: 0 });
 
-    const res = await fetch(new URL("/__chalk_livereload", server.url));
+    const res = await fetch(new URL("/__theia_livereload", server.url));
     expect(res.headers.get("content-type")).toContain("text/event-stream");
 
     const reader = res.body!.getReader();

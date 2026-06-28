@@ -25,10 +25,10 @@ class StubGraph implements ReactiveLike {
 }
 
 function cellHtml(source: string): string {
-  return `<div class="chalk-code chalk-cell" data-chalk-cell="js">
-    <pre class="chalk-code__source"><code>${source}</code></pre>
-    <div class="chalk-cell__output"></div>
-    <div class="chalk-cell__error" hidden></div>
+  return `<div class="theia-code theia-cell" data-theia-cell="js">
+    <pre class="theia-code__source"><code>${source}</code></pre>
+    <div class="theia-cell__output"></div>
+    <div class="theia-cell__error" hidden></div>
   </div>`;
 }
 
@@ -49,12 +49,12 @@ afterEach(() => {
 const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 40));
 
 function outputs(doc: Document): string[] {
-  return Array.from(doc.querySelectorAll(".chalk-cell__output")).map(
+  return Array.from(doc.querySelectorAll(".theia-cell__output")).map(
     (el) => el.textContent?.trim() ?? "",
   );
 }
 function errors(doc: Document): string[] {
-  return Array.from(doc.querySelectorAll(".chalk-cell__error")).map((el) =>
+  return Array.from(doc.querySelectorAll(".theia-cell__error")).map((el) =>
     (el as HTMLElement).hidden ? "" : (el.textContent ?? ""),
   );
 }

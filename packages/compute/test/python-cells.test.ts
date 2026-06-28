@@ -49,10 +49,10 @@ class FakePyodide implements PyodideLike {
 }
 
 function cellHtml(lang: "js" | "py", source: string): string {
-  return `<div class="chalk-code chalk-cell" data-chalk-cell="${lang}">
-    <pre class="chalk-code__source"><code>${source}</code></pre>
-    <div class="chalk-cell__output"></div>
-    <div class="chalk-cell__error" hidden></div>
+  return `<div class="theia-code theia-cell" data-theia-cell="${lang}">
+    <pre class="theia-code__source"><code>${source}</code></pre>
+    <div class="theia-cell__output"></div>
+    <div class="theia-cell__error" hidden></div>
   </div>`;
 }
 
@@ -75,7 +75,7 @@ const flush = async (): Promise<void> => {
 };
 
 function errorText(doc: Document, i: number): string {
-  const el = doc.querySelectorAll(".chalk-cell__error")[i] as HTMLElement;
+  const el = doc.querySelectorAll(".theia-cell__error")[i] as HTMLElement;
   return el.hidden ? "" : (el.textContent ?? "");
 }
 
@@ -152,7 +152,7 @@ describe("python execution path (fake interpreter)", () => {
     });
     initCells(new StubGraph(), { pyodide: () => pending });
     // Before Pyodide resolves, the cell shows the loading message.
-    const loading = mountDoc().querySelector(".chalk-cell__loading");
+    const loading = mountDoc().querySelector(".theia-cell__loading");
     expect(loading?.textContent ?? "").toMatch(/Python|Preparing/i);
     resolveFn(new FakePyodide());
     await flush();

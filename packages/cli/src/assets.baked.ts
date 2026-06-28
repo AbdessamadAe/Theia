@@ -13,7 +13,7 @@ import type { DeckAssets } from "@theia/render-slides/core";
  * esbuild, no `katex` install, and no @theia/runtime source needed at install
  * time. The bytes are identical to what the in-repo build produces, and they
  * still flow through the one shared, isomorphic compile core
- * (`compileChalk` from `@theia/render-slides/core`).
+ * (`compileTheia` from `@theia/render-slides/core`).
  */
 const here = dirname(fileURLToPath(import.meta.url));
 const assetsDir = join(here, "assets");

@@ -9,7 +9,7 @@ import { initNav } from "./nav.js";
 import { initReactive } from "./reactive.js";
 
 function boot(): void {
-  // Derive controllers must subscribe to chalk:advance before nav's first
+  // Derive controllers must subscribe to theia:advance before nav's first
   // show() fires it, so they pick up the initial reveal state.
   initDerive();
   initMedia();

@@ -2,12 +2,12 @@
  * Build the reactive graph from the rendered DOM and wire it up.
  *
  * render-slides emits the facts this needs as data attributes:
- *   - a slider control:   .chalk-slider[data-slider] > input[type=range]
- *   - reactive math:      [data-chalk-math] (template tex) + [data-chalk-vars]
+ *   - a slider control:   .theia-slider[data-slider] > input[type=range]
+ *   - reactive math:      [data-theia-math] (template tex) + [data-theia-vars]
  *                         display math morphs on change; inline re-renders.
- *   - a plot:             .chalk-plot[data-expr][data-vars][data-xmin][data-xmax]
+ *   - a plot:             .theia-plot[data-expr][data-vars][data-xmin][data-xmax]
  *                         optionally [data-point-x] + [data-follow] followers
- *   - a geometry block:   .chalk-geo[data-geo-src]
+ *   - a geometry block:   .theia-geo[data-geo-src]
  *
  * Reactive morphs (Part A) and followers (Part B) both attach to THIS graph as
  * dependents and share one interrupt/retarget policy (RetargetController), so
@@ -89,11 +89,11 @@ export function initReactive(): void {
 
   // --- Sliders → sources ----------------------------------------------------
   document
-    .querySelectorAll<HTMLElement>(".chalk-slider[data-slider]")
+    .querySelectorAll<HTMLElement>(".theia-slider[data-slider]")
     .forEach((box) => {
       const name = box.getAttribute("data-slider");
       const input = box.querySelector<HTMLInputElement>("input[type=range]");
-      const valueEl = box.querySelector<HTMLElement>(".chalk-slider__value");
+      const valueEl = box.querySelector<HTMLElement>(".theia-slider__value");
       if (!name || !input) return;
       graph.setValue(name, parseFloat(input.value));
       input.addEventListener("input", () => {
@@ -104,11 +104,11 @@ export function initReactive(): void {
     });
 
   // --- Reactive math → dependents ------------------------------------------
-  document.querySelectorAll<HTMLElement>("[data-chalk-math]").forEach((el) => {
-    const template = el.getAttribute("data-chalk-math");
+  document.querySelectorAll<HTMLElement>("[data-theia-math]").forEach((el) => {
+    const template = el.getAttribute("data-theia-math");
     if (template === null) return;
-    const vars = parseVars(el.getAttribute("data-chalk-vars"));
-    const display = el.getAttribute("data-chalk-display") === "1";
+    const vars = parseVars(el.getAttribute("data-theia-vars"));
+    const display = el.getAttribute("data-theia-display") === "1";
     const texFor = (): string => substituteLatex(template, graph.scope());
 
     if (!display) {
@@ -126,15 +126,15 @@ export function initReactive(): void {
 
     // Display equation (Part A): morph from current → new on change.
     const initial = document.createElement("span");
-    initial.className = "chalk-morph__state";
+    initial.className = "theia-morph__state";
     while (el.firstChild) initial.appendChild(el.firstChild);
     el.replaceChildren(initial);
-    el.classList.add("chalk-morph");
+    el.classList.add("theia-morph");
     const morpher = new MorphController(el);
 
     const renderState = (): HTMLElement => {
       const span = document.createElement("span");
-      span.className = "chalk-morph__state";
+      span.className = "theia-morph__state";
       if (k) {
         try {
           k.render(texFor(), span, { displayMode: true, throwOnError: false });
@@ -160,7 +160,7 @@ export function initReactive(): void {
 
   // --- Plots (+ optional followers) → dependents ---------------------------
   document
-    .querySelectorAll<HTMLElement>(".chalk-plot[data-expr]")
+    .querySelectorAll<HTMLElement>(".theia-plot[data-expr]")
     .forEach((box) => {
       const exprSrc = box.getAttribute("data-expr");
       const canvas = box.querySelector<HTMLCanvasElement>("canvas");
@@ -235,10 +235,10 @@ export function initReactive(): void {
   // --- Geometry blocks ------------------------------------------------------
   const geoSpecs: GeoSpec[] = [];
   document
-    .querySelectorAll<HTMLElement>(".chalk-geo[data-geo-src]")
+    .querySelectorAll<HTMLElement>(".theia-geo[data-geo-src]")
     .forEach((box) => {
       const src = box.getAttribute("data-geo-src") || "";
-      const target = box.querySelector<HTMLElement>(".chalk-geo__applet") || box;
+      const target = box.querySelector<HTMLElement>(".theia-geo__applet") || box;
       geoSpecs.push({ container: target, commands: src.split("\n") });
     });
   initGeo(geoSpecs);
@@ -253,7 +253,7 @@ export function initReactive(): void {
 
   // Initial paint, then keep plots in sync with theme + viewport changes.
   graph.runAll();
-  document.addEventListener("chalk:themechange", () =>
+  document.addEventListener("theia:themechange", () =>
     repaints.forEach((p) => p()),
   );
   let resizeTimer: ReturnType<typeof setTimeout> | undefined;
@@ -267,10 +267,10 @@ export function initReactive(): void {
 
 function ensureLabel(box: HTMLElement): HTMLElement {
   if (getComputedStyle(box).position === "static") box.style.position = "relative";
-  let el = box.querySelector<HTMLElement>(".chalk-plot__label");
+  let el = box.querySelector<HTMLElement>(".theia-plot__label");
   if (!el) {
     el = document.createElement("div");
-    el.className = "chalk-plot__label";
+    el.className = "theia-plot__label";
     box.appendChild(el);
   }
   return el;

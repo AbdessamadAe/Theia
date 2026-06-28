@@ -64,9 +64,9 @@ const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 const press = (w: Window, key: string): void =>
   void w.document.dispatchEvent(new w.KeyboardEvent("keydown", { key, bubbles: true }));
 const labelCount = (w: Window): number =>
-  w.document.querySelectorAll(".chalk-scene__label").length;
+  w.document.querySelectorAll(".theia-scene__label").length;
 const labelTexts = (w: Window): string[] =>
-  Array.from(w.document.querySelectorAll(".chalk-scene__label")).map(
+  Array.from(w.document.querySelectorAll(".theia-scene__label")).map(
     (n) => n.textContent ?? "",
   );
 
@@ -74,7 +74,7 @@ describe("scene runtime: advance-driven object creation (Phase 8A)", () => {
   it("declares 3 advances (the three +animate verbs)", async () => {
     const w = await boot();
     await tick();
-    expect(w.document.querySelector(".chalk-scene")!.getAttribute("data-transitions")).toBe(
+    expect(w.document.querySelector(".theia-scene")!.getAttribute("data-transitions")).toBe(
       "3",
     );
   });
@@ -110,11 +110,11 @@ describe("scene runtime: advance-driven object creation (Phase 8A)", () => {
     const w = await boot();
     await tick();
     const input = w.document.querySelector<HTMLInputElement>(
-      '.chalk-slider[data-slider="k"] input[type=range]',
+      '.theia-slider[data-slider="k"] input[type=range]',
     )!;
     input.value = "2.5";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
     await tick();
-    expect(w.document.querySelector(".chalk-scene__canvas")).toBeTruthy();
+    expect(w.document.querySelector(".theia-scene__canvas")).toBeTruthy();
   });
 });

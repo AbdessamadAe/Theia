@@ -72,7 +72,7 @@ const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 const press = (w: Window, key: string): void =>
   void w.document.dispatchEvent(new w.KeyboardEvent("keydown", { key, bubbles: true }));
 const video = (w: Window): HTMLVideoElement & FakeVideo =>
-  w.document.querySelector(".chalk-scene__media--video") as HTMLVideoElement & FakeVideo;
+  w.document.querySelector(".theia-scene__media--video") as HTMLVideoElement & FakeVideo;
 
 describe("advance-driven video: play / segment / pause ordering", () => {
   it("does not play before its advance step", async () => {

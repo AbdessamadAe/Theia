@@ -1,5 +1,5 @@
 // Phase 15 media — real-browser checks (Playwright) against the running playground.
-// Run a preview server first: npm run preview -w chalk
+// Run a preview server first: npm run preview -w theia
 import { writeFileSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import lzString from "lz-string";
@@ -50,14 +50,14 @@ const PNG_1x1 = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
   "base64",
 );
-writeFileSync("/tmp/chalk-small.png", PNG_1x1);
-writeFileSync("/tmp/chalk-big.png", Buffer.concat([PNG_1x1, Buffer.alloc(300 * 1024, 1)]));
+writeFileSync("/tmp/theia-small.png", PNG_1x1);
+writeFileSync("/tmp/theia-big.png", Buffer.concat([PNG_1x1, Buffer.alloc(300 * 1024, 1)]));
 
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
-const getDoc = () => page.evaluate(() => window.__chalkDoc?.() ?? "");
+const getDoc = () => page.evaluate(() => window.__theiaDoc?.() ?? "");
 const fr = () => page.frames()[1];
 const active = () => fr().evaluate(() => document.querySelector(".slide.is-active")?.getAttribute("data-index"));
 const nav = async (key) => {
@@ -67,25 +67,25 @@ const nav = async (key) => {
 async function fresh() {
   await page.goto(url);
   await page.waitForSelector(".cm-content", { state: "attached" });
-  await page.waitForFunction(() => typeof window.__chalkDoc === "function" && window.__chalkDoc().length > 0);
+  await page.waitForFunction(() => typeof window.__theiaDoc === "function" && window.__theiaDoc().length > 0);
   await sleep(900);
 }
 
 // ── A positioned scene image renders with alt text ─────────────────────────
 await fresh();
-const card = fr().locator('.chalk-scene__media[alt="label card"]');
+const card = fr().locator('.theia-scene__media[alt="label card"]');
 ok("a positioned @image renders in the scene with alt text", (await card.count()) > 0);
 const box = await card.first().boundingBox();
 ok("the image is sized in scene units (has real layout size)", !!box && box.width > 20 && box.height > 10, box ? `${Math.round(box.width)}×${Math.round(box.height)}` : "none");
 
 // ── Markdown ![]() renders inline in prose ─────────────────────────────────
-ok("markdown ![alt](url) renders as an inline image", (await fr().locator("img.chalk-image--inline").count()) > 0);
+ok("markdown ![alt](url) renders as an inline image", (await fr().locator("img.theia-image--inline").count()) > 0);
 
 // ── A slider-bound image property updates live ─────────────────────────────
 await nav("ArrowRight"); // → Opacity slide
-const ghost = fr().locator('.chalk-scene__media[alt="fading marker"]');
+const ghost = fr().locator('.theia-scene__media[alt="fading marker"]');
 const op1 = await ghost.evaluate((n) => n.style.opacity);
-await fr().locator('.chalk-slider[data-slider="a"] input').evaluate((el) => {
+await fr().locator('.theia-slider[data-slider="a"] input').evaluate((el) => {
   el.value = "1";
   el.dispatchEvent(new Event("input", { bubbles: true }));
 });
@@ -115,7 +115,7 @@ await fr().evaluate(() => {
     configurable: true,
   });
 });
-ok("the scene contains the video element", (await fr().locator(".chalk-scene__media--video").count()) > 0);
+ok("the scene contains the video element", (await fr().locator(".theia-scene__media--video").count()) > 0);
 await nav("ArrowRight"); // crosses `+animate play clip from 0:03 to 0:09`
 let m = await fr().evaluate(() => window.__m);
 ok("advancing plays the clip and seeks to 0:03", m.plays === 1 && m.seek === 3, JSON.stringify(m));
@@ -130,7 +130,7 @@ ok("leaving the slide pauses the clip", m.pauses > pausesBefore, JSON.stringify(
 // ── Playground ingestion: small image inlines + round-trips ────────────────
 await fresh();
 await page.locator(".cm-content").click();
-await page.setInputFiles('input[type="file"]', "/tmp/chalk-small.png");
+await page.setInputFiles('input[type="file"]', "/tmp/theia-small.png");
 await sleep(400);
 const docAfter = await getDoc();
 ok("dropping a small image inlines it as @image (data URI in source)", /@image \w+ of "data:image\/png;base64,/.test(docAfter));
@@ -138,7 +138,7 @@ ok("dropping a small image inlines it as @image (data URI in source)", /@image \
 // ── Playground ingestion: oversized image is refused with a clear warning ──
 await fresh();
 const before = await getDoc();
-await page.setInputFiles('input[type="file"]', "/tmp/chalk-big.png");
+await page.setInputFiles('input[type="file"]', "/tmp/theia-big.png");
 await sleep(400);
 ok("an oversized image is NOT inlined (source unchanged)", (await getDoc()) === before);
 ok("…and the user is warned it can’t go in a shareable link", await page.getByText(/too large to embed/i).isVisible().catch(() => false));

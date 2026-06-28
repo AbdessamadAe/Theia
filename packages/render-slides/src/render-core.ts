@@ -58,11 +58,11 @@ export function renderDeckHTML(doc: DocumentNode, options: RenderOptions): strin
 ${slidesHtml}
   </div>
 </main>
-<footer class="chalk-bar">
-  <div class="chalk-bar__progress" id="chalk-progress"></div>
-  <span class="chalk-bar__title" id="chalk-bar-title"></span>
-  <span class="chalk-bar__counter" id="chalk-counter"></span>
-  <button class="chalk-bar__btn" id="chalk-theme" type="button">Dark</button>
+<footer class="theia-bar">
+  <div class="theia-bar__progress" id="theia-progress"></div>
+  <span class="theia-bar__title" id="theia-bar-title"></span>
+  <span class="theia-bar__counter" id="theia-counter"></span>
+  <button class="theia-bar__btn" id="theia-theme" type="button">Dark</button>
 </footer>
 <script>${katexJs}</script>
 <script>${runtimeJs}</script>
@@ -87,7 +87,7 @@ export interface CompileResult {
  * shows as KaTeX errors in place); a thrown error is reported rather than
  * producing a blank result.
  */
-export function compileChalk(source: string, options: RenderOptions): CompileResult {
+export function compileTheia(source: string, options: RenderOptions): CompileResult {
   try {
     const doc = parse(source);
     const html = renderDeckHTML(doc, options);

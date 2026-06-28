@@ -44,7 +44,7 @@ function stageText(w: Window): string {
   // The derive stage's rendered KaTeX includes the source tex in its MathML
   // annotation, so textContent reveals which state is shown.
   return (
-    w.document.querySelector(".chalk-derive__stage")?.textContent ?? ""
+    w.document.querySelector(".theia-derive__stage")?.textContent ?? ""
   );
 }
 
@@ -53,7 +53,7 @@ describe("derive ↔ navigation integration (jsdom)", () => {
     const w = await boot();
     const slide = w.document.querySelectorAll(".slide")[1]!;
     expect(slide.getAttribute("data-steps")).toBe("1"); // one +to transition
-    const derive = slide.querySelector(".chalk-derive")!;
+    const derive = slide.querySelector(".theia-derive")!;
     expect(derive.getAttribute("data-advance-base")).toBe("0");
     expect(derive.getAttribute("data-transitions")).toBe("1");
   });
@@ -118,7 +118,7 @@ describe("combined +step / +to / +emphasize advance ordering (jsdom)", () => {
   }
 
   const revealedSteps = (w: Window): number =>
-    w.document.querySelectorAll(".chalk-step.is-revealed").length;
+    w.document.querySelectorAll(".theia-step.is-revealed").length;
 
   it("counts 3 advances: two steps then one morph", async () => {
     const w = await bootCombined();
@@ -130,9 +130,9 @@ describe("combined +step / +to / +emphasize advance ordering (jsdom)", () => {
   it("sequences forward (steps, then morph + emphasis) and reverses on ←", async () => {
     const w = await bootCombined();
     const stage = () =>
-      w.document.querySelector(".chalk-derive__stage")?.textContent ?? "";
+      w.document.querySelector(".theia-derive__stage")?.textContent ?? "";
     const hasHighlight = () =>
-      !!w.document.querySelector(".chalk-derive__stage .chalk-emph-highlight");
+      !!w.document.querySelector(".theia-derive__stage .theia-emph-highlight");
 
     // Forward: step 1, step 2, then the derive morphs and emphasizes.
     press(w, "ArrowRight");

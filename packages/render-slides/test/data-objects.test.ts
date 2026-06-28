@@ -68,14 +68,14 @@ describe("data objects", () => {
   it("renders a matrix that re-renders live when a bound entry's slider changes", async () => {
     const { w, k } = await boot();
     await tick();
-    const matrix = w.document.querySelector<HTMLElement>(".chalk-scene__matrix")!;
+    const matrix = w.document.querySelector<HTMLElement>(".theia-scene__matrix")!;
     expect(matrix).toBeTruthy();
     const before = k.texByEl.get(matrix) ?? matrix.textContent ?? "";
     expect(before).toContain("\\begin{bmatrix}");
     expect(before).toContain("2"); // a's default
 
     // Drag the slider → reactive re-render.
-    const input = w.document.querySelector<HTMLInputElement>('.chalk-slider[data-slider="a"] input')!;
+    const input = w.document.querySelector<HTMLInputElement>('.theia-slider[data-slider="a"] input')!;
     input.value = "4";
     input.dispatchEvent(new w.Event("input", { bubbles: true }));
     await tick();
@@ -87,9 +87,9 @@ describe("data objects", () => {
   it("renders a table with header + data rows", async () => {
     const { w } = await boot();
     await tick();
-    const rows = w.document.querySelectorAll(".chalk-scene__table tr");
+    const rows = w.document.querySelectorAll(".theia-scene__table tr");
     expect(rows.length).toBe(2);
-    expect(w.document.querySelector(".chalk-scene__table th")?.textContent).toContain("Name");
+    expect(w.document.querySelector(".theia-scene__table th")?.textContent).toContain("Name");
     expect(w.document.body.textContent).toContain("Ana");
   });
 

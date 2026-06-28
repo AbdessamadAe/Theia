@@ -6,7 +6,7 @@
  *  - Offscreen discipline: pause any <video> not on the active slide whenever
  *    the slide changes, so a clip never keeps playing/decoding after you move
  *    on (and present mode stops audio on slide change).
- *  - Reduced motion: only autoplay `data-chalk-autoplay` videos when the user
+ *  - Reduced motion: only autoplay `data-theia-autoplay` videos when the user
  *    has NOT requested reduced motion; otherwise the poster + controls remain.
  */
 /** Parse a timecode: `m:ss`, `h:mm:ss`, or bare seconds → seconds (NaN if bad). */
@@ -54,12 +54,12 @@ export function initMedia(): void {
       }
     });
   };
-  // nav toggles `.is-active` before dispatching chalk:advance, so the active
+  // nav toggles `.is-active` before dispatching theia:advance, so the active
   // slide is current by the time we run.
-  document.addEventListener("chalk:advance", pauseOffscreen);
+  document.addEventListener("theia:advance", pauseOffscreen);
 
   if (prefersReduced()) return; // honour reduced motion: no autoplay
-  document.querySelectorAll<HTMLVideoElement>("video[data-chalk-autoplay]").forEach((v) => {
+  document.querySelectorAll<HTMLVideoElement>("video[data-theia-autoplay]").forEach((v) => {
     v.muted = true; // browsers only allow muted autoplay
     void v.play?.().catch(() => {
       /* gesture policy — leave on poster */

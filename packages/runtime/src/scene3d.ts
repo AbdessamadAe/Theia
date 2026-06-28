@@ -10,7 +10,7 @@
  * 3D objects join the SAME reactive graph (expressions re-evaluate from a
  * `displayedScope` that eases toward the live slider values via the shared
  * RetargetController — deliberate change morphs, drag snaps) and the SAME
- * advance flow (`chalk:advance`). Labels are pinned to 3D points by projecting
+ * advance flow (`theia:advance`). Labels are pinned to 3D points by projecting
  * world→screen each frame (see proj3d) and positioning DOM nodes.
  *
  * three.js objects are typed via the module namespace but loaded at runtime, so
@@ -106,10 +106,10 @@ export function initScene3D(
   graph: GraphLike,
   options: Scene3DOptions = {},
 ): void {
-  const canvas = host.querySelector<HTMLCanvasElement>(".chalk-scene__canvas");
-  const overlay = host.querySelector<HTMLElement>(".chalk-scene__overlay");
-  const loadingEl = host.querySelector<HTMLElement>(".chalk-scene__loading");
-  const dataEl = host.querySelector(".chalk-scene__data");
+  const canvas = host.querySelector<HTMLCanvasElement>(".theia-scene__canvas");
+  const overlay = host.querySelector<HTMLElement>(".theia-scene__overlay");
+  const loadingEl = host.querySelector<HTMLElement>(".theia-scene__loading");
+  const dataEl = host.querySelector(".theia-scene__data");
   if (!canvas || !dataEl) return;
 
   let data: { objects: ObjSpec[]; anims: AnimSpec[] };
@@ -177,7 +177,7 @@ export function initScene3D(
     ensureLoaded();
   }
 
-  document.addEventListener("chalk:advance", (event) => {
+  document.addEventListener("theia:advance", (event) => {
     const detail = (event as CustomEvent).detail as {
       slide: HTMLElement;
       revealed: number;
@@ -398,7 +398,7 @@ class SceneApp {
         break;
       case "label": {
         const el = document.createElement("div");
-        el.className = "chalk-scene__label";
+        el.className = "theia-scene__label";
         this.renderLabel(el, spec.args.text ?? spec.name);
         this.overlay?.appendChild(el);
         obj.labelEl = el;

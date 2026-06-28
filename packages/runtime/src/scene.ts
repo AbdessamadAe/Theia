@@ -6,7 +6,7 @@
  * store data-space expressions and are mapped to pixels at draw time. Every
  * expression re-evaluates from the shared reactive graph each redraw, so a
  * curve/area/tangent bound to a slider updates live. `+animate` verbs join the
- * existing advance flow via the `chalk:advance` event.
+ * existing advance flow via the `theia:advance` event.
  *
  * Performance: one scene = one canvas + one graph dependent. The dependent
  * schedules a single rAF-coalesced redraw, so N reactive objects cost one
@@ -127,16 +127,16 @@ function compileSafe(src: string | undefined): CompiledExpr | undefined {
 }
 
 export function initScenes(graph: GraphLike, options: Scene3DOptions = {}): void {
-  document.querySelectorAll<HTMLElement>(".chalk-scene").forEach((host) => {
+  document.querySelectorAll<HTMLElement>(".theia-scene").forEach((host) => {
     if (host.getAttribute("data-3d") === "true") initScene3D(host, graph, options);
     else setupScene(host, graph);
   });
 }
 
 function setupScene(host: HTMLElement, graph: GraphLike): void {
-  const canvas = host.querySelector<HTMLCanvasElement>(".chalk-scene__canvas");
-  const overlay = host.querySelector<HTMLElement>(".chalk-scene__overlay");
-  const dataEl = host.querySelector(".chalk-scene__data");
+  const canvas = host.querySelector<HTMLCanvasElement>(".theia-scene__canvas");
+  const overlay = host.querySelector<HTMLElement>(".theia-scene__overlay");
+  const dataEl = host.querySelector(".theia-scene__data");
   if (!canvas || !dataEl) return;
 
   let data: { objects: ObjSpec[]; anims: AnimSpec[] };
@@ -186,7 +186,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
   );
   const cyclic = new Set(cycles);
   if (cycles.length) {
-    console.warn(`chalk: placement cycle among [${cycles.join(", ")}] — falling back to absolute position`);
+    console.warn(`theia: placement cycle among [${cycles.join(", ")}] — falling back to absolute position`);
   }
   const resolveSequence = placeOrder.map((n) => byName.get(n)!).filter(Boolean);
   /** Resolved data-space position of every object, recomputed each draw. */
@@ -248,7 +248,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
 
   function postEdit(span: [number, number] | undefined, x: number, y: number): void {
     if (!span || !embedded) return;
-    window.parent.postMessage({ source: "chalk", type: "coords", span, x, y }, "*");
+    window.parent.postMessage({ source: "theia", type: "coords", span, x, y }, "*");
   }
 
   function csForObject(o: SceneObj): CoordSystem | null {
@@ -262,13 +262,13 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     node.style.pointerEvents = "auto";
     if (!it.free) {
       node.style.cursor = "not-allowed";
-      node.setAttribute("data-chalk-derived", "true");
+      node.setAttribute("data-theia-derived", "true");
       node.title = it.vars.length
         ? `Bound to ${it.vars.join(", ")} — drag the slider to move this`
         : "Computed position — not draggable";
       return;
     }
-    node.setAttribute("data-chalk-free", "true");
+    node.setAttribute("data-theia-free", "true");
     node.setAttribute("role", "button");
     node.setAttribute("aria-label", `Move ${o.spec.name} (drag, or arrow keys to nudge)`);
     node.style.cursor = "grab";
@@ -358,9 +358,9 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       const free = isDraggablePosition(o.spec.args.x, o.spec.args.y);
       const node = document.createElement("div");
       node.className =
-        o.spec.kind === "label" ? "chalk-scene__label chalk-scene__handle" : "chalk-scene__handle";
+        o.spec.kind === "label" ? "theia-scene__label theia-scene__handle" : "theia-scene__handle";
       if (o.spec.kind === "label") node.textContent = o.spec.args.text ?? o.spec.name;
-      else node.setAttribute("data-chalk-point", "true");
+      else node.setAttribute("data-theia-point", "true");
       // Only attach a node + behavior when there is something to do: free
       // objects are draggable; derived objects show the "drag the slider" hint;
       // a free *label* still needs its node to render text even when standalone.
@@ -399,7 +399,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       const el = document.createElement(isVideo ? "video" : "img") as
         | HTMLImageElement
         | HTMLVideoElement;
-      el.className = "chalk-scene__media" + (isVideo ? " chalk-scene__media--video" : "");
+      el.className = "theia-scene__media" + (isVideo ? " theia-scene__media--video" : "");
       if (isVideo) {
         const v = el as HTMLVideoElement;
         v.src = src;
@@ -552,7 +552,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
         const rows = parseMatrix(o.spec.args.value ?? "");
         const exprs = rows.flat().map((e) => compileExpr(e));
         const el = document.createElement("div");
-        el.className = "chalk-scene__matrix";
+        el.className = "theia-scene__matrix";
         overlay.appendChild(el);
         const render = (scope: Record<string, number>): void => {
           const body = rows
@@ -581,7 +581,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
           .map((line) => line.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()));
         const exprs = type === "decimal" ? cells.flat().map((c) => compileExpr(c)) : [];
         const el = document.createElement("div");
-        el.className = "chalk-scene__table";
+        el.className = "theia-scene__table";
         overlay.appendChild(el);
         const render = (scope: Record<string, number>): void => {
           el.innerHTML = "";
@@ -1148,7 +1148,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     void forward;
   };
 
-  document.addEventListener("chalk:advance", (event) => {
+  document.addEventListener("theia:advance", (event) => {
     const detail = (event as CustomEvent).detail as {
       slide: HTMLElement;
       revealed: number;
@@ -1441,7 +1441,7 @@ function positionLabels(
   // Reconcile a small pool of label nodes (avoid per-frame churn). Interactive
   // handle labels are managed separately, so exclude them from the pool.
   const nodes = overlay.querySelectorAll<HTMLElement>(
-    ".chalk-scene__label:not(.chalk-scene__handle)",
+    ".theia-scene__label:not(.theia-scene__handle)",
   );
   for (let i = 0; i < Math.max(nodes.length, labels.length); i++) {
     let node = nodes[i];
@@ -1451,7 +1451,7 @@ function positionLabels(
     }
     if (!node) {
       node = document.createElement("div");
-      node.className = "chalk-scene__label";
+      node.className = "theia-scene__label";
       overlay.appendChild(node);
     }
     const l = labels[i]!;

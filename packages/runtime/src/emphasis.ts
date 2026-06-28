@@ -41,7 +41,7 @@ function reducedMotion(): boolean {
 
 /** Add the persistent highlight class (color/underline). */
 function highlight(el: HTMLElement): void {
-  el.classList.add("chalk-emph-highlight");
+  el.classList.add("theia-emph-highlight");
 }
 
 function pulse(el: HTMLElement): void {
@@ -60,7 +60,7 @@ function circumscribe(el: HTMLElement): void {
   const host = el.offsetParent instanceof HTMLElement ? el.offsetParent : null;
   // Draw a ring in the nearest positioned ancestor (the slide body / stage).
   const ring = document.createElement("div");
-  ring.className = "chalk-emph-ring";
+  ring.className = "theia-emph-ring";
   const r = el.getBoundingClientRect();
   const base = (host ?? document.body).getBoundingClientRect();
   const pad = 4;

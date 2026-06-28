@@ -32,7 +32,7 @@ function injectScript(src: string): Promise<void> {
   if (scriptPromise) return scriptPromise;
   scriptPromise = new Promise<void>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
-      `script[data-chalk-pyodide]`,
+      `script[data-theia-pyodide]`,
     );
     if (existing) {
       resolve();
@@ -41,7 +41,7 @@ function injectScript(src: string): Promise<void> {
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
-    script.setAttribute("data-chalk-pyodide", "");
+    script.setAttribute("data-theia-pyodide", "");
     script.onload = () => resolve();
     script.onerror = () =>
       reject(new Error("Failed to load Pyodide from the CDN (needs network)."));

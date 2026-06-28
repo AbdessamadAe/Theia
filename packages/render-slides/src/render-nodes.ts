@@ -76,7 +76,7 @@ function renderMathNode(tex: string, display: boolean, ctx: SlideCtx): string {
   const vars = referencedVars(tex, ctx.sliders.keys());
   if (vars.length === 0) {
     return display
-      ? `<div class="chalk-math-display">${renderMath(tex, true)}</div>`
+      ? `<div class="theia-math-display">${renderMath(tex, true)}</div>`
       : renderMath(tex, false);
   }
 
@@ -84,13 +84,13 @@ function renderMathNode(tex: string, display: boolean, ctx: SlideCtx): string {
   for (const v of vars) defaults[v] = ctx.sliders.get(v) ?? 0;
   const initial = renderMath(substituteLatex(tex, defaults), display);
   const attrs =
-    `data-chalk-math="${escapeHtml(tex)}"` +
-    ` data-chalk-vars="${escapeHtml(vars.join(","))}"` +
-    ` data-chalk-display="${display ? "1" : "0"}"`;
+    `data-theia-math="${escapeHtml(tex)}"` +
+    ` data-theia-vars="${escapeHtml(vars.join(","))}"` +
+    ` data-theia-display="${display ? "1" : "0"}"`;
 
   return display
-    ? `<div class="chalk-math-display chalk-reactive" ${attrs}>${initial}</div>`
-    : `<span class="chalk-reactive" ${attrs}>${initial}</span>`;
+    ? `<div class="theia-math-display theia-reactive" ${attrs}>${initial}</div>`
+    : `<span class="theia-reactive" ${attrs}>${initial}</span>`;
 }
 
 // --- Inline ----------------------------------------------------------------
@@ -106,7 +106,7 @@ function renderInlineNode(node: Inline, ctx: SlideCtx): string {
     case "inlineMath":
       return renderMathNode(node.tex, false, ctx);
     case "inlineCode":
-      return `<code class="chalk-code-inline">${escapeHtml(node.value)}</code>`;
+      return `<code class="theia-code-inline">${escapeHtml(node.value)}</code>`;
     case "strong":
       return `<strong>${renderInline(node.children, ctx)}</strong>`;
     case "emphasis":
@@ -118,7 +118,7 @@ function renderInlineNode(node: Inline, ctx: SlideCtx): string {
 
 /** A markdown inline image — the same `<img>` treatment as a standalone @image. */
 function renderInlineImage(node: ImageInline, ctx: SlideCtx): string {
-  return imageTag(ctx.resolveMedia(node.url), node.alt, { className: "chalk-image chalk-image--inline" });
+  return imageTag(ctx.resolveMedia(node.url), node.alt, { className: "theia-image theia-image--inline" });
 }
 
 // --- Blocks ----------------------------------------------------------------
@@ -130,7 +130,7 @@ function renderBlocks(blocks: Block[], ctx: SlideCtx): string {
 function renderBlock(block: Block, ctx: SlideCtx): string {
   switch (block.type) {
     case "paragraph":
-      return `<p class="chalk-p">${renderInline(block.children, ctx)}</p>`;
+      return `<p class="theia-p">${renderInline(block.children, ctx)}</p>`;
     case "math":
       return renderMathNode(block.tex, true, ctx);
     case "theorem":
@@ -171,9 +171,9 @@ function imageTag(
   opts: { className?: string; style?: string } = {},
 ): string {
   const missing = alt === undefined || alt.trim() === "";
-  return `<img class="${opts.className ?? "chalk-image"}" src="${escapeHtml(src)}" alt="${escapeHtml(
+  return `<img class="${opts.className ?? "theia-image"}" src="${escapeHtml(src)}" alt="${escapeHtml(
     alt ?? "",
-  )}" loading="lazy" decoding="async"${missing ? ' data-chalk-noalt="1"' : ""}${
+  )}" loading="lazy" decoding="async"${missing ? ' data-theia-noalt="1"' : ""}${
     opts.style ? ` style="${opts.style}"` : ""
   } />`;
 }
@@ -182,11 +182,11 @@ function imageTag(
 function renderMedia(block: MediaBlock, ctx: SlideCtx): string {
   const src = ctx.resolveMedia(block.src);
   const caption = block.caption
-    ? `<figcaption class="chalk-media__caption">${escapeHtml(block.caption)}</figcaption>`
+    ? `<figcaption class="theia-media__caption">${escapeHtml(block.caption)}</figcaption>`
     : "";
 
   if (block.mediaKind === "image") {
-    return `<figure class="chalk-block chalk-media chalk-media--image">${imageTag(src, block.alt, {
+    return `<figure class="theia-block theia-media theia-media--image">${imageTag(src, block.alt, {
       style: widthStyle(block.width),
     })}${caption}</figure>`;
   }
@@ -197,7 +197,7 @@ function renderMedia(block: MediaBlock, ctx: SlideCtx): string {
     block.controls === false ? "" : "controls",
     block.loop ? "loop" : "",
     block.muted || block.autoplay ? "muted" : "",
-    block.autoplay ? 'data-chalk-autoplay="1"' : "",
+    block.autoplay ? 'data-theia-autoplay="1"' : "",
     block.poster ? `poster="${escapeHtml(ctx.resolveMedia(block.poster))}"` : "",
     'preload="none"',
     "playsinline",
@@ -207,8 +207,8 @@ function renderMedia(block: MediaBlock, ctx: SlideCtx): string {
   const track = block.track
     ? `<track kind="captions" src="${escapeHtml(ctx.resolveMedia(block.track))}" default />`
     : "";
-  return `<figure class="chalk-block chalk-media chalk-media--video">
-  <video class="chalk-video" ${attrs} style="${widthStyle(block.width)}" aria-label="${escapeHtml(
+  return `<figure class="theia-block theia-media theia-media--video">
+  <video class="theia-video" ${attrs} style="${widthStyle(block.width)}" aria-label="${escapeHtml(
     block.alt ?? block.caption ?? "video",
   )}"><source src="${escapeHtml(src)}" />${track}</video>${caption}</figure>`;
 }
@@ -250,20 +250,20 @@ function renderScene(block: SceneBlock, ctx: SlideCtx): string {
   };
   const json = JSON.stringify(model).replace(/</g, "\\u003c");
   const is3d = block.dimension === "3d";
-  const dimClass = is3d ? " chalk-scene--3d" : "";
+  const dimClass = is3d ? " theia-scene--3d" : "";
   const dimAttr = is3d ? ` data-3d="true"` : "";
   // 3D scenes load three.js lazily; show a calm loading state until ready.
   const loading = is3d
-    ? `\n  <div class="chalk-scene__loading">Preparing 3D…</div>`
+    ? `\n  <div class="theia-scene__loading">Preparing 3D…</div>`
     : "";
   const hint = is3d
-    ? `\n  <div class="chalk-scene__hint">drag to orbit · scroll to zoom · double-click to reset</div>`
+    ? `\n  <div class="theia-scene__hint">drag to orbit · scroll to zoom · double-click to reset</div>`
     : "";
 
-  return `<div class="chalk-block chalk-scene${dimClass}"${dimAttr} data-advance-base="${base}" data-transitions="${transitions}">
-  <canvas class="chalk-scene__canvas"></canvas>
-  <div class="chalk-scene__overlay"></div>${loading}${hint}
-  <script type="application/json" class="chalk-scene__data">${json}</script>
+  return `<div class="theia-block theia-scene${dimClass}"${dimAttr} data-advance-base="${base}" data-transitions="${transitions}">
+  <canvas class="theia-scene__canvas"></canvas>
+  <div class="theia-scene__overlay"></div>${loading}${hint}
+  <script type="application/json" class="theia-scene__data">${json}</script>
 </div>`;
 }
 
@@ -289,46 +289,46 @@ function renderDerive(block: DeriveBlock, ctx: SlideCtx): string {
     ),
   ).replace(/</g, "\\u003c"); // keep the JSON safe inside the <script> tag
 
-  return `<div class="chalk-block chalk-derive" data-advance-base="${base}" data-transitions="${transitions}" data-driver="${block.driver}">
-  <div class="chalk-derive__stage">${renderMath(initialTex, true, true, MARK_MACRO)}</div>
-  <script type="application/json" class="chalk-derive__states">${statesJson}</script>
+  return `<div class="theia-block theia-derive" data-advance-base="${base}" data-transitions="${transitions}" data-driver="${block.driver}">
+  <div class="theia-derive__stage">${renderMath(initialTex, true, true, MARK_MACRO)}</div>
+  <script type="application/json" class="theia-derive__states">${statesJson}</script>
 </div>`;
 }
 
 function renderTheorem(block: TheoremBlock, ctx: SlideCtx): string {
   const label = THEOREM_LABELS[block.kind];
   const title = block.title
-    ? ` <span class="chalk-theorem__title">${escapeHtml(block.title)}</span>`
+    ? ` <span class="theia-theorem__title">${escapeHtml(block.title)}</span>`
     : "";
   const body = renderBlocks(block.children, ctx);
   const steps = block.steps
     .map((step) => {
       const index = ctx.advance++;
-      return `<div class="chalk-step" data-step="${index}">${renderBlocks(
+      return `<div class="theia-step" data-step="${index}">${renderBlocks(
         step.children,
         ctx,
       )}</div>`;
     })
     .join("\n");
-  return `<div class="chalk-block chalk-theorem chalk-theorem--${block.kind}">
-  <div class="chalk-theorem__label"><span class="chalk-theorem__kind">${label}</span>${title}</div>
-  <div class="chalk-theorem__body">${body}${steps}</div>
+  return `<div class="theia-block theia-theorem theia-theorem--${block.kind}">
+  <div class="theia-theorem__label"><span class="theia-theorem__kind">${label}</span>${title}</div>
+  <div class="theia-theorem__body">${body}${steps}</div>
 </div>`;
 }
 
 /** A live, interactive range slider wired to the reactive graph at load. */
 function renderSlider(block: Slider): string {
   const step = block.step ?? (block.max - block.min) / 100;
-  return `<div class="chalk-block chalk-slider chalk-interactive" data-slider="${escapeHtml(
+  return `<div class="theia-block theia-slider theia-interactive" data-slider="${escapeHtml(
     block.name,
   )}">
-  <span class="chalk-tag">slider</span>
-  <span class="chalk-slider__name">${escapeHtml(block.name)}</span>
-  <input class="chalk-slider__input" type="range" min="${block.min}" max="${block.max}" value="${block.default}" step="${step}" aria-label="${escapeHtml(
+  <span class="theia-tag">slider</span>
+  <span class="theia-slider__name">${escapeHtml(block.name)}</span>
+  <input class="theia-slider__input" type="range" min="${block.min}" max="${block.max}" value="${block.default}" step="${step}" aria-label="${escapeHtml(
     block.name,
   )}" />
-  <span class="chalk-slider__value">= ${formatValue(block.default)}</span>
-  <span class="chalk-slider__range">[${block.min}, ${block.max}]</span>
+  <span class="theia-slider__value">= ${formatValue(block.default)}</span>
+  <span class="theia-slider__range">[${block.min}, ${block.max}]</span>
 </div>`;
 }
 
@@ -345,10 +345,10 @@ function renderPlot(block: Plot): string {
   const label = block.lhs ? `${block.lhs} = ${block.expr}` : block.expr;
   const deps =
     block.vars.length > 0
-      ? `<span class="chalk-plot__deps">reacts to ${block.vars
+      ? `<span class="theia-plot__deps">reacts to ${block.vars
           .map((v) => `<code>${escapeHtml(v)}</code>`)
           .join(", ")}</span>`
-      : `<span class="chalk-plot__deps">static curve</span>`;
+      : `<span class="theia-plot__deps">static curve</span>`;
   // Follower attributes (Part B): a tracking point + tangent/dropline/label.
   const followAttrs =
     block.pointX !== undefined
@@ -356,15 +356,15 @@ function renderPlot(block: Plot): string {
           (block.follows ?? []).join(","),
         )}"`
       : "";
-  return `<div class="chalk-block chalk-plot chalk-interactive" data-expr="${escapeHtml(
+  return `<div class="theia-block theia-plot theia-interactive" data-expr="${escapeHtml(
     block.expr,
   )}" data-vars="${escapeHtml(block.vars.join(","))}" data-xvar="${escapeHtml(
     deriveXVar(block.lhs),
   )}" data-xmin="-5" data-xmax="5"${followAttrs}>
-  <div class="chalk-plot__head"><span class="chalk-tag">plot</span><code class="chalk-plot__expr">${escapeHtml(
+  <div class="theia-plot__head"><span class="theia-tag">plot</span><code class="theia-plot__expr">${escapeHtml(
     label,
   )}</code>${deps}</div>
-  <canvas class="chalk-plot__canvas" role="img" aria-label="plot of ${escapeHtml(
+  <canvas class="theia-plot__canvas" role="img" aria-label="plot of ${escapeHtml(
     label,
   )}"></canvas>
 </div>`;
@@ -373,27 +373,27 @@ function renderPlot(block: Plot): string {
 /** A real GeoGebra embed. The applet is injected client-side (needs the
  * geogebra.org CDN); the source commands ride along in `data-geo-src`. */
 function renderGeo(block: GeoBlock): string {
-  return `<div class="chalk-block chalk-geo chalk-interactive" data-geo-src="${escapeHtml(
+  return `<div class="theia-block theia-geo theia-interactive" data-geo-src="${escapeHtml(
     block.source,
   )}">
-  <div class="chalk-geo__head"><span class="chalk-tag">geometry</span><span class="chalk-geo__note">GeoGebra (loads from geogebra.org)</span></div>
-  <div class="chalk-geo__applet"></div>
+  <div class="theia-geo__head"><span class="theia-tag">geometry</span><span class="theia-geo__note">GeoGebra (loads from geogebra.org)</span></div>
+  <div class="theia-geo__applet"></div>
 </div>`;
 }
 
 function renderCode(block: CodeCell): string {
   // Both js and py cells run live in the compute layer. The runtime reads the
-  // source from `.chalk-code__source` and writes results into `__output` (or
+  // source from `.theia-code__source` and writes results into `__output` (or
   // `__error` on a throw). Python runs client-side via Pyodide, loaded lazily
   // only because this deck contains a py cell.
   const label = block.lang === "py" ? "python" : "javascript";
   const note =
     block.lang === "py" ? "runs in your browser (Pyodide)" : "runs live";
-  return `<div class="chalk-block chalk-code chalk-cell" data-chalk-cell="${block.lang}">
-  <div class="chalk-code__head"><span class="chalk-tag">${label}</span><span class="chalk-code__note">${note}</span></div>
-  <pre class="chalk-code__source"><code>${escapeHtml(block.source)}</code></pre>
-  <div class="chalk-cell__output"></div>
-  <div class="chalk-cell__error" hidden></div>
+  return `<div class="theia-block theia-code theia-cell" data-theia-cell="${block.lang}">
+  <div class="theia-code__head"><span class="theia-tag">${label}</span><span class="theia-code__note">${note}</span></div>
+  <pre class="theia-code__source"><code>${escapeHtml(block.source)}</code></pre>
+  <div class="theia-cell__output"></div>
+  <div class="theia-cell__error" hidden></div>
 </div>`;
 }
 
@@ -402,7 +402,7 @@ function renderList(block: ListBlock, ctx: SlideCtx): string {
   const items = block.items
     .map((item) => `<li>${renderBlocks(item, ctx)}</li>`)
     .join("\n");
-  return `<${tag} class="chalk-list">${items}</${tag}>`;
+  return `<${tag} class="theia-list">${items}</${tag}>`;
 }
 
 // --- Slide -----------------------------------------------------------------
@@ -423,7 +423,7 @@ export function renderSlide(
 
   if (slide.kind === "title") {
     const headingHtml = heading
-      ? `<h1 class="chalk-title">${heading}</h1>`
+      ? `<h1 class="theia-title">${heading}</h1>`
       : "";
     return {
       html: `<section class="slide slide--title" data-index="${index}" data-steps="${ctx.advance}">
@@ -438,7 +438,7 @@ export function renderSlide(
 
   return {
     html: `<section class="slide slide--content" data-index="${index}" data-steps="${ctx.advance}">
-  <header class="slide__header"><h2 class="chalk-heading">${heading}</h2></header>
+  <header class="slide__header"><h2 class="theia-heading">${heading}</h2></header>
   <div class="slide__body">${body}</div>
 </section>`,
     steps: ctx.advance,

@@ -1,5 +1,5 @@
 // Phase 12 drag-on-preview — real-browser checks (Playwright).
-// Run a preview server first: npm run preview -w chalk
+// Run a preview server first: npm run preview -w theia
 import { chromium } from "@playwright/test";
 import { parse } from "@theia/parser";
 import lzString from "lz-string";
@@ -32,11 +32,11 @@ const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 
-const getDoc = () => page.evaluate(() => window.__chalkDoc?.() ?? "");
+const getDoc = () => page.evaluate(() => window.__theiaDoc?.() ?? "");
 async function fresh(src = SOURCE) {
   await page.goto(SHARE(src));
   await page.waitForSelector(".cm-editor");
-  await page.waitForFunction(() => typeof window.__chalkDoc === "function" && window.__chalkDoc().length > 0);
+  await page.waitForFunction(() => typeof window.__theiaDoc === "function" && window.__theiaDoc().length > 0);
   await sleep(500); // let the deck render + position handles
 }
 const labelCoords = (doc) => {
@@ -51,13 +51,13 @@ const pointCoords = (doc) => {
 };
 
 const fl = () => page.frameLocator("iframe");
-const freeHandle = () => fl().locator(".chalk-scene__handle[data-chalk-free]").first();
-const pointHandle = () => fl().locator(".chalk-scene__handle[data-chalk-derived]").first();
+const freeHandle = () => fl().locator(".theia-scene__handle[data-theia-free]").first();
+const pointHandle = () => fl().locator(".theia-scene__handle[data-theia-derived]").first();
 
 // ── Affordances: free label draggable, derived point inert ─────────────────
 await fresh();
 ok("the free @label exposes a drag handle", (await freeHandle().count()) > 0);
-ok("the derived @point is inert (data-chalk-derived)", (await pointHandle().count()) > 0);
+ok("the derived @point is inert (data-theia-derived)", (await pointHandle().count()) > 0);
 const hint = await pointHandle().getAttribute("title");
 ok("derived point hints 'drag the slider'", /drag the slider/i.test(hint || ""), hint || "");
 
@@ -105,7 +105,7 @@ ok("dragging the derived @point does NOT edit the source", pointCoords(await get
 await fresh();
 before = await getDoc();
 const ptLeftBefore = await pointHandle().evaluate((n) => n.style.left);
-const slider = fl().locator('.chalk-slider[data-slider="s"] input.chalk-slider__input');
+const slider = fl().locator('.theia-slider[data-slider="s"] input.theia-slider__input');
 await slider.evaluate((el) => {
   el.value = String(Math.min(+el.max, +el.value + 1.2));
   el.dispatchEvent(new Event("input", { bubbles: true }));
@@ -134,7 +134,7 @@ await page.mouse.up();
 await sleep(600);
 const draggedDoc = await getDoc();
 await page.goto(SHARE(draggedDoc)); // reopen the dragged deck from its share URL
-await page.waitForFunction(() => typeof window.__chalkDoc === "function" && window.__chalkDoc().length > 0);
+await page.waitForFunction(() => typeof window.__theiaDoc === "function" && window.__theiaDoc().length > 0);
 ok("share URL round-trips the dragged deck exactly", (await getDoc()) === draggedDoc);
 
 ok("no page errors during drag interactions", errors.length === 0, errors.slice(0, 2).join(" | "));

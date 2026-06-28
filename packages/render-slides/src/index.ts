@@ -10,7 +10,7 @@
 import type { DocumentNode } from "@theia/ast";
 import { inlinedKatexCss, inlinedKatexJs } from "./katex-assets.js";
 import {
-  compileChalk as compileChalkCore,
+  compileTheia as compileTheiaCore,
   type CompileResult,
   type DeckAssets,
   renderDeckHTML,
@@ -18,7 +18,7 @@ import {
 import { inlinedRuntimeJs } from "./runtime-asset.js";
 
 export type { DeckAssets, RenderOptions, CompileResult } from "./render-core.js";
-export { renderDeckHTML, compileChalk as compileChalkWithAssets } from "./render-core.js";
+export { renderDeckHTML, compileTheia as compileTheiaWithAssets } from "./render-core.js";
 export { renderSlide } from "./render-nodes.js";
 
 let cachedAssets: DeckAssets | null = null;
@@ -46,9 +46,9 @@ export function renderDeck(doc: DocumentNode, options: RenderDeckOptions = {}): 
 }
 
 /** Compile `.theia` source → HTML deck using the shared core with Node assets. */
-export function compileChalk(
+export function compileTheia(
   source: string,
   options: RenderDeckOptions = {},
 ): CompileResult {
-  return compileChalkCore(source, { ...options, assets: loadNodeAssets() });
+  return compileTheiaCore(source, { ...options, assets: loadNodeAssets() });
 }

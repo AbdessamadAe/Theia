@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { buildFile, isExternalRef, makeMediaResolver, MEDIA_INLINE_THRESHOLD } from "../src/build.js";
 
-const tmp = (): string => mkdtempSync(join(tmpdir(), "chalk-media-"));
+const tmp = (): string => mkdtempSync(join(tmpdir(), "theia-media-"));
 
 describe("isExternalRef", () => {
   it("treats https / data / blob as external (no embedding)", () => {

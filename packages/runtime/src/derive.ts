@@ -3,7 +3,7 @@
  *
  * Each block carries an ordered list of states (tex + optional emphasis specs)
  * emitted as JSON, and its position in the slide's advance sequence. It listens
- * for the navigation controller's `chalk:advance` event — the SAME flow as
+ * for the navigation controller's `theia:advance` event — the SAME flow as
  * `+step` reveal and slider updates — and morphs to the implied state, then
  * fires that state's emphasis. Going backward reverses the morph; persistent
  * highlights re-apply, transient pulses/rings do not replay.
@@ -27,7 +27,7 @@ const MARK_MACRO = { "\\mark": "\\htmlClass{ck-mark}{#1}" };
 
 function renderState(tex: string): HTMLElement {
   const span = document.createElement("span");
-  span.className = "chalk-derive__state";
+  span.className = "theia-derive__state";
   const k = katex();
   if (k) {
     try {
@@ -49,13 +49,13 @@ function renderState(tex: string): HTMLElement {
 
 export function initDerive(): void {
   const blocks = Array.from(
-    document.querySelectorAll<HTMLElement>(".chalk-derive"),
+    document.querySelectorAll<HTMLElement>(".theia-derive"),
   );
   if (blocks.length === 0) return;
 
   for (const block of blocks) {
-    const stage = block.querySelector<HTMLElement>(".chalk-derive__stage");
-    const statesEl = block.querySelector(".chalk-derive__states");
+    const stage = block.querySelector<HTMLElement>(".theia-derive__stage");
+    const statesEl = block.querySelector(".theia-derive__states");
     if (!stage || !statesEl) continue;
 
     let states: StateSpec[];
@@ -102,7 +102,7 @@ export function initDerive(): void {
     block.setAttribute("data-advance-base", String(base));
   }
 
-  document.addEventListener("chalk:advance", (event) => {
+  document.addEventListener("theia:advance", (event) => {
     const detail = (event as CustomEvent).detail as {
       slide: HTMLElement;
       revealed: number;

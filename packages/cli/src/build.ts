@@ -9,19 +9,17 @@ import { basename, dirname, extname, join, resolve } from "node:path";
 import { walk } from "@theia/ast";
 import { parse } from "@theia/parser";
 // Feed the deck assets through the shared, isomorphic compile core (the same
-// `compileChalk` the playground uses), with the asset source behind `getAssets`:
+// `compileTheia` the playground uses), with the asset source behind `getAssets`:
 // in-repo it computes them live (esbuild + fs); the published bundle swaps in
 // `assets.baked.ts` (prebaked files, zero deps). Either way the same bytes flow
 // through the same core — the compile path itself is unchanged.
-import { compileChalk } from "@theia/render-slides/core";
+import { compileTheia } from "@theia/render-slides/core";
 import { getAssets } from "./assets.js";
 
 /** Derive the output `.html` path for a given `.theia` source path. */
 export function outputPathFor(input: string): string {
   const abs = resolve(input);
-  // Strip a known source extension. `.theia` is the current extension; `.chalk`
-  // is still accepted so decks authored before the rename keep building.
-  const base = /\.(theia|chalk)$/i.test(abs) ? abs.replace(/\.[^.]+$/, "") : abs;
+  const base = abs.toLowerCase().endsWith(".theia") ? abs.slice(0, -".theia".length) : abs;
   return `${base}.html`;
 }
 
@@ -141,7 +139,7 @@ export function buildFile(input: string, outPath?: string): BuildResult {
     warnings,
   });
 
-  const { html, slides, error } = compileChalk(source, { resolveMedia, assets: getAssets() });
+  const { html, slides, error } = compileTheia(source, { resolveMedia, assets: getAssets() });
   if (error) throw new Error(error);
   writeFileSync(output, html, "utf8");
   return {

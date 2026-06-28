@@ -83,7 +83,7 @@ export function initGeo(specs: GeoSpec[]): void {
       for (const spec of specs) {
         spec.container.textContent =
           "GeoGebra could not be loaded (needs an internet connection).";
-        spec.container.classList.add("chalk-geo__error");
+        spec.container.classList.add("theia-geo__error");
       }
     });
 }

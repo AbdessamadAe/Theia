@@ -1,5 +1,5 @@
 // Phase 11 authoring assists — real-browser checks (Playwright) against the
-// running playground. Run a preview server first (npm run preview -w chalk).
+// running playground. Run a preview server first (npm run preview -w theia).
 import { chromium } from "@playwright/test";
 import { parse } from "@theia/parser";
 import lzString from "lz-string";
@@ -34,11 +34,11 @@ const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
 const errors = [];
 page.on("pageerror", (e) => errors.push(String(e)));
 
-const getDoc = () => page.evaluate(() => window.__chalkDoc?.() ?? "");
+const getDoc = () => page.evaluate(() => window.__theiaDoc?.() ?? "");
 async function fresh() {
   await page.goto(SHARE);
   await page.waitForSelector(".cm-editor");
-  await page.waitForFunction(() => typeof window.__chalkDoc === "function" && window.__chalkDoc().length > 0);
+  await page.waitForFunction(() => typeof window.__theiaDoc === "function" && window.__theiaDoc().length > 0);
   await sleep(200);
 }
 const contentSlides = (doc) =>
