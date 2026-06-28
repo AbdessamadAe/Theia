@@ -35,6 +35,7 @@ import {
   renameProject,
 } from "@/lib/db";
 import type { Theme } from "@/lib/theme";
+import { LANDING_PATH, navigate } from "@/lib/router";
 import { bundleToJson, fileToBundle, PROJECT_EXT, safeFileName, saveToDisk } from "@/lib/transfer";
 
 const BLANK = "# Untitled\n\nStart your lecture here.\n";
@@ -182,13 +183,22 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
 
       {/* Header */}
       <header className="bg-card/60 sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 backdrop-blur sm:px-6">
-        <div className="flex items-center gap-2.5">
-          <img src={logoUrl} alt="Theia" width={30} height={30} className="ring-border size-8 rounded-lg shadow-1 ring-1" />
+        <a
+          href={LANDING_PATH}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey) return;
+            e.preventDefault();
+            navigate(LANDING_PATH);
+          }}
+          className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Theia home"
+        >
+          <img src={logoUrl} alt="" width={30} height={30} className="ring-border size-8 rounded-lg shadow-1 ring-1" />
           <span className="theia-wordmark relative font-serif text-2xl font-semibold tracking-tight">
             Theia
             <WordmarkFlourish className="theia-flourish text-live absolute -bottom-2 left-0 hidden h-2 w-full" />
           </span>
-        </div>
+        </a>
         <div className="flex-1" />
         <Hint label="Import a .theia or project file">
           <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>

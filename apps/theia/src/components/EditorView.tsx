@@ -28,6 +28,7 @@ import { coordEdits } from "@/lib/drag";
 import { applySnippet, theiaSlashPalette } from "@/lib/insert";
 import type { SnippetDef } from "@/lib/snippets";
 import { useMediaQuery } from "@/lib/use-media-query";
+import { LANDING_PATH, navigate } from "@/lib/router";
 import { buildShareUrl, MEDIA_INLINE_BUDGET, SHARE_LIMIT } from "@/share";
 import type { Theme } from "@/lib/theme";
 
@@ -354,15 +355,28 @@ export function EditorView({
       )}
 
       <header className="bg-card/60 flex items-center gap-2 border-b px-3 py-2 backdrop-blur sm:gap-3 sm:px-4">
+        <Hint label="Theia home">
+          <a
+            href={LANDING_PATH}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey) return;
+              e.preventDefault();
+              navigate(LANDING_PATH);
+            }}
+            aria-label="Theia home"
+            className="focus-visible:ring-ring rounded-lg focus-visible:outline-none focus-visible:ring-2"
+          >
+            <img src={logoUrl} alt="Theia" width={28} height={28} className="ring-border size-7 rounded-lg shadow-1 ring-1" />
+          </a>
+        </Hint>
         <Hint label="Back to projects">
           <button
             id="home"
             onClick={onHome}
             aria-label="Back to projects"
-            className="focus-visible:ring-ring flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2"
+            className="focus-visible:ring-ring text-muted-foreground rounded-lg focus-visible:outline-none focus-visible:ring-2"
           >
-            <img src={logoUrl} alt="Theia" width={28} height={28} className="ring-border size-7 rounded-lg shadow-1 ring-1" />
-            <HomeIcon className="text-muted-foreground size-4" />
+            <HomeIcon className="size-4" />
           </button>
         </Hint>
 

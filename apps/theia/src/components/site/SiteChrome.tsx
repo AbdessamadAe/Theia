@@ -86,10 +86,19 @@ export function SiteFooter(): React.ReactElement {
     <footer className="border-t">
       <div className="text-muted-foreground mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:grid-cols-3 sm:px-6">
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
+          <a
+            href={LANDING_PATH}
+            onClick={(e) => {
+              if (e.metaKey || e.ctrlKey) return;
+              e.preventDefault();
+              navigate(LANDING_PATH);
+            }}
+            className="flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Theia home"
+          >
             <img src={logoUrl} alt="" width={24} height={24} className="size-6 rounded-md" />
             <span className="text-foreground font-serif text-lg font-semibold">Theia</span>
-          </div>
+          </a>
           <p className="max-w-xs text-sm">
             Built so educators can present mathematics that actually moves. Free and open source.
           </p>
