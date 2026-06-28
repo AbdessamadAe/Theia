@@ -5,9 +5,10 @@
   "description": "The Theia web app: landing page, zero-install playground, gallery, and docs — edit .theia and see the live deck, all compiled client-side with the engine packages.",
   "type": "module",
   "scripts": {
-    "prebuild": "node scripts/prebuild.mjs",
-    "dev": "npm run prebuild && vite",
-    "build": "npm run prebuild && vite build",
+    "build:deps": "npm run build -w @theia/ast -w @theia/parser -w @theia/compute -w @theia/runtime -w @theia/render-slides",
+    "bake": "node scripts/prebuild.mjs",
+    "dev": "npm run build:deps && npm run bake && vite",
+    "build": "npm run build:deps && npm run bake && vite build",
     "preview": "vite preview --port 5173 --strictPort",
     "typecheck": "tsc -p tsconfig.json"
   },

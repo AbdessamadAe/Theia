@@ -88,7 +88,7 @@ caching).
 2. **Root Directory:** leave at the repo root (so the npm workspaces install).
 3. Framework preset: **Other** (settings come from `vercel.json`):
    - Install: `npm install`
-   - Build: `npm run build`
+   - Build: `npm run build:vercel` (compiles engine packages, then the web app — do **not** override with `npm run build -w theia` alone unless you know why)
    - Output: `apps/theia/dist`
 4. No environment variables. Deploy.
 
