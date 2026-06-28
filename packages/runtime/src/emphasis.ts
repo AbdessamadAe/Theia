@@ -63,10 +63,15 @@ function circumscribe(el: HTMLElement): void {
   ring.className = "theia-emph-ring";
   const r = el.getBoundingClientRect();
   const base = (host ?? document.body).getBoundingClientRect();
+  // The deck is scaled to fit (.deck transform: scale(S)); getBoundingClientRect
+  // returns screen px, but the ring is positioned/sized in the host's local px
+  // (it's inside the scaled deck). Divide by S so it doesn't drift or mis-size
+  // at non-1:1 scales. pad stays local so the gap is visually constant.
+  const scale = host && host.offsetWidth ? base.width / host.offsetWidth : 1;
   const pad = 4;
-  ring.style.cssText = `position:absolute;left:${r.left - base.left - pad}px;top:${
-    r.top - base.top - pad
-  }px;width:${r.width + 2 * pad}px;height:${r.height + 2 * pad}px;`;
+  ring.style.cssText = `position:absolute;left:${(r.left - base.left) / scale - pad}px;top:${
+    (r.top - base.top) / scale - pad
+  }px;width:${r.width / scale + 2 * pad}px;height:${r.height / scale + 2 * pad}px;`;
   (host ?? document.body).appendChild(ring);
   if (typeof ring.animate === "function") {
     const anim = ring.animate(

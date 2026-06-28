@@ -163,18 +163,30 @@ export class MorphController {
       return;
     }
 
+    // The whole deck is scaled to fit the viewport (`.deck { transform: scale(S) }`,
+    // see nav.ts). getBoundingClientRect reports screen px (already ×S), but a
+    // glyph's OWN transform is applied in its local space and then scaled by the
+    // ancestor again — so translate offsets must be divided by S, or matched
+    // glyphs land S× off and the morph only looks right at S≈1. Width *ratios*
+    // (sx, sy) are scale-invariant, so they need no correction.
+    const scale = this.stage.offsetWidth ? origin1.width / this.stage.offsetWidth : 1;
     const anims: Animation[] = [];
     const matchedTo = new Set<number>();
     for (const { from: fi, to: ti } of result.pairs) {
       matchedTo.add(ti);
       const f = fromInfo[fi]!.rect;
       const t = toRects[ti]!;
-      const dx = f.left - t.left;
-      const dy = f.top - t.top;
+      const dx = (f.left - t.left) / scale;
+      const dy = (f.top - t.top) / scale;
       const sx = t.width ? f.width / t.width : 1;
       const sy = t.height ? f.height / t.height : 1;
+      const g = toGlyphs[ti]!;
+      // Pin the origin to the top-left so a glyph that changes size scales about
+      // the same corner the translate is measured from (the default center
+      // origin makes size-changing glyphs drift).
+      g.style.transformOrigin = "0 0";
       anims.push(
-        toGlyphs[ti]!.animate(
+        g.animate(
           [
             { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
             { transform: "none" },
@@ -196,7 +208,9 @@ export class MorphController {
     }
     const overlay = makeOverlay(this.stage);
     for (const fi of result.unmatchedFrom) {
-      const clone = floatClone(fromInfo[fi]!.html, fromInfo[fi]!.rect);
+      const r = fromInfo[fi]!.rect;
+      // Overlay lives inside the scaled deck, so position it in local px too.
+      const clone = floatClone(fromInfo[fi]!.html, { ...r, left: r.left / scale, top: r.top / scale });
       overlay.appendChild(clone);
       anims.push(
         clone.animate([{ opacity: 1 }, { opacity: 0 }], {
@@ -229,6 +243,9 @@ export class MorphController {
     fromClone.style.position = "absolute";
     fromClone.style.left = "0";
     fromClone.style.top = "0";
+    // Span the stage so a centred display equation keeps its centring while it
+    // fades (a shrink-to-fit absolute clone would jump to the left edge).
+    fromClone.style.width = "100%";
     overlay.appendChild(fromClone);
     const anims = [
       fromClone.animate([{ opacity: 1 }, { opacity: 0 }], {
