@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build & test (both artifacts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # Build engine → CLI bundle → web app (workspace order). This also
+      # type-checks the engine packages via their tsc build.
+      - name: Build (engine, chalkdeck CLI, web app)
+        run: npm run build
+
+      - name: Typecheck (CLI + web app)
+        run: npm run typecheck
+
+      # Unit + jsdom suite, including the docs example-compile-check that
+      # compiles every documented snippet with the real engine.
+      - name: Test
+        run: npm test
+
+      # Prove the publishable package still assembles cleanly (no publish).
+      - name: Verify chalkdeck package manifest
+        run: npm pack -w chalkdeck --dry-run

@@ -1,0 +1,46 @@
+name: Release (npm)
+
+# GATED / OFF BY DEFAULT. This workflow only runs when you manually dispatch it,
+# and even then it stays a dry-run unless you both (a) tick `publish: true` and
+# (b) have added the NPM_TOKEN repository secret. Until then it just prints the
+# manifest it *would* publish. See RELEASE.md for the full go-live checklist.
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Actually publish chalkdeck to npm (otherwise dry-run only)"
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    name: Publish chalkdeck (gated)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: npm ci
+
+      - name: Build (engine + chalkdeck)
+        run: npm run build
+
+      - name: Publish or dry-run
+        env:
+          # Provided only if you have added the NPM_TOKEN repo secret.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ "${{ inputs.publish }}" = "true" ] && [ -n "$NODE_AUTH_TOKEN" ]; then
+            echo "Publishing via changesets…"
+            npx changeset publish
+          else
+            echo "::notice::Dry-run (publish=${{ inputs.publish }}, NPM_TOKEN set: $([ -n "$NODE_AUTH_TOKEN" ] && echo yes || echo no)). Showing the manifest that WOULD be published:"
+            npm pack -w chalkdeck --dry-run
+          fi
