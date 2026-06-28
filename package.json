@@ -18,11 +18,18 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:app": "npm run build -w chalk",
+    "build:cli": "npm run build -w chalkdeck",
+    "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "vitest run",
     "test:e2e": "node scripts/browser-test.mjs",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "npm run build && changeset publish",
     "clean": "rm -rf packages/*/dist"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@playwright/test": "^1.61.1",
     "@types/jsdom": "^28.0.3",
     "@types/node": "^20.14.0",

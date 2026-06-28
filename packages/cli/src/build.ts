@@ -8,7 +8,13 @@ import {
 import { basename, dirname, extname, join, resolve } from "node:path";
 import { walk } from "@chalk/ast";
 import { parse } from "@chalk/parser";
-import { compileChalk } from "@chalk/render-slides";
+// Feed the deck assets through the shared, isomorphic compile core (the same
+// `compileChalk` the playground uses), with the asset source behind `getAssets`:
+// in-repo it computes them live (esbuild + fs); the published bundle swaps in
+// `assets.baked.ts` (prebaked files, zero deps). Either way the same bytes flow
+// through the same core — the compile path itself is unchanged.
+import { compileChalk } from "@chalk/render-slides/core";
+import { getAssets } from "./assets.js";
 
 /** Derive the output `.html` path for a given `.chalk` source path. */
 export function outputPathFor(input: string): string {
@@ -133,7 +139,7 @@ export function buildFile(input: string, outPath?: string): BuildResult {
     warnings,
   });
 
-  const { html, slides, error } = compileChalk(source, { resolveMedia });
+  const { html, slides, error } = compileChalk(source, { resolveMedia, assets: getAssets() });
   if (error) throw new Error(error);
   writeFileSync(output, html, "utf8");
   return {

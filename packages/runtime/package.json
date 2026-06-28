@@ -1,6 +1,7 @@
 {
   "name": "@chalk/runtime",
   "version": "0.1.0",
+  "private": true,
   "description": "Chalk's client-side reactive runtime: live sliders, reactive KaTeX math, canvas plots, and GeoGebra embeds. Ships inside the slide bundle.",
   "type": "module",
   "main": "./dist/index.js",

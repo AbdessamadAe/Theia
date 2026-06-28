@@ -1,19 +1,57 @@
 {
-  "name": "@chalk/cli",
+  "name": "chalkdeck",
   "version": "0.1.0",
-  "description": "The `chalk` command — build, watch, and present Chalk decks.",
+  "description": "Compile a math-teaching markup language (.chalk) into self-contained, interactive HTML slide decks — live sliders, reactive KaTeX, 2D/3D scenes.",
   "type": "module",
   "bin": {
-    "chalk": "./dist/cli.js"
+    "chalk": "./dist/cli.js",
+    "chalkdeck": "./dist/cli.js"
   },
-  "main": "./dist/build.js",
-  "types": "./dist/build.d.ts",
-  "files": ["dist"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "MIT",
+  "author": "Abdessamad Ait Elmouden",
+  "homepage": "https://github.com/AbdessamadAe/Chalk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AbdessamadAe/Chalk.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/AbdessamadAe/Chalk/issues"
+  },
+  "keywords": [
+    "chalk",
+    "slides",
+    "presentation",
+    "math",
+    "mathematics",
+    "katex",
+    "latex",
+    "interactive",
+    "education",
+    "teaching",
+    "markdown",
+    "lecture"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "node scripts/bundle.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepack": "node scripts/bundle.mjs"
   },
-  "dependencies": {
+  "devDependencies": {
+    "@chalk/ast": "0.1.0",
     "@chalk/parser": "0.1.0",
-    "@chalk/render-slides": "0.1.0"
+    "@chalk/render-slides": "0.1.0",
+    "esbuild": "^0.21.5"
   }
 }
