@@ -504,6 +504,174 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     }
   }
 
+  // --- Data objects: @matrix & @table (DOM overlay), @barchart (canvas) ----
+  const renderKatex = (el: HTMLElement, tex: string, display: boolean): void => {
+    const k = (globalThis as unknown as { katex?: { render(t: string, e: HTMLElement, o: object): void } }).katex;
+    if (k) {
+      try {
+        k.render(tex, el, { displayMode: display, throwOnError: false });
+        return;
+      } catch {
+        /* fall through to text */
+      }
+    }
+    el.textContent = tex;
+  };
+  const fmt = (v: number): string =>
+    !Number.isFinite(v) ? "?" : Number.isInteger(v) ? String(v) : String(Math.round(v * 100) / 100);
+  const unq = (s: string): string => s.trim().replace(/^["']|["']$/g, "");
+  const parseList = (s: string): string[] =>
+    s.trim().replace(/^\[/, "").replace(/\]$/, "").split(",").map((x) => x.trim()).filter(Boolean);
+  const parseMatrix = (s: string): string[][] => {
+    const inner = s.trim().replace(/^\[/, "").replace(/\]$/, ""); // drop outer brackets
+    return (inner.match(/\[[^\]]*\]/g) ?? []).map((r) => parseList(r));
+  };
+  const defaultCoord = (area: ReturnType<typeof areaRect>): CoordSystem =>
+    makeCoordSystem([-6, 6], [-3.6, 3.6], area);
+  const csOrDefault = (on: string | undefined, area: ReturnType<typeof areaRect>): CoordSystem =>
+    coordFor(on, area) ?? defaultCoord(area);
+
+  interface DataObj {
+    o: SceneObj;
+    el: HTMLElement;
+    exprs: CompiledExpr[]; // reactive entries/cells
+    lastKey: string;
+    render: (scope: Record<string, number>) => void;
+  }
+  const dataObjects: DataObj[] = [];
+
+  if (overlay) {
+    for (const o of objects) {
+      const kind = o.spec.kind;
+      if (kind === "matrix") {
+        const rows = parseMatrix(o.spec.args.value ?? "");
+        const exprs = rows.flat().map((e) => compileExpr(e));
+        const el = document.createElement("div");
+        el.className = "chalk-scene__matrix";
+        overlay.appendChild(el);
+        const render = (scope: Record<string, number>): void => {
+          const body = rows
+            .map((r) =>
+              r
+                .map((e) => {
+                  const v = (() => {
+                    try {
+                      return compileExpr(e).eval(scope);
+                    } catch {
+                      return NaN;
+                    }
+                  })();
+                  return Number.isFinite(v) ? fmt(v) : e; // number, else raw symbol
+                })
+                .join(" & "),
+            )
+            .join(" \\\\ ");
+          renderKatex(el, `\\begin{bmatrix} ${body} \\end{bmatrix}`, true);
+        };
+        dataObjects.push({ o, el, exprs, lastKey: "", render });
+      } else if (kind === "table") {
+        const type = o.spec.args.type ?? "text";
+        const cells = (o.spec.args.rows ?? "")
+          .split("\n")
+          .map((line) => line.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()));
+        const exprs = type === "decimal" ? cells.flat().map((c) => compileExpr(c)) : [];
+        const el = document.createElement("div");
+        el.className = "chalk-scene__table";
+        overlay.appendChild(el);
+        const render = (scope: Record<string, number>): void => {
+          el.innerHTML = "";
+          const table = document.createElement("table");
+          cells.forEach((row, ri) => {
+            const tr = document.createElement("tr");
+            row.forEach((cell) => {
+              const td = document.createElement(ri === 0 ? "th" : "td");
+              if (type === "math") renderKatex(td, cell, false);
+              else if (type === "decimal" && ri > 0) {
+                let v = NaN;
+                try {
+                  v = compileExpr(cell).eval(scope);
+                } catch {
+                  /* non-numeric */
+                }
+                td.textContent = Number.isFinite(v) ? fmt(v) : cell;
+              } else td.textContent = cell;
+              tr.appendChild(td);
+            });
+            table.appendChild(tr);
+          });
+          el.appendChild(table);
+        };
+        dataObjects.push({ o, el, exprs, lastKey: "", render });
+      }
+    }
+  }
+
+  function positionDataObjects(scope: Record<string, number>, area: ReturnType<typeof areaRect>): void {
+    for (const d of dataObjects) {
+      const cs = csOrDefault(d.o.spec.on, area);
+      const [x, y] = resolved.get(d.o) ?? basePos(d.o, scope);
+      const [px, py] = cs.toPixel(x, y);
+      const op = Math.max(0, Math.min(1, d.o.appear));
+      const key = d.exprs.length === 0 ? "static" : d.exprs.map((e) => fmt(e.eval(scope))).join(",");
+      if (key !== d.lastKey) {
+        d.render(scope); // re-typeset only when the computed cells change
+        d.lastKey = key;
+      }
+      d.el.style.left = `${px}px`;
+      d.el.style.top = `${py}px`;
+      d.el.style.opacity = String(op);
+    }
+  }
+
+  // Barchart bar heights (eased toward their target values for a smooth change).
+  const barValueExprs = new Map<SceneObj, CompiledExpr[]>();
+  const barCur = new Map<SceneObj, number[]>();
+  for (const o of objects) {
+    if (o.spec.kind === "barchart" && o.spec.args.values) {
+      const exprs = parseList(o.spec.args.values).map((v) => compileExpr(v));
+      barValueExprs.set(o, exprs);
+      barCur.set(o, exprs.map(() => 0));
+    }
+  }
+
+  function drawBarchart(ctx: CanvasRenderingContext2D, cs: CoordSystem, o: SceneObj, scope: Record<string, number>, colors: Colors): void {
+    const exprs = barValueExprs.get(o);
+    const eased = barCur.get(o);
+    if (!exprs || !eased) return;
+    // Reduced motion: no tween — draw the target heights directly.
+    const cur = reduced ? exprs.map((e) => e.eval(scope)) : eased;
+    const labels = o.spec.args.labels ? parseList(o.spec.args.labels).map(unq) : [];
+    const [ox, oy] = (resolved.get(o) ?? basePos(o, scope));
+    const [bx, by] = cs.toPixel(ox, oy);
+    const [sx, sy] = cs.scale();
+    const wUnits = o.spec.args.width ? parseFloat(o.spec.args.width) : 4;
+    const hUnits = o.spec.args.height ? parseFloat(o.spec.args.height) : 3;
+    const n = cur.length || 1;
+    const slot = (wUnits * sx) / n;
+    const maxV = Math.max(1, ...cur, ...exprs.map((e) => Math.abs(e.eval(scope))));
+    ctx.save();
+    ctx.globalAlpha = o.appear;
+    ctx.font = "12px -apple-system, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    for (let i = 0; i < n; i++) {
+      const h = (cur[i]! / maxV) * hUnits * sy;
+      const x0 = bx + i * slot + slot * 0.15;
+      const w = slot * 0.7;
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(x0, by - h, w, h);
+      if (labels[i]) {
+        ctx.fillStyle = colors.text;
+        ctx.fillText(labels[i]!, x0 + w / 2, by + 14);
+      }
+    }
+    ctx.strokeStyle = colors.axis;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.lineTo(bx + wUnits * sx, by);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
   for (const o of objects) {
@@ -513,6 +681,8 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     }
   }
   for (const v of mediaDepVars()) if (graph.get(v) !== undefined) deps.add(v);
+  for (const d of dataObjects) for (const e of d.exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
+  for (const exprs of barValueExprs.values()) for (const e of exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
 
   // --- rAF scheduler shared by reactivity + animation ----------------------
   let rafId = 0;
@@ -533,6 +703,18 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       if (o.flash > 0) {
         o.flash = Math.max(0, o.flash - dt / 500);
         if (o.flash > 0) active = true;
+      }
+    }
+    // Ease barchart heights toward their (possibly reactive) target values.
+    const scope = graph.scope();
+    const k = 1 - Math.pow(0.001, dt / 1000);
+    for (const [o, exprs] of barValueExprs) {
+      const cur = barCur.get(o)!;
+      for (let i = 0; i < cur.length; i++) {
+        const target = exprs[i]!.eval(scope);
+        cur[i] = cur[i]! + (target - cur[i]!) * k;
+        if (Math.abs(target - cur[i]!) > 0.005) active = true;
+        else cur[i] = target;
       }
     }
     return active;
@@ -608,11 +790,15 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       if (cs) drawAxes(ctx, cs, o, colors, labels);
     }
 
-    // Then objects placed on a coordinate system, in declaration order.
+    // Then objects placed on a coordinate system, in declaration order. Curve-
+    // like objects require axes; free objects (barchart/graph/vectorfield) fall
+    // back to a default frame so they can be placed with `at` alone.
+    const FREE = new Set(["barchart", "graph", "digraph", "vectorfield"]);
     for (const o of objects) {
       if (o.spec.kind === "axes" || o.spec.kind === "numberline") continue;
       if (o.appear <= 0.001) continue;
-      const cs = coordFor(o.spec.on, area);
+      const realCs = coordFor(o.spec.on, area);
+      const cs = realCs ?? (FREE.has(o.spec.kind) ? defaultCoord(area) : null);
       if (!cs) continue;
       switch (o.spec.kind) {
         case "plot":
@@ -626,6 +812,9 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
           break;
         case "point":
           drawPoint(ctx, cs, o, scope, colors);
+          break;
+        case "barchart":
+          drawBarchart(ctx, cs, o, scope, colors);
           break;
         case "label": {
           // Interactive labels (with a handle node) render via the overlay so
@@ -645,6 +834,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     lastArea = area;
     positionInteractives(scope, area);
     positionMedia(scope, area);
+    positionDataObjects(scope, area);
   }
 
   // --- Advance flow --------------------------------------------------------

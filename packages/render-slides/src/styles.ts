@@ -249,6 +249,21 @@ body {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--muted) 45%, transparent);
 }
 
+/* Data objects: matrix & table (positioned overlay; crisp text/KaTeX). */
+.chalk-scene__matrix, .chalk-scene__table {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  color: var(--fg);
+}
+.chalk-scene__matrix { font-size: 1.15em; }
+.chalk-scene__table table { border-collapse: collapse; font-size: 0.9em; background: var(--surface); }
+.chalk-scene__table th, .chalk-scene__table td {
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  text-align: center;
+}
+.chalk-scene__table th { font-weight: 700; background: var(--tag-bg); color: var(--tag-fg); }
+
 /* Reactive math: a subtle accent tint marks formulae that move with a slider. */
 .chalk-reactive { border-radius: 4px; }
 span.chalk-reactive { background: color-mix(in srgb, var(--accent) 9%, transparent); padding: 0 3px; }

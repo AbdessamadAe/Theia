@@ -163,9 +163,10 @@ function parseSceneObjectArgs(
   const shift = grab(/\bshift\s*:\s*\(([^)]*)\)/);
   if (shift !== undefined) args.shift = shift.trim();
 
-  // Matrix literal: `= [[a, b], [c, d]]` (entries may reference sliders).
-  const matrix = grab(/=\s*(\[\[[\s\S]*\]\])\s*$/);
-  if (matrix !== undefined) args.value = matrix;
+  // Matrix literal: `= [[a, b], [c, d]]` (entries may reference sliders). Allows
+  // trailing args like `at (x, y)`; non-greedy to the closing `]]`.
+  const matrix = grab(/=\s*(\[\[.*?\]\])/);
+  if (matrix !== undefined) args.value = matrix.replace(/\s+/g, " ");
 
   // `label "…"` and a bare trailing `"…"` both become text-ish args.
   const labelText = grab(/\blabel\s+"([^"]*)"/);
@@ -740,15 +741,29 @@ export function parse(source: string): DocumentNode {
         const kind = obj[1]!;
         const objName = obj[2]!;
         const { on, args } = parseSceneObjectArgs(kind, obj[3]!);
+        let lastLine = s;
+        // A `@table … :` may be followed by markdown-style `| … |` rows; gather
+        // them into the object's body (the only multi-line scene object).
+        if (kind === "table") {
+          const rows: string[] = [];
+          let j = s + 1;
+          while (j < bodyEnd && lines[j]!.text.trim().startsWith("|")) {
+            rows.push(lines[j]!.text.trim());
+            j++;
+          }
+          if (rows.length) args.rows = rows.join("\n");
+          lastLine = j - 1;
+        }
         const node: SceneObject = {
           type: "sceneObject",
           kind,
           name: objName,
           args,
-          loc: src.loc(lines[s]!.start, lines[s]!.end),
+          loc: src.loc(lines[s]!.start, lines[lastLine]!.end),
         };
         if (on !== undefined) node.on = on;
         objects.push(node);
+        s = lastLine;
         continue;
       }
       // Unrecognized lines are ignored rather than mangled.
