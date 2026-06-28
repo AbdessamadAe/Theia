@@ -220,7 +220,9 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
   function resolvePositions(scope: Record<string, number>): void {
     resolved.clear();
     for (const o of resolveSequence) {
-      resolved.set(o, o.movePos ?? basePos(o, scope));
+      let p = o.movePos ?? basePos(o, scope);
+      if (o.angle) p = orbit(p, activePivot.get(o) ?? { kind: "self" }, o.angle, scope);
+      resolved.set(o, p);
     }
   }
 
@@ -457,6 +459,8 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       m.el.style.top = `${py}px`;
       m.el.style.width = `${Math.max(0, wUnits * sx)}px`;
       m.el.style.opacity = String(op);
+      // Orientation from a rotate verb (negate: data y is up, CSS y is down).
+      m.el.style.transform = `translate(-50%, -50%) rotate(${-m.o.angle}rad)`;
       // An invisible (not-yet-created) element must not eat clicks/keys.
       m.el.style.pointerEvents = op > 0.05 ? "auto" : "none";
     }
@@ -815,6 +819,65 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     ctx.restore();
   }
 
+  // --- move / rotate animation verbs (Part E) ------------------------------
+  type MoveSpec =
+    | { kind: "coord"; x: CompiledExpr; y: CompiledExpr }
+    | { kind: "nextTo"; to: string; dir: [number, number]; buff: number };
+  type Pivot = { kind: "self" } | { kind: "coord"; x: number; y: number } | { kind: "obj"; name: string };
+  interface MoveAnim extends AnimSpec { spec: MoveSpec | null }
+  interface RotateAnim extends AnimSpec { rad: number; pivot: Pivot }
+
+  const parseMove = (args: string[]): MoveSpec | null => {
+    const s = args.join(" ");
+    const nt = /\bnext_to\s+(\w+)(?:\s+([\w-]+))?/.exec(s);
+    if (nt) return { kind: "nextTo", to: nt[1]!, dir: directionVector(nt[2]), buff: 0.6 };
+    const co = /\bto\s*\(([^)]*)\)/.exec(s);
+    if (co) {
+      const [xe, ye] = splitTopComma(co[1]!);
+      try {
+        return { kind: "coord", x: compileExpr(xe ?? "0"), y: compileExpr(ye ?? "0") };
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+  const parseRotate = (args: string[]): { rad: number; pivot: Pivot } => {
+    const s = args.join(" ");
+    const by = /\bby\s+(-?[\d.]+)\s*(deg|rad)?/.exec(s);
+    const deg = by ? parseFloat(by[1]!) * (by[2] === "rad" ? 180 / Math.PI : 1) : 0;
+    const pc = /\babout\s+\(([^)]*)\)/.exec(s);
+    let pivot: Pivot = { kind: "self" };
+    if (pc) {
+      const [px, py] = splitTopComma(pc[1]!).map((n) => parseFloat(n));
+      pivot = { kind: "coord", x: px ?? 0, y: py ?? 0 };
+    } else {
+      const po = /\babout\s+(\w+)/.exec(s);
+      if (po && po[1] !== "center" && po[1] !== "self") pivot = { kind: "obj", name: po[1]! };
+    }
+    return { rad: (deg * Math.PI) / 180, pivot };
+  };
+  const moveAnims: MoveAnim[] = anims.filter((a) => a.verb === "move").map((a) => ({ ...a, spec: parseMove(a.args) }));
+  const rotateAnims: RotateAnim[] = anims.filter((a) => a.verb === "rotate").map((a) => ({ ...a, ...parseRotate(a.args) }));
+  const activeMove = new Map<SceneObj, MoveSpec | null>();
+  const activePivot = new Map<SceneObj, Pivot>();
+
+  const resolveMoveTarget = (spec: MoveSpec, scope: Record<string, number>): [number, number] => {
+    if (spec.kind === "coord") return [spec.x.eval(scope), spec.y.eval(scope)];
+    const t = byName.get(spec.to);
+    const base = (t && resolved.get(t)) ?? [0, 0];
+    return [base[0] + spec.dir[0] * spec.buff, base[1] + spec.dir[1] * spec.buff];
+  };
+  /** Rotate a point about a pivot (data space). */
+  const orbit = (p: [number, number], pivot: Pivot, ang: number, scope: Record<string, number>): [number, number] => {
+    if (ang === 0 || pivot.kind === "self") return p;
+    const c: [number, number] =
+      pivot.kind === "coord" ? [pivot.x, pivot.y] : (byName.get(pivot.name) && resolved.get(byName.get(pivot.name)!)) ?? [0, 0];
+    const dx = p[0] - c[0];
+    const dy = p[1] - c[1];
+    return [c[0] + dx * Math.cos(ang) - dy * Math.sin(ang), c[1] + dx * Math.sin(ang) + dy * Math.cos(ang)];
+  };
+
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
   for (const o of objects) {
@@ -823,6 +886,8 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
     }
   }
+  // Reactive move targets (coordinate exprs) are dependents too.
+  for (const a of moveAnims) if (a.spec?.kind === "coord") for (const e of [a.spec.x, a.spec.y]) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
   for (const v of mediaDepVars()) if (graph.get(v) !== undefined) deps.add(v);
   for (const d of dataObjects) for (const e of d.exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
   for (const exprs of barValueExprs.values()) for (const e of exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
@@ -859,6 +924,24 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
         cur[i] = cur[i]! + (target - cur[i]!) * k;
         if (Math.abs(target - cur[i]!) > 0.005) active = true;
         else cur[i] = target;
+      }
+    }
+    // Ease move (toward the live target) + rotate (toward the accumulated angle).
+    for (const o of objects) {
+      const spec = activeMove.get(o);
+      if (spec) {
+        const tgt = resolveMoveTarget(spec, scope);
+        if (!o.movePos) o.movePos = resolved.get(o) ?? basePos(o, scope);
+        o.movePos = [o.movePos[0] + (tgt[0] - o.movePos[0]) * k, o.movePos[1] + (tgt[1] - o.movePos[1]) * k];
+        if (Math.hypot(tgt[0] - o.movePos[0], tgt[1] - o.movePos[1]) > 0.003) active = true;
+        else o.movePos = tgt;
+      } else if (o.movePos) {
+        o.movePos = null; // move reversed away → back to base
+      }
+      if (o.angle !== o.angleTarget) {
+        o.angle += (o.angleTarget - o.angle) * k;
+        if (Math.abs(o.angleTarget - o.angle) > 0.002) active = true;
+        else o.angle = o.angleTarget;
       }
     }
     return active;
@@ -955,7 +1038,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
           drawTangent(ctx, cs, o, scope, colors, byName);
           break;
         case "point":
-          drawPoint(ctx, cs, o, scope, colors);
+          drawPoint(ctx, cs, resolved.get(o) ?? coordsOf(o, scope), o, colors);
           break;
         case "barchart":
           drawBarchart(ctx, cs, o, scope, colors);
@@ -997,11 +1080,24 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
 
     const tween = singleForward && !reduced;
 
+    const scope = graph.scope();
     // Object visibility from creation verbs. Jumps, reverses, and reduced
     // motion settle instantly; a forward single step tweens via the rAF loop.
     for (const o of objects) {
       o.appearTarget = o.creationIndex === null || next > o.creationIndex ? 1 : 0;
       if (!tween) o.appear = o.appearTarget;
+
+      // move: the latest revealed move verb's target (null → back to base).
+      const mv = moveAnims.filter((a) => a.target === o.spec.name && a.index < next).pop();
+      activeMove.set(o, mv?.spec ?? null);
+      // rotate: accumulate revealed angles; use the latest pivot.
+      const rots = rotateAnims.filter((a) => a.target === o.spec.name && a.index < next);
+      o.angleTarget = rots.reduce((s, a) => s + a.rad, 0);
+      if (rots.length) activePivot.set(o, rots[rots.length - 1]!.pivot);
+      if (!tween) {
+        o.movePos = mv?.spec ? resolveMoveTarget(mv.spec, scope) : null;
+        o.angle = o.angleTarget;
+      }
     }
 
     // A single forward step may also be an `indicate` pulse or a media verb.
@@ -1294,12 +1390,11 @@ function drawTangent(
 function drawPoint(
   ctx: CanvasRenderingContext2D,
   cs: CoordSystem,
+  pos: [number, number],
   o: SceneObj,
-  scope: Record<string, number>,
   colors: Colors,
 ): void {
-  if (!o.xExpr || !o.yExpr) return;
-  const [x, y] = o.override ?? [o.xExpr.eval(scope), o.yExpr.eval(scope)];
+  const [x, y] = pos; // already resolved (override / placement / move)
   if (!Number.isFinite(x) || !Number.isFinite(y)) return;
   const [px, py] = cs.toPixel(x, y);
   const r = (o.style === "grow" ? 5 * o.appear : 5) + o.flash * 4;
