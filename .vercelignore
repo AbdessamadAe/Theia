@@ -1,0 +1,13 @@
+# Vercel auto-excludes node_modules and .git. These are build artifacts or
+# things the web build never needs (examples/*.chalk ARE needed — the app's
+# prebuild reads them — so they are NOT ignored).
+examples/*.html
+examples/*.assets/
+packages/*/dist/
+apps/*/dist/
+.changeset/
+.github/
+**/*.test.ts
+test/
+packages/*/test/
+apps/*/test/
