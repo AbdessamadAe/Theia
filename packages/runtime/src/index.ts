@@ -1,5 +1,5 @@
 /**
- * @chalk/runtime — the client-side reactive runtime for Chalk decks.
+ * @chalk/runtime — the client-side reactive runtime for Theia decks.
  *
  * The browser bundle is built from `./browser` (esbuild → a single IIFE inlined
  * by render-slides). This index re-exports the *pure*, DOM-free pieces — the

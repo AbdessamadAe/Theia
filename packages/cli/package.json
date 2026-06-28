@@ -17,14 +17,14 @@
   },
   "license": "MIT",
   "author": "Abdessamad Ait Elmouden",
-  "homepage": "https://github.com/AbdessamadAe/Chalk#readme",
+  "homepage": "https://github.com/AbdessamadAe/Theia#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AbdessamadAe/Chalk.git",
+    "url": "git+https://github.com/AbdessamadAe/Theia.git",
     "directory": "packages/cli"
   },
   "bugs": {
-    "url": "https://github.com/AbdessamadAe/Chalk/issues"
+    "url": "https://github.com/AbdessamadAe/Theia/issues"
   },
   "keywords": [
     "chalk",

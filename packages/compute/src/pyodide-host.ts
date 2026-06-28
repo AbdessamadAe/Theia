@@ -2,7 +2,7 @@
  * Lazy, one-time Pyodide loader (browser only).
  *
  * Pyodide and its packages are fetched from the official CDN — this is the one
- * part of a Chalk deck that needs network access, and ONLY for decks that
+ * part of a Theia deck that needs network access, and ONLY for decks that
  * contain a `py` cell. The interpreter is created once and reused for every
  * cell and every slider-driven re-run; the heavy download/init never repeats.
  * (Browsers cache the CDN assets, so repeat visits are much faster.)

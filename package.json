@@ -2,7 +2,7 @@
   "name": "chalk-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Chalk — compile a math-teaching markup language into interactive slide decks.",
+  "description": "Theia — compile a math-teaching markup language into interactive slide decks.",
   "type": "module",
   "engines": {
     "node": ">=20"

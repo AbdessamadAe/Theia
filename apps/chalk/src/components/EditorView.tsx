@@ -361,7 +361,7 @@ export function EditorView({
             aria-label="Back to projects"
             className="focus-visible:ring-ring flex items-center gap-2 rounded-lg focus-visible:outline-none focus-visible:ring-2"
           >
-            <img src={logoUrl} alt="Chalk" width={28} height={28} className="ring-border size-7 rounded-lg shadow-1 ring-1" />
+            <img src={logoUrl} alt="Theia" width={28} height={28} className="ring-border size-7 rounded-lg shadow-1 ring-1" />
             <HomeIcon className="text-muted-foreground size-4" />
           </button>
         </Hint>
@@ -436,7 +436,7 @@ export function EditorView({
           onChange={setTheme}
           className="p-0.5"
           options={[
-            { value: "chalkboard", label: <BoardIcon className="size-4" />, ariaLabel: "Chalk theme", title: "Chalk" },
+            { value: "chalkboard", label: <BoardIcon className="size-4" />, ariaLabel: "Theia theme", title: "Theia" },
             { value: "dark", label: <MoonIcon className="size-4" />, ariaLabel: "Dark theme", title: "Dark" },
           ]}
         />

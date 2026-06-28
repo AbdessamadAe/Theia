@@ -1,12 +1,12 @@
 # chalkdeck
 
-Compile **Chalk** — a math-teaching markup language — into a single
+Compile **Theia** — a math-teaching markup language — into a single
 self-contained, interactive HTML slide deck. Drag a slider and the curve moves;
 math re-renders live; 2D/3D scenes, code cells, and equation morphing all run in
 the browser with no server.
 
 The published package is standalone: the KaTeX stylesheet (with embedded fonts),
-the KaTeX engine, and the Chalk reactive runtime are all baked in, so a built
+the KaTeX engine, and the Theia reactive runtime are all baked in, so a built
 deck is one offline-capable `.html` file and the CLI itself has **zero runtime
 dependencies**.
 

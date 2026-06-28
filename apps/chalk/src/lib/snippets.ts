@@ -1,5 +1,5 @@
 /**
- * Insert-palette snippets: ready-to-edit Chalk skeletons with CodeMirror
+ * Insert-palette snippets: ready-to-edit Theia skeletons with CodeMirror
  * tab-stops (`${1:field}`; reused `${1}` links). Each is a minimal VALID
  * construct. Container-requiring snippets carry both a `template` (standalone,
  * wrapped in its container) and an `inside` form (bare, used when the caret is

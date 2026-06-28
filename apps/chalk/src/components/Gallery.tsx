@@ -40,7 +40,7 @@ export function Gallery({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
                 <ProjectThumb source={ex.source} />
               </a>
               <h2 className="mt-3 text-sm font-semibold">{ex.label}</h2>
-              <p className="text-muted-foreground mt-1 flex-1 text-sm">{BLURB[ex.id] ?? "An example Chalk lecture."}</p>
+              <p className="text-muted-foreground mt-1 flex-1 text-sm">{BLURB[ex.id] ?? "An example Theia lecture."}</p>
               <Button
                 variant="secondary"
                 size="sm"

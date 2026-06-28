@@ -1,7 +1,7 @@
 /**
- * A small CodeMirror 6 StreamLanguage for Chalk — line-oriented highlighting of
+ * A small CodeMirror 6 StreamLanguage for Theia — line-oriented highlighting of
  * headings, ::: blocks, + directives, @ object/control directives, code fences,
- * and inline/display math. (Deliberately lightweight: Chalk is markdown-ish, so
+ * and inline/display math. (Deliberately lightweight: Theia is markdown-ish, so
  * a token-per-construct stream language is plenty.)
  */
 import { LanguageSupport, StreamLanguage } from "@codemirror/language";

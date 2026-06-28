@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ===========================================================================
-   Chalk design tokens — the single source of the design language.
+   Theia design tokens — the single source of the design language.
    Identity: "ink on paper" (light) and "blackboard" (dark). One signature
    accent — `live` (chalk cyan) — marks everything reactive: sliders, reactive
    math, focus rings, progress. Both themes are first-class.

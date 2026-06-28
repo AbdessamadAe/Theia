@@ -1,7 +1,7 @@
 import * as React from "react";
 
 /**
- * Chalk-style inline SVG garnish for the Chalkboard theme. All decorative,
+ * Theia-style inline SVG garnish for the Chalkboard theme. All decorative,
  * hand-drawn-feel line art (round caps/joins, slightly irregular paths) drawn
  * in `currentColor` so it takes the chalk-white / accent tones. These are
  * GARNISH — used on the switcher icon, the wordmark flourish, and empty states;

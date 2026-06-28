@@ -2,7 +2,7 @@
   "name": "@chalk/compute",
   "version": "0.1.0",
   "private": true,
-  "description": "Chalk's compute layer: runs JavaScript code cells inside the reactive runtime, in dependency order, with error isolation. (Python via Pyodide is a later phase.)",
+  "description": "Theia's compute layer: runs JavaScript code cells inside the reactive runtime, in dependency order, with error isolation. (Python via Pyodide is a later phase.)",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

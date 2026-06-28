@@ -2,7 +2,7 @@
   "name": "@chalk/ast",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared AST node types for Chalk — the contract between parser and renderers.",
+  "description": "Shared AST node types for Theia — the contract between parser and renderers.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

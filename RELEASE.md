@@ -1,4 +1,4 @@
-# Releasing Chalk
+# Releasing Theia
 
 Two artifacts ship from this one monorepo, on two independent paths:
 
@@ -84,7 +84,7 @@ caching).
 
 ### Connect the project (dashboard, one-time)
 
-1. vercel.com → **Add New… → Project** → import `AbdessamadAe/Chalk`.
+1. vercel.com → **Add New… → Project** → import `AbdessamadAe/Theia`.
 2. **Root Directory:** leave at the repo root (so the npm workspaces install).
 3. Framework preset: **Other** (settings come from `vercel.json`):
    - Install: `npm install`

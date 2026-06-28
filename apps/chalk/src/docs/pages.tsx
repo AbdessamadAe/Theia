@@ -23,10 +23,10 @@ const Link = ({ to, children }: { to: string; children: React.ReactNode }): Reac
 // ───────────────────────────── Getting started ────────────────────────────
 const Intro: React.FC = () => (
   <>
-    <h1 className="text-3xl font-semibold tracking-tight">What is Chalk?</h1>
-    <Lead>Chalk is a small language and engine for live, interactive mathematics slides. You write a plain-text <Code>.chalk</Code> file; Chalk compiles it to a reactive deck that runs entirely in the browser.</Lead>
+    <h1 className="text-3xl font-semibold tracking-tight">What is Theia?</h1>
+    <Lead>Theia is a small language and engine for live, interactive mathematics slides. You write a plain-text <Code>.chalk</Code> file; Theia compiles it to a reactive deck that runs entirely in the browser.</Lead>
     <H2>The problem it solves</H2>
-    <P>Presentation tools mangle equations or reduce them to images. Beamer typesets beautifully but is static and slow to iterate. Neither lets a class <em>see</em> what happens as a parameter changes — which is often the whole point. Chalk is math-native like Beamer, live like a notebook, and authored in plain text you own.</P>
+    <P>Presentation tools mangle equations or reduce them to images. Beamer typesets beautifully but is static and slow to iterate. Neither lets a class <em>see</em> what happens as a parameter changes — which is often the whole point. Theia is math-native like Beamer, live like a notebook, and authored in plain text you own.</P>
     <H2>Who it's for</H2>
     <P>Teachers and students who present or study mathematics and want the ideas to move — drag a slider and the curve responds, morph one equation into the next, explore a surface. No server, no account, no install required to start.</P>
     <H2>When to use it — and when not</H2>
@@ -75,7 +75,7 @@ const Install: React.FC = () => (
     <P>The fastest path: open the <Link to={DASHBOARD_PATH}>playground</Link> in any modern browser. It runs the full engine client-side — edit, preview, present, and share with no install and no account.</P>
 
     <H2>The engine (command line)</H2>
-    <P>Chalk also ships a CLI that compiles a <Code>.chalk</Code> file to a self-contained HTML deck. It needs <strong>Node.js 20+</strong>.</P>
+    <P>Theia also ships a CLI that compiles a <Code>.chalk</Code> file to a self-contained HTML deck. It needs <strong>Node.js 20+</strong>.</P>
     <Callout tone="planned">A published npm package isn't available yet — the command below is how it will install (the name <Code>chalk</Code> is taken on npm, so it ships as <Code>chalkdeck</Code> and provides both <Code>chalk</Code> and <Code>chalkdeck</Code> commands). For now, build from the repository (see <Link to={docsPath("contributing")}>Contributing</Link>). This note will go once it's on npm.</Callout>
     <DocCode lang="bash" code={`# planned: install the CLI globally (installs the \`chalk\` command)\nnpm install -g chalkdeck\n\n# compile a lecture to a self-contained lecture.html\nchalk build lecture.chalk\n\n# live-reload dev server while you write\nchalk watch lecture.chalk\n\n# build, then open the deck\nchalk present lecture.chalk`} />
     <P>See the <Link to={docsPath("cli")}>CLI reference</Link> for every command and flag.</P>
@@ -370,7 +370,7 @@ const Faq: React.FC = () => (
 const Contributing: React.FC = () => (
   <>
     <h1 className="text-3xl font-semibold tracking-tight">Contributing</h1>
-    <Lead>Chalk is free and open source. Issues, ideas, and pull requests are welcome.</Lead>
+    <Lead>Theia is free and open source. Issues, ideas, and pull requests are welcome.</Lead>
 
     <H2>Repository layout</H2>
     <P>An npm-workspaces monorepo:</P>
@@ -397,13 +397,13 @@ export const DOC_GROUPS: DocGroup[] = [
   {
     label: "Getting started",
     pages: [
-      { id: "intro", title: "What is Chalk?", keywords: "introduction overview problem who", Body: Intro },
+      { id: "intro", title: "What is Theia?", keywords: "introduction overview problem who", Body: Intro },
       { id: "quickstart", title: "Your first lecture", keywords: "quickstart tutorial start begin", Body: Quickstart },
       { id: "install", title: "Installation", keywords: "install cli npm node setup", Body: Install },
     ],
   },
   {
-    label: "The Chalk language",
+    label: "The Theia language",
     pages: [
       { id: "structure", title: "Structure & math", keywords: "slide title heading prose markdown math katex latex", Body: Structure },
       { id: "theorems", title: "Theorems & derivations", keywords: "theorem definition lemma proof step derive morph emphasize", Body: Theorems },

@@ -63,7 +63,7 @@ export function Landing({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
               {TAGLINE}
             </h1>
             <p className="text-muted-foreground mt-4 max-w-xl text-base sm:text-lg">
-              Chalk turns plain text into math-native slides that are actually interactive — drag a
+              Theia turns plain text into math-native slides that are actually interactive — drag a
               slider and the curve moves, morph an equation, present from the front of the room or
               share a link. No mangled equations, no static PDFs.
             </p>
@@ -92,7 +92,7 @@ export function Landing({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
               <p>Neither lets a student <em>see</em> what happens as a parameter changes. The most important idea — that math moves — is exactly what gets lost.</p>
             </div>
             <p className="mt-6 max-w-3xl text-sm sm:text-base">
-              Chalk fills that gap: math-native like Beamer, live like a notebook, authored in plain
+              Theia fills that gap: math-native like Beamer, live like a notebook, authored in plain
               text you own — and it runs entirely in the browser.
             </p>
           </Section>
@@ -179,7 +179,7 @@ export function Landing({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme
         <Section className="py-14 text-center">
           <h2 className="text-xl font-semibold sm:text-2xl">Free, and open source</h2>
           <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-sm sm:text-base">
-            Chalk exists because the tools teachers reach for weren’t built for live mathematics.
+            Theia exists because the tools teachers reach for weren’t built for live mathematics.
             It’s free to use and open to contributions — issues, ideas, and pull requests welcome.
           </p>
           <a href={GITHUB_URL} target="_blank" rel="noreferrer" className="mt-5 inline-block">

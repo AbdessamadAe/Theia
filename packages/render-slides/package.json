@@ -2,7 +2,7 @@
   "name": "@chalk/render-slides",
   "version": "0.1.0",
   "private": true,
-  "description": "Render a Chalk AST into a self-contained interactive slide-deck bundle.",
+  "description": "Render a Theia AST into a self-contained interactive slide-deck bundle.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

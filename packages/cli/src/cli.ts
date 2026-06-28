@@ -8,7 +8,7 @@ import { startDevServer } from "./serve.js";
 
 const VERSION = "0.1.0";
 
-const USAGE = `chalk ${VERSION} — compile a Chalk lecture into an interactive slide deck
+const USAGE = `chalk ${VERSION} — compile a Theia lecture into an interactive slide deck
 
 Usage:
   chalk build   <file.chalk> [--out <file.html>]   compile to a slide bundle

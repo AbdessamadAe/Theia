@@ -1,20 +1,20 @@
-# Chalk — Architecture
+# Theia — Architecture
 
 *An installable engine that compiles a math-teaching markup language into live, interactive slide decks.*
 
 ---
 
-## 1. What Chalk is
+## 1. What Theia is
 
-Chalk is a tool for presenting mathematics. A professor writes a single source file in the Chalk language (`.chalk`), runs the Chalk engine, and gets an **interactive slide deck** to present in class — live and reactive, not a static PDF. Because the deck compiles to a self-contained web bundle, it is also shareable as a URL: students can open the same interactive slides on their own devices, drag the same sliders, and step through the same derivations.
+Theia is a tool for presenting mathematics. A professor writes a single source file in the Theia language (`.chalk`), runs the Theia engine, and gets an **interactive slide deck** to present in class — live and reactive, not a static PDF. Because the deck compiles to a self-contained web bundle, it is also shareable as a URL: students can open the same interactive slides on their own devices, drag the same sliders, and step through the same derivations.
 
-Chalk sits in the lineage of LaTeX and Manim. LaTeX compiles markup into documents; Manim compiles Python into mathematical animation videos. Chalk compiles a math-teaching language into interactive slides. Like both, it is installed and run from the command line. Unlike both, its output is a *live, reactive* document that runs in a browser — a slider the professor drags during the lecture re-computes and re-renders on the projector in real time.
+Theia sits in the lineage of LaTeX and Manim. LaTeX compiles markup into documents; Manim compiles Python into mathematical animation videos. Theia compiles a math-teaching language into interactive slides. Like both, it is installed and run from the command line. Unlike both, its output is a *live, reactive* document that runs in a browser — a slider the professor drags during the lecture re-computes and re-renders on the projector in real time.
 
-### What Chalk is not
+### What Theia is not
 
 - It is not a WYSIWYG slide editor. Authoring is text-based, like LaTeX or markdown.
 - It is not a general typesetting system. It targets math-teaching slides specifically, not papers or books.
-- It is not a geometry engine. Geometric figures are delegated to GeoGebra; Chalk orchestrates rather than reinvents.
+- It is not a geometry engine. Geometric figures are delegated to GeoGebra; Theia orchestrates rather than reinvents.
 - It is not a commercial product. The goal is to be genuinely useful to educators and free to use.
 
 ### Scope
@@ -35,7 +35,7 @@ These resolve design decisions when the right answer is unclear.
 2. **Markup first, code when needed.** The bulk of a lecture — prose, math, theorems, proofs — is written in readable markup. Computation drops into embedded code cells. That escape hatch into a real programming language is what gives the engine open-ended power.
 3. **The AST is the single source of truth.** The renderer reads the parsed tree. The parser is pure and decoupled, and is designed to carry more than the slide renderer currently uses, so future renderers need no parser change.
 4. **Interactivity is live, and needs no server.** A slider is a reactive variable in the runtime, not a value baked in at compile time. Reactivity runs client-side.
-5. **Delegate what already works.** KaTeX renders math. GeoGebra renders geometry. Chalk builds only the connective tissue and the genuinely missing primitives.
+5. **Delegate what already works.** KaTeX renders math. GeoGebra renders geometry. Theia builds only the connective tissue and the genuinely missing primitives.
 6. **Slides are shareable, so students benefit too.** The compiled deck is a self-contained web bundle. A shared interactive deck — sliders, stepped proofs, live plots — is a far better study artifact than a static PDF of slides.
 7. **Step-reveal is a pacing mechanic.** Revealing a derivation one line at a time keeps a class focused on the current step. It is built into the slide model, not a layout afterthought.
 
@@ -78,9 +78,9 @@ The parser and the AST types are the load-bearing core. The renderer and the run
 
 ---
 
-## 4. The Chalk language
+## 4. The Theia language
 
-Chalk is a markdown-family markup language: familiar to anyone who knows markdown or LaTeX, with a small set of math-teaching constructs and an escape hatch into code.
+Theia is a markdown-family markup language: familiar to anyone who knows markdown or LaTeX, with a small set of math-teaching constructs and an escape hatch into code.
 
 ```chalk
 # Limits and Continuity              ← section / title slide
@@ -165,13 +165,13 @@ Pyodide loads lazily — only when a `.chalk` file actually contains a Python ce
 
 ## 7. The reactive runtime
 
-The runtime ships inside the compiled slide bundle and is what makes a Chalk deck feel alive. With slides as the only output, it is the heart of the product.
+The runtime ships inside the compiled slide bundle and is what makes a Theia deck feel alive. With slides as the only output, it is the heart of the product.
 
 - A `@slider` is a reactive variable. Dragging it re-runs the cells that read it and re-renders the equations and plots that depend on it — in real time, during the lecture.
 - It owns slide navigation, step-reveal on advance, plot interactivity, and GeoGebra embedding.
 - It borrows the proven dependency-graph model from Observable rather than inventing reactivity from scratch.
 
-Where Manim pre-renders animation to a fixed video, Chalk emits a live deck the presenter can drive.
+Where Manim pre-renders animation to a fixed video, Theia emits a live deck the presenter can drive.
 
 ---
 
@@ -229,7 +229,7 @@ Client-side `numpy` / `sympy` / `matplotlib`. The headline capability: server-fr
 Put `chalk watch` in front of one real professor. Watch silently. Confirm or revise the syntax before it hardens.
 
 ### Phase 7 — Sharing + hosted playground
-Shareable hosting of the slide bundle, and a hosted browser playground so a professor can try Chalk before installing the engine.
+Shareable hosting of the slide bundle, and a hosted browser playground so a professor can try Theia before installing the engine.
 
 ### Phase 8 — Adoption-readiness
 LaTeX/Beamer importer, an example gallery across topics (calculus, linear algebra, discrete math), documentation, and a clear writeup aimed at r/math, r/LaTeX, Hacker News, and Mathstodon.
@@ -240,24 +240,24 @@ LaTeX/Beamer importer, an example gallery across topics (calculus, linear algebr
 
 | Risk | Severity | Mitigation |
 |---|---|---|
-| A new language is friction over known LaTeX/markdown | High | Make Chalk a near-superset of markdown plus LaTeX math, so it is familiar on first sight. Validate with a real user in Phase 6 before the syntax hardens. |
+| A new language is friction over known LaTeX/markdown | High | Make Theia a near-superset of markdown plus LaTeX math, so it is familiar on first sight. Validate with a real user in Phase 6 before the syntax hardens. |
 | The install step deters the least-technical professors | Medium | Accepted trade-off; the target audience installs tools willingly. A hosted browser playground provides zero-install first contact. |
 | Pyodide bundle size / load time | Medium | Load Pyodide lazily, only when a Python cell exists; cache aggressively; JS-only decks stay light. |
 | Two compute languages double the surface area | Medium | Ship JavaScript first and fully; treat Python as additive, not a parallel obligation. |
 | Reactive runtime complexity | Medium | Adopt Observable's dependency-graph model rather than inventing one. |
 | Slides-only means students get a sparse deck rather than full notes | Medium | A shared *interactive* deck (live sliders, stepped proofs) is already more useful than a static PDF. Notes remain a clean future renderer because the AST carries full content. |
-| Discovery: students only see Chalk if the professor shares it | Medium | The professor is the channel by design; the tool must be easy and useful enough that sharing is the default. |
+| Discovery: students only see Theia if the professor shares it | Medium | The professor is the channel by design; the tool must be easy and useful enough that sharing is the default. |
 
 ---
 
 ## 12. Success criteria
 
-In order of increasing ambition. None is a revenue or user-count target — the measure is whether Chalk genuinely helps someone teach or learn math better.
+In order of increasing ambition. None is a revenue or user-count target — the measure is whether Theia genuinely helps someone teach or learn math better.
 
 1. One `.chalk` file compiles to an interactive slide deck with live math, a working reactive slider, a stepped proof, and a geometry embed.
-2. A real professor writes a real lecture in Chalk and presents from it without help.
+2. A real professor writes a real lecture in Theia and presents from it without help.
 3. A professor shares the deck with a class and students open it.
-4. Someone you have never met writes a lecture in Chalk and says it was better than what they used before.
+4. Someone you have never met writes a lecture in Theia and says it was better than what they used before.
 5. Contributions arrive — a theme, a theorem style, an importer — from people who found it useful.
 
 ---

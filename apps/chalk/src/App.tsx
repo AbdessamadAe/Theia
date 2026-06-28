@@ -1,4 +1,7 @@
 import * as React from "react";
+// TODO(theia-rebrand): assets/logo.png is the legacy mark — a stroke that reads
+// as a "C" (for Chalk). It no longer matches the name "Theia"; regenerate the
+// icon (the text wordmark already says "Theia"). Tracked as a design follow-up.
 import logoUrl from "../assets/logo.png";
 import { Dashboard } from "@/components/Dashboard";
 import { Docs } from "@/components/Docs";
@@ -30,14 +33,14 @@ export function App(): React.ReactElement {
   // Per-route document title (basic SEO / tab clarity).
   React.useEffect(() => {
     const titles: Record<string, string> = {
-      landing: "Chalk — Live, interactive math slides from plain text",
-      gallery: "Gallery — Chalk",
-      docs: "Docs — Chalk",
-      dashboard: "Your projects — Chalk",
-      project: "Editor — Chalk",
-      shared: "Shared deck — Chalk",
+      landing: "Theia — Live, interactive math slides from plain text",
+      gallery: "Gallery — Theia",
+      docs: "Docs — Theia",
+      dashboard: "Your projects — Theia",
+      project: "Editor — Theia",
+      shared: "Shared deck — Theia",
     };
-    document.title = titles[route.kind] ?? "Chalk";
+    document.title = titles[route.kind] ?? "Theia";
   }, [route.kind]);
 
   // Load the project named by /projects/:id.

@@ -20,7 +20,7 @@ export interface DeckAssets {
 }
 
 export interface RenderOptions {
-  /** Document <title>; defaults to the lecture title or "Chalk deck". */
+  /** Document <title>; defaults to the lecture title or "Theia deck". */
   title?: string;
   assets: DeckAssets;
   /**
@@ -34,7 +34,7 @@ export interface RenderOptions {
 
 /** Render a parsed Document into a self-contained HTML deck string. */
 export function renderDeckHTML(doc: DocumentNode, options: RenderOptions): string {
-  const title = options.title ?? doc.title ?? "Chalk deck";
+  const title = options.title ?? doc.title ?? "Theia deck";
   const { katexCss, katexJs, runtimeJs } = options.assets;
   const resolveMedia = options.resolveMedia ?? ((ref: string) => ref);
 
@@ -47,7 +47,7 @@ export function renderDeckHTML(doc: DocumentNode, options: RenderOptions): strin
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="generator" content="Chalk" />
+<meta name="generator" content="Theia" />
 <title>${escapeHtml(title)}</title>
 <style>${katexCss}</style>
 <style>${DECK_CSS}</style>

@@ -15,7 +15,7 @@ interface EditorProps {
   onReady?: (view: EditorView) => void;
 }
 
-/** A CodeMirror 6 editor with Chalk highlighting, wrapped for React. External
+/** A CodeMirror 6 editor with Theia highlighting, wrapped for React. External
  * `value` changes (e.g. loading an example) are synced in without clobbering
  * live typing; the view is exposed via `onReady` for programmatic edits. */
 export function Editor({ value, onChange, extensions, onReady }: EditorProps): React.ReactElement {

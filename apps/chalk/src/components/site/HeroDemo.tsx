@@ -55,7 +55,7 @@ export function HeroDemo(): React.ReactElement {
       )}
       <iframe
         ref={iframeRef}
-        title="Live Chalk demo: a slider driving a parabola"
+        title="Live Theia demo: a slider driving a parabola"
         className={`h-full w-full border-0 transition-opacity duration-500 ${html ? "opacity-100" : "opacity-0"}`}
         loading="lazy"
       />

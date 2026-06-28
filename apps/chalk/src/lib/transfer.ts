@@ -26,7 +26,7 @@ export function parseBundle(text: string): ProjectBundle {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("Not a valid Chalk project file (invalid JSON).");
+    throw new Error("Not a valid Theia project file (invalid JSON).");
   }
   const b = data as Partial<ProjectBundle>;
   if (
@@ -36,7 +36,7 @@ export function parseBundle(text: string): ProjectBundle {
     !Array.isArray(b.files) ||
     !b.files.every((f) => f && typeof f.name === "string" && typeof f.source === "string")
   ) {
-    throw new Error("Not a valid Chalk project bundle.");
+    throw new Error("Not a valid Theia project bundle.");
   }
   return { version: 1, name: b.name, files: b.files.map((f) => ({ name: f.name, source: f.source })) };
 }
@@ -72,7 +72,7 @@ export async function saveToDisk(suggestedName: string, text: string, mime: stri
     try {
       const handle = await w.showSaveFilePicker({
         suggestedName,
-        types: [{ description: "Chalk", accept: { [mime]: [suggestedName.replace(/^.*(\.[^.]+)$/, "$1")] } }],
+        types: [{ description: "Theia", accept: { [mime]: [suggestedName.replace(/^.*(\.[^.]+)$/, "$1")] } }],
       });
       const writable = await handle.createWritable();
       await writable.write(text);

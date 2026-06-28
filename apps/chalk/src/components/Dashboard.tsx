@@ -183,9 +183,9 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
       {/* Header */}
       <header className="bg-card/60 sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 backdrop-blur sm:px-6">
         <div className="flex items-center gap-2.5">
-          <img src={logoUrl} alt="Chalk" width={30} height={30} className="ring-border size-8 rounded-lg shadow-1 ring-1" />
+          <img src={logoUrl} alt="Theia" width={30} height={30} className="ring-border size-8 rounded-lg shadow-1 ring-1" />
           <span className="chalk-wordmark relative font-serif text-2xl font-semibold tracking-tight">
-            Chalk
+            Theia
             <WordmarkFlourish className="chalk-flourish text-live absolute -bottom-2 left-0 hidden h-2 w-full" />
           </span>
         </div>
@@ -205,7 +205,7 @@ export function Dashboard({ theme, setTheme, onOpen }: DashboardProps): React.Re
           onChange={setTheme}
           className="p-0.5"
           options={[
-            { value: "chalkboard", label: <ChalkBoardIcon className="size-4" />, ariaLabel: "Chalk theme", title: "Chalk" },
+            { value: "chalkboard", label: <ChalkBoardIcon className="size-4" />, ariaLabel: "Theia theme", title: "Theia" },
             { value: "dark", label: <MoonIcon className="size-4" />, ariaLabel: "Dark theme", title: "Dark" },
           ]}
         />

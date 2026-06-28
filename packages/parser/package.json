@@ -2,7 +2,7 @@
   "name": "@chalk/parser",
   "version": "0.1.0",
   "private": true,
-  "description": "Pure .chalk string → AST parser for Chalk. No I/O, no DOM.",
+  "description": "Pure .chalk string → AST parser for Theia. No I/O, no DOM.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

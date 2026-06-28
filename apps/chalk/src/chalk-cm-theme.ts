@@ -1,5 +1,5 @@
 /**
- * CodeMirror editor + syntax theme, derived entirely from the Chalk design
+ * CodeMirror editor + syntax theme, derived entirely from the Theia design
  * tokens. Because the editor lives in the playground DOM (not the deck iframe),
  * `hsl(var(--token))` resolves against :root / .dark and flips with the theme
  * automatically — one theme object serves both light and dark.

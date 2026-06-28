@@ -32,7 +32,7 @@ function ThemeToggle({ theme, setTheme }: { theme: Theme; setTheme: (t: Theme) =
       onChange={setTheme}
       className="p-0.5"
       options={[
-        { value: "chalkboard", label: <BoardIcon className="size-4" />, ariaLabel: "Chalk theme", title: "Chalk" },
+        { value: "chalkboard", label: <BoardIcon className="size-4" />, ariaLabel: "Theia theme", title: "Theia" },
         { value: "dark", label: <MoonIcon className="size-4" />, ariaLabel: "Dark theme", title: "Dark" },
       ]}
     />
@@ -51,11 +51,11 @@ export function SiteHeader({ theme, setTheme }: { theme: Theme; setTheme: (t: Th
             navigate(LANDING_PATH);
           }}
           className="flex items-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
-          aria-label="Chalk home"
+          aria-label="Theia home"
         >
           <img src={logoUrl} alt="" width={30} height={30} className="ring-border size-7 rounded-lg shadow-1 ring-1" />
           <span className="chalk-wordmark relative font-serif text-xl font-semibold tracking-tight">
-            Chalk
+            Theia
             <WordmarkFlourish className="chalk-flourish text-live absolute -bottom-1.5 left-0 hidden h-2 w-full" />
           </span>
         </a>
@@ -88,7 +88,7 @@ export function SiteFooter(): React.ReactElement {
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <img src={logoUrl} alt="" width={24} height={24} className="size-6 rounded-md" />
-            <span className="text-foreground font-serif text-lg font-semibold">Chalk</span>
+            <span className="text-foreground font-serif text-lg font-semibold">Theia</span>
           </div>
           <p className="max-w-xs text-sm">
             Built so educators can present mathematics that actually moves. Free and open source.

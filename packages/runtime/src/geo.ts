@@ -1,7 +1,7 @@
 /**
  * GeoGebra embedding via the official deployggb API.
  *
- * NOTE: this is the one part of a Chalk deck that is *not* offline — it loads
+ * NOTE: this is the one part of a Theia deck that is *not* offline — it loads
  * `deployggb.js` from geogebra.org, and only when a `:::geo` block exists on a
  * slide. Everything else in the bundle works with no network.
  */
