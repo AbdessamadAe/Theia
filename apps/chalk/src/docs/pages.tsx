@@ -168,11 +168,49 @@ const Scenes: React.FC = () => (
 
     <H2>Positioning</H2>
     <P>Objects are placed with literal or expression coordinates in <Code>at (x, y)</Code>, on the system named by <Code>on</Code>. In the playground, an object whose coordinates are plain numbers can be <strong>dragged</strong> to edit them; objects whose position is computed from a slider move when you drag the slider instead.</P>
-    <Callout tone="planned">Relative placement helpers (<Code>next_to</Code>, <Code>shift</Code>), tables/matrices, bar charts, graphs/networks, and 2-D vector fields are <strong>not implemented</strong>. Don't use them yet.</Callout>
+
+    <H3>Relative placement</H3>
+    <P>Any object can be placed <em>relative to another</em> instead of (or as well as) <Code>at (x, y)</Code>:</P>
+    <Ul>
+      <li><Code>next_to &lt;target&gt; dir:&lt;up|down|left|right|diagonals&gt; buff:&lt;gap&gt;</Code> — anchor to another named object, offset in a direction.</li>
+      <li><Code>shift:(dx, dy)</Code> — nudge a position by a fixed offset.</li>
+    </Ul>
+    <P>Placement joins the same reactive dependency graph: a follower resolves <em>after</em> its target and updates live when the target moves — whether the move comes from a slider, a drag, or a <Code>move</Code>/<Code>rotate</Code> verb. Targets are resolved in dependency order; a placement cycle (<Code>A next_to B</Code>, <Code>B next_to A</Code>) is detected and reported rather than hanging.</P>
+    <Example id="scene-placement" />
+
+    <H2>Data objects</H2>
+    <P>Matrices, tables, and bar charts are named, positionable scene objects whose entries can reference sliders — change a slider and they re-render live.</P>
+    <Ul>
+      <li><Code>@matrix M = [[a, 0], [0, 1]]</Code> — rows of expressions, rendered as a bracketed matrix (each entry can be a slider-bound formula).</li>
+      <li><Code>@table t type:&lt;text|math|decimal&gt; :</Code> followed by <Code>|</Code>-delimited rows — the column <Code>type</Code> controls how cells render.</li>
+      <li><Code>@barchart bc values:[…] labels:[…]</Code> — bars animate to new heights when the values change.</li>
+    </Ul>
+    <Example id="scene-matrix" />
+    <Example id="scene-table" live={false} />
+    <Example id="scene-barchart" />
+
+    <H2>Graphs &amp; networks</H2>
+    <P><Code>@graph g nodes:[…] edges:[A-B, …]</Code> draws an undirected network; <Code>@digraph d … edges:[A-&gt;B, …]</Code> draws a directed one with arrowheads. Pick a layout with <Code>layout:spring</Code> (force-directed) or <Code>layout:circular</Code>. Nodes and edges can be animated in, and a path can be highlighted with <Code>+animate indicate g A-B-C</Code> (reusing the emphasis system).</P>
+    <Example id="scene-graph" />
+    <Example id="scene-digraph" />
+
+    <H2>Vector fields</H2>
+    <P><Code>@vectorfield vf on ax : (u, v)</Code> samples the field <Code>(u, v)</Code> over a grid of arrows. Tune it with <Code>density:&lt;n&gt;</Code>, <Code>scale:&lt;s&gt;</Code>, and <Code>normalize</Code> (unit-length arrows, magnitude shown by opacity). The field is reactive — reference a slider in the components and it recomputes as you drag.</P>
+    <Example id="scene-vectorfield" />
 
     <H2>Animation verbs</H2>
     <P>Inside a scene, <Code>+animate &lt;verb&gt; &lt;target&gt;</Code> lines each occupy one advance stop and play in order. Creation verbs: <Code>create</Code>, <Code>write</Code>, <Code>grow</Code>, <Code>fade-in</Code>, <Code>draw-border-then-fill</Code>. Also <Code>indicate</Code> (a brief pulse). Objects without a creation verb are visible from the start.</P>
     <Example id="scene-animate" />
+
+    <H3>Motion: <Code>move</Code> and <Code>rotate</Code></H3>
+    <P>Move or rotate any positioned object on advance:</P>
+    <Ul>
+      <li><Code>+animate move P to (2, 4)</Code> — or <Code>move fig next_to Q dir:right</Code> to glide toward another object.</li>
+      <li><Code>+animate rotate tri by 90deg about center</Code> — pivot can be <Code>center</Code>, a named object, or <Code>(x, y)</Code>; the angle is <Code>deg</Code> or <Code>rad</Code>.</li>
+    </Ul>
+    <P>Both ride the one advance flow (reverse with <Code>←</Code>), ease toward the <em>live</em> target so they survive a drag, and snap instantly under reduced motion.</P>
+    <Example id="scene-move" />
+    <Example id="scene-rotate" />
   </>
 );
 

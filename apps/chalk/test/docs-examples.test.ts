@@ -69,4 +69,22 @@ describe("documentation examples parse to the constructs they claim", () => {
   it("the geo example is a geo block", () => {
     expect(shapes(DOC_EXAMPLES.geo).types.has("geo")).toBe(true);
   });
+
+  it("the data-object examples parse to matrix / table / barchart kinds", () => {
+    expect(shapes(DOC_EXAMPLES["scene-matrix"]).kinds.has("matrix")).toBe(true);
+    expect(shapes(DOC_EXAMPLES["scene-table"]).kinds.has("table")).toBe(true);
+    expect(shapes(DOC_EXAMPLES["scene-barchart"]).kinds.has("barchart")).toBe(true);
+  });
+  it("the network examples parse to graph / digraph kinds", () => {
+    expect(shapes(DOC_EXAMPLES["scene-graph"]).kinds.has("graph")).toBe(true);
+    expect(shapes(DOC_EXAMPLES["scene-digraph"]).kinds.has("digraph")).toBe(true);
+  });
+  it("the vector-field example parses to a vectorfield kind", () => {
+    expect(shapes(DOC_EXAMPLES["scene-vectorfield"]).kinds.has("vectorfield")).toBe(true);
+  });
+  it("the placement example uses next_to and shift", () => {
+    const src = DOC_EXAMPLES["scene-placement"];
+    expect(src).toContain("next_to");
+    expect(src).toContain("shift:");
+  });
 });

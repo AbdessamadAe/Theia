@@ -34,6 +34,25 @@ export const DOC_EXAMPLES = {
   "scene-animate": `## Built up on advance\n\n:::scene\n@axes ax x:[-3, 3] y:[-1, 9] grid\n@plot f on ax : x^2\n@point P on ax at (1, 1)\n+animate create ax\n+animate write f\n+animate grow P\n:::\n`,
   "scene-numberline": `## A number line\n\n:::scene\n@numberline nl range:[-5, 5]\n@point P on nl at (2, 0)\n:::\n`,
 
+  // ── Relative placement ──────────────────────────────────────────────────
+  "scene-placement": `## Relative placement\n\n:::scene\n@axes ax x:[-4, 4] y:[-4, 4] grid\n@point P on ax at (1, 1)\n@label cap on ax next_to P dir:up buff:0.4 "P"\n@point Q on ax at (-1, -1) shift:(0.5, 0)\n:::\n`,
+
+  // ── Data objects ────────────────────────────────────────────────────────
+  "scene-matrix": `## A live matrix\n\n@slider a [0, 3] = 2\n\n:::scene\n@axes ax x:[-3, 3] y:[-3, 3]\n@matrix M on ax at (0, 0) = [[a, 0], [0, 1]]\n:::\n`,
+  "scene-table": `## A table\n\n:::scene\n@table grades type:math :\n| x | x^2 |\n| 1 | 1 |\n| 2 | 4 |\n| 3 | 9 |\n:::\n`,
+  "scene-barchart": `## A bar chart\n\n:::scene\n@axes ax x:[0, 5] y:[0, 10]\n@barchart bc on ax values:[3, 5, 2, 8] labels:["A", "B", "C", "D"]\n:::\n`,
+
+  // ── Graphs & networks ───────────────────────────────────────────────────
+  "scene-graph": `## A network\n\n:::scene\n@graph g nodes:[A, B, C, D] edges:[A-B, B-C, C-D, D-A, A-C] layout:spring\n:::\n`,
+  "scene-digraph": `## A directed graph\n\n:::scene\n@digraph d nodes:[A, B, C] edges:[A->B, B->C, C->A] layout:circular\n:::\n`,
+
+  // ── Vector fields ───────────────────────────────────────────────────────
+  "scene-vectorfield": `## A vector field\n\n:::scene\n@axes ax x:[-3, 3] y:[-3, 3]\n@vectorfield vf on ax : (-y, x)\n:::\n`,
+
+  // ── Motion verbs ────────────────────────────────────────────────────────
+  "scene-move": `## Moving an object\n\n:::scene\n@axes ax x:[-5, 5] y:[-5, 5] grid\n@point P on ax at (0, 0)\n+animate move P to (3, 2)\n:::\n`,
+  "scene-rotate": `## Rotating an object\n\n:::scene\n@axes ax x:[-5, 5] y:[-5, 5] grid\n@point P on ax at (3, 0)\n+animate rotate P by 90deg about (0, 0)\n:::\n`,
+
   // ── 3D ──────────────────────────────────────────────────────────────────
   "scene3d-surface": `## A paraboloid\n\n@slider a [0.1, 1] = 0.5\n\n:::scene3d\n@axes3d ax x:[-3,3] y:[-3,3] z:[0,9]\n@surface s on ax : a*(x^2 + y^2) colorscale:height\n@camera cam phi:62 theta:-35 distance:9 autorotate\n:::\n`,
   "scene3d-solids": `## Solids\n\n:::scene3d\n@axes3d ax x:[-3,3] y:[-3,3] z:[-1,3]\n@sphere s on ax at (-1, 0, 1) r:1\n@cube c on ax at (1.5, 0, 1) size:1.4\n@camera cam phi:65 theta:-30 distance:9\n:::\n`,

@@ -30,6 +30,7 @@ const manifest = [
   { file: "limits.chalk", label: "Limits & Continuity — everything" },
   { file: "morphing.chalk", label: "Equation morphing" },
   { file: "graphing.chalk", label: "2D graphing scene" },
+  { file: "linear-algebra.chalk", label: "Matrices as transformations" },
   { file: "surfaces.chalk", label: "3D surfaces (WebGL)" },
 ];
 const examples = manifest.map((m) => ({

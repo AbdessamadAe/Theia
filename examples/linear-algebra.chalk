@@ -1,0 +1,59 @@
+# Matrices as transformations
+
+A $2 \times 2$ matrix is a machine that bends the plane: it sends each point
+$(x, y)$ to a new point $M\,(x, y)$. Drag the four entries below and watch the
+**same matrix** act on space three different ways.
+
+@slider a [-2, 2] = 1
+
+@slider b [-2, 2] = 0.5
+
+@slider c [-2, 2] = 0
+
+@slider d [-2, 2] = 1
+
+## The matrix you control
+
+Every entry is bound to a slider, so the matrix re-typesets the instant you
+drag. The transformed basis vectors $M e_1 = (a, c)$ and $M e_2 = (b, d)$ are
+the **columns** of $M$; each rides along as a point with a label pinned beside
+it via relative placement.
+
+:::scene
+@axes ax x:[-3, 3] y:[-3, 3] grid
+@matrix M on ax at (-2, 2.4) = [[a, b], [c, d]]
+@point E1 on ax at (a, c)
+@point E2 on ax at (b, d)
+@label l1 on ax next_to E1 dir:right buff:0.3 "M e1"
+@label l2 on ax next_to E2 dir:up buff:0.3 "M e2"
++animate create ax
++animate write M
++animate grow E1
++animate grow E2
+:::
+
+## The whole plane at once
+
+The vector field $(x, y) \mapsto \big(a x + b y,\ c x + d y\big)$ shows where
+the matrix sends every point. The field **recomputes live** as you drag the
+entries — try $b = 1$ for a shear, or $a = 0,\ b = -1,\ c = 1,\ d = 0$ for a
+quarter-turn rotation.
+
+:::scene
+@axes ax x:[-3, 3] y:[-3, 3]
+@matrix M on ax at (-2, 2.4) = [[a, b], [c, d]]
+@vectorfield vf on ax : (a*x + b*y, c*x + d*y)
+:::
+
+## The determinant, live
+
+The determinant $\det M = ad - bc$ is the signed factor by which the matrix
+scales area. A negative value means the orientation flips. This cell reads all
+four sliders and reports it as you drag:
+
+```js
+const a = chalk.slider("a"), b = chalk.slider("b");
+const c = chalk.slider("c"), d = chalk.slider("d");
+const det = a * d - b * c;
+chalk.tex("\\det M = ad - bc = " + det.toFixed(2));
+```
