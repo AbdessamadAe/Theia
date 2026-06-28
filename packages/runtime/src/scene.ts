@@ -743,6 +743,78 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     ctx.restore();
   }
 
+  // --- Vector fields (Part D): @vectorfield vf on ax : (u, v) --------------
+  const splitTopComma = (s: string): string[] => {
+    const out: string[] = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of s) {
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      if (ch === "," && depth === 0) {
+        out.push(cur);
+        cur = "";
+      } else cur += ch;
+    }
+    out.push(cur);
+    return out.map((x) => x.trim());
+  };
+  const fieldExprs = new Map<SceneObj, { u: CompiledExpr; v: CompiledExpr }>();
+  for (const o of objects) {
+    if (o.spec.kind !== "vectorfield" || !o.spec.args.expr) continue;
+    const inner = o.spec.args.expr.trim().replace(/^\(/, "").replace(/\)$/, "");
+    const parts = splitTopComma(inner);
+    if (parts.length >= 2) {
+      try {
+        fieldExprs.set(o, { u: compileExpr(parts[0]!), v: compileExpr(parts[1]!) });
+      } catch {
+        /* leave undrawn on a bad expression */
+      }
+    }
+  }
+  function drawVectorField(ctx: CanvasRenderingContext2D, cs: CoordSystem, o: SceneObj, scope: Record<string, number>, colors: Colors): void {
+    const f = fieldExprs.get(o);
+    if (!f) return;
+    const density = Math.max(3, Math.min(25, o.spec.args.density ? parseInt(o.spec.args.density, 10) : 11));
+    const userScale = o.spec.args.scale ? parseFloat(o.spec.args.scale) : 1;
+    const normalize = o.spec.args.normalize === "true";
+    const cellX = (cs.xMax - cs.xMin) / density;
+    const ny = Math.max(3, Math.round((cs.yMax - cs.yMin) / cellX));
+    const cellY = (cs.yMax - cs.yMin) / ny;
+    // First pass: sample u,v + the max magnitude for proportional scaling.
+    const samples: { gx: number; gy: number; u: number; v: number; m: number }[] = [];
+    let maxM = 1e-6;
+    for (let i = 0; i < density; i++) {
+      for (let j = 0; j < ny; j++) {
+        const gx = cs.xMin + (i + 0.5) * cellX;
+        const gy = cs.yMin + (j + 0.5) * cellY;
+        const s2 = { ...scope, x: gx, y: gy };
+        const u = f.u.eval(s2);
+        const v = f.v.eval(s2);
+        if (!Number.isFinite(u) || !Number.isFinite(v)) continue;
+        const m = Math.hypot(u, v);
+        maxM = Math.max(maxM, m);
+        samples.push({ gx, gy, u, v, m });
+      }
+    }
+    ctx.save();
+    ctx.globalAlpha = o.appear;
+    for (const s of samples) {
+      if (s.m < 1e-6) continue;
+      const len = (normalize ? 0.45 : (0.2 + 0.45 * (s.m / maxM))) * cellX * userScale;
+      const ex = s.gx + (s.u / s.m) * len;
+      const ey = s.gy + (s.v / s.m) * len;
+      const [x1, y1] = cs.toPixel(s.gx, s.gy);
+      const [x2, y2] = cs.toPixel(ex, ey);
+      ctx.globalAlpha = o.appear * (0.4 + 0.6 * (s.m / maxM));
+      ctx.strokeStyle = colors.accent;
+      ctx.fillStyle = colors.accent;
+      ctx.lineWidth = 1.5;
+      drawArrow(ctx, x1, y1, x2, y2, true, 5);
+    }
+    ctx.restore();
+  }
+
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
   for (const o of objects) {
@@ -754,6 +826,7 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
   for (const v of mediaDepVars()) if (graph.get(v) !== undefined) deps.add(v);
   for (const d of dataObjects) for (const e of d.exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
   for (const exprs of barValueExprs.values()) for (const e of exprs) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
+  for (const f of fieldExprs.values()) for (const e of [f.u, f.v]) for (const v of e.vars) if (graph.get(v) !== undefined) deps.add(v);
 
   // --- rAF scheduler shared by reactivity + animation ----------------------
   let rafId = 0;
@@ -890,6 +963,9 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
         case "graph":
         case "digraph":
           drawGraph(ctx, cs, o, scope, colors);
+          break;
+        case "vectorfield":
+          drawVectorField(ctx, cs, o, scope, colors);
           break;
         case "label": {
           // Interactive labels (with a handle node) render via the overlay so
