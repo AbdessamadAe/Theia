@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
+    "build:vercel": "npm run build --workspace=@theia/ast --workspace=@theia/parser --workspace=@theia/compute --workspace=@theia/runtime --workspace=@theia/render-slides --workspace=theia",
     "build:app": "npm run build -w theia",
     "build:cli": "npm run build -w theialang",
     "typecheck": "npm run typecheck --workspaces --if-present",
