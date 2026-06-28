@@ -85,11 +85,10 @@ caching).
 ### Connect the project (dashboard, one-time)
 
 1. vercel.com → **Add New… → Project** → import `AbdessamadAe/Theia`.
-2. **Root Directory:** leave at the repo root (so the npm workspaces install).
-3. Framework preset: **Other** (settings come from `vercel.json`):
-   - Install: `npm install`
-   - Build: `npm run build:vercel` (compiles engine packages, then the web app — do **not** override with `npm run build -w theia` alone unless you know why)
-   - Output: `apps/theia/dist`
+2. **Root Directory:** set to **`apps/theia`** (recommended — uses `apps/theia/vercel.json`) **or** leave at the repo root (uses root `vercel.json`). Do not override the build command in the dashboard; let the checked-in config win.
+3. Framework preset: **Other**. Expected settings:
+   - **Root = `apps/theia`:** Install `cd ../.. && npm install`, Build `npm run build`, Output `dist`
+   - **Root = repo root:** Install `npm install`, Build `npm run build:vercel`, Output `apps/theia/dist`
 4. No environment variables. Deploy.
 
 After connecting, Vercel automatically gives you **preview deploys on every PR**

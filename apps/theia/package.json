@@ -7,6 +7,7 @@
   "scripts": {
     "build:deps": "npm run build -w @theia/ast -w @theia/parser -w @theia/compute -w @theia/runtime -w @theia/render-slides",
     "bake": "node scripts/prebuild.mjs",
+    "build:vercel": "npm run build",
     "dev": "npm run build:deps && npm run bake && vite",
     "build": "npm run build:deps && npm run bake && vite build",
     "preview": "vite preview --port 5173 --strictPort",
