@@ -20,6 +20,8 @@ export { isFreeLiteral, isDraggablePosition, boundVars } from "./drag.js";
 
 export { parseMediaTime, parseMediaSegment } from "./media.js";
 
+export { placementOrder, directionVector, DIRECTIONS, type PlaceItem } from "./placement.js";
+
 export { ReactiveGraph, type Dependent } from "./graph.js";
 
 export {

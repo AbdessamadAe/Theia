@@ -19,7 +19,15 @@ import { type CoordSystem, makeCoordSystem, niceStep, parseRange } from "./coord
 import { boundVars, isDraggablePosition } from "./drag.js";
 import { type CompiledExpr, compileExpr } from "./expr.js";
 import { parseMediaSegment } from "./media.js";
+import { directionVector, placementOrder } from "./placement.js";
 import { initScene3D, type Scene3DOptions } from "./scene3d.js";
+
+/** Parse a `"dx, dy"` tuple into a numeric pair (NaN-safe). */
+function parsePair(s: string | undefined): [number, number] | undefined {
+  if (!s) return undefined;
+  const m = s.split(",").map((p) => parseFloat(p.trim()));
+  return m.length === 2 && m.every((n) => Number.isFinite(n)) ? [m[0]!, m[1]!] : undefined;
+}
 
 interface GraphLike {
   get(name: string): number | undefined;
@@ -66,6 +74,16 @@ interface SceneObj {
   toExpr?: CompiledExpr;
   /** Live drag override in data coords; visual-only until committed to text. */
   override?: [number, number] | null;
+  // Relative placement (Part A): resolve relative to another object's position.
+  nextTo?: string;
+  dirVec?: [number, number];
+  buff?: number;
+  shiftXY?: [number, number];
+  // Imperative move/rotate animation (Part E).
+  movePos?: [number, number] | null; // current tweened position when a move is active
+  moveTarget?: [number, number] | null;
+  angle: number; // current rotation (radians)
+  angleTarget: number;
 }
 
 interface Colors {
@@ -148,10 +166,62 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       yExpr: compileSafe(spec.args.y),
       fromExpr: compileSafe(spec.args.from),
       toExpr: compileSafe(spec.args.to),
+      angle: 0,
+      angleTarget: 0,
     };
+    if (spec.args.next_to) {
+      obj.nextTo = spec.args.next_to;
+      obj.dirVec = directionVector(spec.args.dir);
+      obj.buff = spec.args.buff !== undefined ? parseFloat(spec.args.buff) : 0.6;
+    }
+    obj.shiftXY = parsePair(spec.args.shift);
     return obj;
   });
   const byName = new Map(objects.map((o) => [o.spec.name, o]));
+
+  // --- Relative placement order (Part A): resolve next_to targets first ----
+  const { order: placeOrder, cycles } = placementOrder(
+    objects.map((o) => ({ name: o.spec.name, nextTo: o.nextTo })),
+  );
+  const cyclic = new Set(cycles);
+  if (cycles.length) {
+    console.warn(`chalk: placement cycle among [${cycles.join(", ")}] — falling back to absolute position`);
+  }
+  const resolveSequence = placeOrder.map((n) => byName.get(n)!).filter(Boolean);
+  /** Resolved data-space position of every object, recomputed each draw. */
+  const resolved = new Map<SceneObj, [number, number]>();
+
+  const absolutePos = (o: SceneObj, scope: Record<string, number>): [number, number] => [
+    o.xExpr ? o.xExpr.eval(scope) : 0,
+    o.yExpr ? o.yExpr.eval(scope) : 0,
+  ];
+
+  /** Base position before move/rotate: drag override, else next_to, else `at`,
+   * then `shift`. next_to reads the target's already-resolved position. */
+  function basePos(o: SceneObj, scope: Record<string, number>): [number, number] {
+    if (o.override) return o.override;
+    let p: [number, number];
+    if (o.nextTo && !cyclic.has(o.spec.name)) {
+      const target = byName.get(o.nextTo);
+      const base = (target && resolved.get(target)) ?? [0, 0];
+      const d = o.dirVec ?? [1, 0];
+      const b = o.buff ?? 0.6;
+      p = [base[0] + d[0] * b, base[1] + d[1] * b];
+    } else {
+      p = absolutePos(o, scope);
+    }
+    if (o.shiftXY) p = [p[0] + o.shiftXY[0], p[1] + o.shiftXY[1]];
+    return p;
+  }
+
+  /** Recompute every object's resolved position, in dependency order. A `move`
+   * animation (Part E), when active, overrides with the tweened position. */
+  function resolvePositions(scope: Record<string, number>): void {
+    resolved.clear();
+    for (const o of resolveSequence) {
+      resolved.set(o, o.movePos ?? basePos(o, scope));
+    }
+  }
 
   // --- Direct-manipulation handles (editor only) ---------------------------
   // Drag-to-edit is an AUTHORING affordance: enabled only when embedded in the
@@ -168,8 +238,10 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
   const interactiveByObj = new Map<SceneObj, Interactive>();
   let lastArea: ReturnType<typeof areaRect> | null = null;
 
+  // Resolved position (placement + move), falling back to a fresh base compute
+  // for callers that run outside a draw (e.g. drag handlers reading current pos).
   const coordsOf = (o: SceneObj, scope: Record<string, number>): [number, number] =>
-    o.override ?? [o.xExpr ? o.xExpr.eval(scope) : 0, o.yExpr ? o.yExpr.eval(scope) : 0];
+    o.override ?? o.movePos ?? resolved.get(o) ?? basePos(o, scope);
 
   function postEdit(span: [number, number] | undefined, x: number, y: number): void {
     if (!span || !embedded) return;
@@ -524,6 +596,9 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     const scope = graph.scope();
     const area = areaRect(cssW, cssH);
     const labels: Array<{ left: number; top: number; text: string }> = [];
+
+    // Resolve placement (next_to/shift/move) in dependency order before drawing.
+    resolvePositions(scope);
 
     // Coordinate systems first (background).
     for (const o of objects) {

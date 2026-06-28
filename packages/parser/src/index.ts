@@ -156,6 +156,17 @@ function parseSceneObjectArgs(
   const ofSrc = grab(/\bof\s+("[^"]*"|\S+)/);
   if (ofSrc !== undefined) args.src = unquote(ofSrc);
 
+  // Relative placement: `next_to <object>` and `shift:(dx, dy)` (dir:/buff: are
+  // captured as ordinary key:value pairs below).
+  const nextTo = grab(/\bnext_to\s+([A-Za-z_]\w*)/);
+  if (nextTo !== undefined) args.next_to = nextTo;
+  const shift = grab(/\bshift\s*:\s*\(([^)]*)\)/);
+  if (shift !== undefined) args.shift = shift.trim();
+
+  // Matrix literal: `= [[a, b], [c, d]]` (entries may reference sliders).
+  const matrix = grab(/=\s*(\[\[[\s\S]*\]\])\s*$/);
+  if (matrix !== undefined) args.value = matrix;
+
   // `label "…"` and a bare trailing `"…"` both become text-ish args.
   const labelText = grab(/\blabel\s+"([^"]*)"/);
   if (labelText !== undefined) args.label = labelText;
