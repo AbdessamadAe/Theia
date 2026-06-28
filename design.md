@@ -82,7 +82,7 @@ The parser and the AST types are the load-bearing core. The renderer and the run
 
 Theia is a markdown-family markup language: familiar to anyone who knows markdown or LaTeX, with a small set of math-teaching constructs and an escape hatch into code.
 
-```chalk
+```theia
 # Limits and Continuity              ← section / title slide
 
 ## The intuition behind a limit      ← a new slide
@@ -136,7 +136,7 @@ The language stays readable because the common case (prose, math, structure) is 
 The engine is built in TypeScript and distributed through npm.
 
 ```
-npm install -g chalk
+npm install -g theia
 
 theia build    lecture.theia    # → interactive slide bundle
 theia watch    lecture.theia    # live preview while authoring
@@ -190,14 +190,14 @@ Because the bundle is self-contained, sharing is just a link, and there is no ac
 ## 9. Repository structure
 
 ```
-chalk/
+theia/
 ├── packages/
 │   ├── ast/            # shared AST node types — the contract
 │   ├── parser/         # .theia text → AST  (pure, no I/O, fully tested)
 │   ├── compute/        # orchestrates JS + Pyodide code cells
 │   ├── runtime/        # reactive runtime shipped in the slide bundle
 │   ├── render-slides/  # AST → interactive slide bundle
-│   └── cli/            # the `chalk` command (build / watch / present)
+│   └── cli/            # the `theia` command (build / watch / present)
 └── examples/           # real lectures across topics
 ```
 

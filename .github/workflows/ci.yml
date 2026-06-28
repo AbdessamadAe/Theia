@@ -28,7 +28,7 @@ jobs:
 
       # Build engine → CLI bundle → web app (workspace order). This also
       # type-checks the engine packages via their tsc build.
-      - name: Build (engine, chalkdeck CLI, web app)
+      - name: Build (engine, theialang CLI, web app)
         run: npm run build
 
       - name: Typecheck (CLI + web app)
@@ -40,5 +40,5 @@ jobs:
         run: npm test
 
       # Prove the publishable package still assembles cleanly (no publish).
-      - name: Verify chalkdeck package manifest
-        run: npm pack -w chalkdeck --dry-run
+      - name: Verify theialang package manifest
+        run: npm pack -w theialang --dry-run

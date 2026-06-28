@@ -9,13 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: "Actually publish chalkdeck to npm (otherwise dry-run only)"
+        description: "Actually publish theialang to npm (otherwise dry-run only)"
         type: boolean
         default: false
 
 jobs:
   release:
-    name: Publish chalkdeck (gated)
+    name: Publish theialang (gated)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
       - name: Install
         run: npm ci
 
-      - name: Build (engine + chalkdeck)
+      - name: Build (engine + theialang)
         run: npm run build
 
       - name: Publish or dry-run
@@ -42,5 +42,5 @@ jobs:
             npx changeset publish
           else
             echo "::notice::Dry-run (publish=${{ inputs.publish }}, NPM_TOKEN set: $([ -n "$NODE_AUTH_TOKEN" ] && echo yes || echo no)). Showing the manifest that WOULD be published:"
-            npm pack -w chalkdeck --dry-run
+            npm pack -w theialang --dry-run
           fi

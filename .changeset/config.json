@@ -8,7 +8,7 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "chalk",
+    "theia",
     "@theia/ast",
     "@theia/parser",
     "@theia/compute",

@@ -2,7 +2,7 @@
 
 Two artifacts ship from this one monorepo, on two independent paths:
 
-1. **`chalkdeck`** — the engine + CLI, published to **npm**.
+1. **`theialang`** — the engine + CLI, published to **npm**.
 2. **The web app** (landing + playground + gallery + docs) — deployed to **Vercel** as a static site.
 
 Nothing here is published or deployed automatically. CI builds and tests both on
@@ -13,17 +13,17 @@ secrets only you can add. This file is that checklist.
 
 ## 0. One-time facts
 
-- **Package name:** the npm name `chalk` is taken (the string-styling library),
-  so the CLI is published as **`chalkdeck`**. It installs both a `chalk` and a
-  `chalkdeck` command.
+- **Package name:** the npm name `theia` is taken (the string-styling library),
+  so the CLI is published as **`theialang`**. It installs both a `theia` and a
+  `theialang` command.
 - **License:** MIT (`LICENSE`).
 - **Versioning:** [changesets](https://github.com/changesets/changesets). Only
-  `chalkdeck` is publishable; the engine packages (`@chalk/*`) and the web app
-  (`chalk`) are `private` and bundled/served, never published.
+  `theialang` is publishable; the engine packages (`@theia/*`) and the web app
+  (`theia`) are `private` and bundled/served, never published.
 
 ---
 
-## 1. npm — publish `chalkdeck`
+## 1. npm — publish `theialang`
 
 ### Secrets you add yourself
 
@@ -55,23 +55,23 @@ npm run release           # = npm run build && changeset publish
 
 ```bash
 npm run build
-npm pack -w chalkdeck --dry-run     # inspect the file manifest
-npm publish --dry-run -w chalkdeck  # same manifest, asserts auth/name/version
+npm pack -w theialang --dry-run     # inspect the file manifest
+npm publish --dry-run -w theialang  # same manifest, asserts auth/name/version
 ```
 
 A clean-room smoke test (what an end user gets):
 
 ```bash
-npm pack -w chalkdeck --pack-destination /tmp/cd
+npm pack -w theialang --pack-destination /tmp/cd
 mkdir /tmp/cd/clean && cd /tmp/cd/clean && npm init -y
-npm install /tmp/cd/chalkdeck-*.tgz   # installs 1 package, 0 transitive deps
+npm install /tmp/cd/theialang-*.tgz   # installs 1 package, 0 transitive deps
 echo '# Hi
 @slider a [0,3] = 1
 :::scene
 @axes ax x:[-3,3] y:[-3,3] grid
 @plot f on ax : a*x^2
-:::' > demo.chalk
-./node_modules/.bin/chalk build demo.chalk   # → demo.html, self-contained
+:::' > demo.theia
+./node_modules/.bin/theia build demo.theia   # → demo.html, self-contained
 ```
 
 ---
@@ -89,7 +89,7 @@ caching).
 3. Framework preset: **Other** (settings come from `vercel.json`):
    - Install: `npm install`
    - Build: `npm run build`
-   - Output: `apps/chalk/dist`
+   - Output: `apps/theia/dist`
 4. No environment variables. Deploy.
 
 After connecting, Vercel automatically gives you **preview deploys on every PR**
@@ -107,7 +107,7 @@ vercel deploy --prebuilt    # preview deploy; add --prod for production
 
 > `vercel build` requires a linked, authenticated project — it can't run
 > headless in this repo without your account. The produced bundle is just
-> `apps/chalk/dist` (an `index.html` + hashed `/assets/*`), which `npm run build`
+> `apps/theia/dist` (an `index.html` + hashed `/assets/*`), which `npm run build`
 > already emits and CI verifies.
 
 ---
@@ -116,7 +116,7 @@ vercel deploy --prebuilt    # preview deploy; add --prod for production
 
 `.github/workflows/ci.yml` runs on every push/PR to `main`: install → build
 (engine + CLI + app) → typecheck → test (incl. the docs example-compile-check)
-→ verify the `chalkdeck` package manifest. It needs no secrets.
+→ verify the `theialang` package manifest. It needs no secrets.
 
 `.github/workflows/release.yml` is **off by default** — it only runs on manual
 dispatch and stays a dry-run unless you tick `publish: true` *and* `NPM_TOKEN`

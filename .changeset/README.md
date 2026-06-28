@@ -1,7 +1,7 @@
 # Changesets
 
 This folder is managed by [changesets](https://github.com/changesets/changesets).
-It versions and publishes the one public package in this monorepo: **`chalkdeck`**
+It versions and publishes the one public package in this monorepo: **`theialang`**
 (the engine packages and the web app are `private` and never published).
 
 To record a change for the next release:
