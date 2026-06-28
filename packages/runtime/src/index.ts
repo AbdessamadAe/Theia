@@ -22,6 +22,16 @@ export { parseMediaTime, parseMediaSegment } from "./media.js";
 
 export { placementOrder, directionVector, DIRECTIONS, type PlaceItem } from "./placement.js";
 
+export {
+  circularLayout,
+  springLayout,
+  layoutGraph,
+  parseEdges,
+  pathEdges,
+  type Edge,
+  type Layout,
+} from "./graph-layout.js";
+
 export { ReactiveGraph, type Dependent } from "./graph.js";
 
 export {

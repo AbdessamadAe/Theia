@@ -18,6 +18,7 @@
 import { type CoordSystem, makeCoordSystem, niceStep, parseRange } from "./coord.js";
 import { boundVars, isDraggablePosition } from "./drag.js";
 import { type CompiledExpr, compileExpr } from "./expr.js";
+import { type Edge, layoutGraph, type Layout, parseEdges, pathEdges } from "./graph-layout.js";
 import { parseMediaSegment } from "./media.js";
 import { directionVector, placementOrder } from "./placement.js";
 import { initScene3D, type Scene3DOptions } from "./scene3d.js";
@@ -672,6 +673,76 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
     ctx.restore();
   }
 
+  // --- Graphs / networks (Part C): @graph (undirected) / @digraph -----------
+  interface GraphData {
+    names: string[];
+    edges: Edge[];
+    directed: boolean;
+    layout: Layout; // unit-normalized node positions, scaled by radius at draw
+    radius: number;
+    highlight: Set<string>; // "from~to" keys highlighted by an indicate path
+  }
+  const edgeKey = (e: Edge): string => `${e.from}~${e.to}`;
+  const graphData = new Map<SceneObj, GraphData>();
+  for (const o of objects) {
+    if (o.spec.kind !== "graph" && o.spec.kind !== "digraph") continue;
+    const names = o.spec.args.nodes ? parseList(o.spec.args.nodes) : [];
+    const edges = o.spec.args.edges ? parseEdges(o.spec.args.edges) : [];
+    graphData.set(o, {
+      names,
+      edges,
+      directed: o.spec.kind === "digraph",
+      layout: layoutGraph(names, edges, o.spec.args.layout ?? "spring"),
+      radius: o.spec.args.radius ? parseFloat(o.spec.args.radius) : 2.4,
+      highlight: new Set(),
+    });
+  }
+  function drawGraph(ctx: CanvasRenderingContext2D, cs: CoordSystem, o: SceneObj, scope: Record<string, number>, colors: Colors): void {
+    const g = graphData.get(o);
+    if (!g) return;
+    const [cx, cy] = resolved.get(o) ?? basePos(o, scope);
+    const px = (name: string): [number, number] => {
+      const p = g.layout.get(name) ?? [0, 0];
+      return cs.toPixel(cx + p[0] * g.radius, cy + p[1] * g.radius);
+    };
+    ctx.save();
+    ctx.globalAlpha = o.appear;
+    // edges
+    for (const e of g.edges) {
+      const a = px(e.from);
+      const b = px(e.to);
+      const lit = (o.flash > 0 && g.highlight.has(edgeKey(e))) || g.highlight.has(`${e.from}~${e.to}`);
+      ctx.strokeStyle = lit ? colors.accent : colors.axis;
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = lit ? 3.5 : 1.5;
+      // stop the line/arrow short of the node radius
+      const ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const r = 13;
+      const bx = b[0] - r * Math.cos(ang);
+      const by = b[1] - r * Math.sin(ang);
+      const ax = a[0] + r * Math.cos(ang);
+      const ay = a[1] + r * Math.sin(ang);
+      drawArrow(ctx, ax, ay, bx, by, g.directed, 9);
+    }
+    // nodes
+    ctx.font = "12px -apple-system, system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    for (const name of g.names) {
+      const [x, y] = px(name);
+      ctx.beginPath();
+      ctx.arc(x, y, 12, 0, Math.PI * 2);
+      ctx.fillStyle = colors.surface;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = colors.curve;
+      ctx.stroke();
+      ctx.fillStyle = colors.text;
+      ctx.fillText(name, x, y);
+    }
+    ctx.restore();
+  }
+
   // Reactive dependencies: slider vars referenced by any expression.
   const deps = new Set<string>();
   for (const o of objects) {
@@ -816,6 +887,10 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
         case "barchart":
           drawBarchart(ctx, cs, o, scope, colors);
           break;
+        case "graph":
+        case "digraph":
+          drawGraph(ctx, cs, o, scope, colors);
+          break;
         case "label": {
           // Interactive labels (with a handle node) render via the overlay so
           // they can be dragged; otherwise fall back to the pooled label.
@@ -858,7 +933,22 @@ function setupScene(host: HTMLElement, graph: GraphLike): void {
       const verb = anims[played];
       if (verb && verb.verb === "indicate" && !reduced) {
         const target = byName.get(verb.target);
-        if (target) target.flash = 1;
+        if (target) {
+          target.flash = 1;
+          // Indicate over a graph path: highlight the matching edges.
+          const g = target && graphData.get(target);
+          const pathArg = verb.args.find((a) => /-/.test(a) || /->/.test(a));
+          if (g && pathArg) {
+            g.highlight = new Set();
+            for (const pe of pathEdges(pathArg)) {
+              for (const e of g.edges) {
+                const fwd = e.from === pe.from && e.to === pe.to;
+                const rev = !g.directed && e.from === pe.to && e.to === pe.from;
+                if (fwd || rev) g.highlight.add(`${e.from}~${e.to}`);
+              }
+            }
+          }
+        }
       } else if (verb && verb.verb === "play") {
         playMedia(verb.target, verb.args);
       } else if (verb && verb.verb === "pause") {
@@ -1147,6 +1237,30 @@ function drawPoint(
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.restore();
+}
+
+/** Draw a line from (x1,y1)→(x2,y2) in pixels, with an optional arrowhead. */
+function drawArrow(
+  ctx: CanvasRenderingContext2D,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  head: boolean,
+  headSize = 8,
+): void {
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  if (!head) return;
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headSize * Math.cos(a - 0.4), y2 - headSize * Math.sin(a - 0.4));
+  ctx.lineTo(x2 - headSize * Math.cos(a + 0.4), y2 - headSize * Math.sin(a + 0.4));
+  ctx.closePath();
+  ctx.fill();
 }
 
 function positionLabels(
